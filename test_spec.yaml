@@ -1,72 +1,78 @@
 test:
   suites:
   - setup: |
-      printit("Setting up test suite")
+      print("Setting up test suite")
       b="  happy!"
       c=uuid()
     cases:
-    - |
-      printit("Inside test case Alice {:d}".format(testcase_num))
-      printit(b)
-      a=10
-      if 'a' in locals():
-        a=11
-      printit("Greetings")
-      fail()
-    - |
-      printit("Inside test case Bob {:d}".format(testcase_num))
-      printit(b)
-      a=10
-      if 'a' in locals():
-        a=11
-      printit("Greetings")
-      printit("uuid is {0}".format(c))
-      expect(4==5, "four should equal five")
-    - |
-      printit("Now inside")
-      printit(" test case Carol {:d}".format(testcase_num))
-      if 'a' not in locals():
-        a=20
-      printit(b)
-      printit(a)
-      printit("here")
-      abort()
-      printit("and there")
-    - |
-      printit("Now inside")
-      printit(" test case Dan {:d}".format(testcase_num))
-      if 'a' not in locals():
-        a=30
-      printit(b)
-      printit(a)
-      printit("here {0}".format(uuid))
-      printit("uuid is {0}".format(c))
-      require(7==8, "seven equals eight")
-      printit("and there")      
-    - |
-      printit("Inside good test case Ellen {:d}".format(testcase_num))
-      printit(b)
-      a=40
-      printit("uuid is {0}".format(c))
-      if 'a' in locals():
-        a=31
-    - |
-      printit("Inside good test case Felix {:d}".format(testcase_num))
-      printit(b)
-      a=50
-      printit("uuid={0}".format(uuid()))
-      if 'a' in locals():
-        a=31
-      #require(1==2,"hah!")  # removing this line makes everything below pass. Investigate!
-      out = callit("ls")
-      printit(out)
-      require(1==2,"hah!")
-      call_may_fail("ls my_failure")
-      out = call("lslkasdj will_fail")
-      require(len(out)==0, "failed in explicit check only!")
+    - id: Alice
+      code: |
+        print("Inside test case Alice {:d}".format(testcase_num))
+        print(b)
+        a=10
+        if 'a' in locals():
+          a=11
+        print("Greetings")
+        fail()
+    - id: Bob
+      code: |
+        print("Inside test case Bob {:d}".format(testcase_num))
+        print(b)
+        a=10
+        if 'a' in locals():
+          a=11
+        print("Greetings")
+        print("uuid is {0}".format(c))
+        expect(4==5, "four should equal five")
+    - id: Carol
+      code: |
+        print("Now inside")
+        print(" test case Carol {:d}".format(testcase_num))
+        if 'a' not in locals():
+          a=20
+        print(b)
+        print(a)
+        print("here")
+        abort()
+        print("and there")
+    - id: Dan
+      code: |
+        print("Now inside")
+        print(" test case Dan {:d}".format(testcase_num))
+        if 'a' not in locals():
+          a=30
+        print(b)
+        print(a)
+        print("here {0}".format(uuid()))
+        print("uuid is {0}".format(c))
+        require(7==8, "seven equals eight")
+        print("and there")      
+    - id: Ellen
+      code: |
+        print("Inside good test case Ellen {:d}".format(testcase_num))
+        print(b)
+        a=40
+        print("uuid is {0}".format(c))
+        if 'a' in locals():
+          a=31
+    - id: Felix
+      code: |
+        print("Inside good test case Felix {:d}".format(testcase_num))
+        print(b)
+        a=50
+        print("uuid={0}".format(uuid()))
+        if 'a' in locals():
+          a=31
+        out = call("ls /tmp/ca*")
+        print(out)
+        code, out = call_may_fail("ls my_failure")
+        print("code {0}  out:\n{1}\n\n".format(code, out))
+        expect(len(out)==10,"output is size 10")
+        out = call("lslkasdj will_fail")
+        require(len(out)==0, "failed in explicit check only!")
       
     teardown: |
-      printit("Tearing down test suite")
-      printit(a)
-      printit(b)
+      print("Tearing down test suite")
+      print(a)
+      print(b)
       

@@ -8,6 +8,7 @@
 import yaml
 import uuid
 import string
+import subprocess
 
 
 def main():
@@ -25,7 +26,7 @@ def main():
     teardown = suite["teardown"]
     suite_passed = True
     for idx, case in enumerate(suite["cases"]):
-      suite_passed &=run_test_case(idx, setup, case, teardown)
+      suite_passed &=run_test_case(idx, case["id"], setup, case["code"], teardown)
     if suite_passed:
       print("==== SUITE SUCCESS ========================================")
     else:
@@ -34,13 +35,13 @@ def main():
   if not run_passed:
     exit(-1)
 
-def run_test_case(idx,setup, case, teardown):
+def run_test_case(idx,label, setup, case, teardown):
 
-  case_failure = ""
+  case_failure = []
   def expect(condition, message):
     nonlocal case_failure
     if not condition:
-      case_failure = message
+      case_failure.append(message)
 
   def fail():
     expect(False, "failure")
@@ -48,7 +49,7 @@ def run_test_case(idx,setup, case, teardown):
   def require(condition, message):
     nonlocal case_failure
     if not condition:
-      case_failure = message
+      case_failure.append(message)
       raise Exception(message)
 
   def abort():
@@ -58,22 +59,25 @@ def run_test_case(idx,setup, case, teardown):
   def print_out(msg):
     nonlocal output
     output += str(msg) + "\n"
+    #try:
+    #  output += str(msg) + "\n"
+    #except Exception as e:
+    #  raise
 
   def call_allow_error(cmd):
-    print(".......", cmd)
     try:
       out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-      print("......... {0}".out)
       return_code = 0
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
       return_code = e.returncode
       out = e.output
-      print("......... {0}".out)
-      return return_code, out
-    return return_code, out
+      # return return_code, out
+    except Exception as e:
+      raise
+    finally:
+      return return_code, out.decode("utf-8")
 
   def call_no_error(cmd):
-    print("........", cmd)
     return_code, out = call_allow_error(cmd)
     require(return_code == 0, "call failed: \"{0}\"".format(cmd))
     return out
@@ -85,13 +89,12 @@ def run_test_case(idx,setup, case, teardown):
       "abort": abort,
       "require": require,
       "uuid": uuid.uuid4,
-      "printit":print_out,
-      "print":print,  # just for debugging
-      "callit": call_no_error,
+      "print":print_out,
+      "call": call_no_error,
       "call_may_fail": call_allow_error}
 
   status_message = ""
-  print("\n==== Test case {:d}: ".format(idx), end="")
+  print("\n==== Test case {:d}: \"{:s}\"".format(idx,label), end="")
   #  print("-------- setup -----------------------------------")
   exec(setup,{},localVars)
 
@@ -99,11 +102,12 @@ def run_test_case(idx,setup, case, teardown):
   try:
     exec(case, {}, localVars)
   except Exception as e:
-    status_message = "TERMINAL FAILURE"
+    status_message = "FAILED REQUIREMENT"
   if len(case_failure) > 0:
-    status_message = " FAILED"
+    status_message = "FAILED EXPECTATION"
     print(" FAILURE ====================")
-    print("*** {0} \"{1}\"".format(status_message, case_failure))
+    for failure in case_failure:
+      print("*** {0} \"{1}\"".format(status_message, failure))
     print("*** Output:")
     print(reindent(output, 4))
   else:
