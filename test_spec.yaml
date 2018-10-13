@@ -7,7 +7,7 @@ test:
     cases:
     - id: Alice
       code: |
-        print("Inside test case Alice {:d}".format(testcase_num))
+        print("Inside test case {0} {1}".format(testcase_id, testcase_num))
         print(b)
         a=10
         if 'a' in locals():

@@ -12,14 +12,12 @@ import subprocess
 
 
 def main():
-  print("Hello world!")
   with open("test_spec.yaml", 'r') as stream:
     try:
         spec = yaml.load(stream)
     except yaml.YAMLError as exc:
         print(exc)
-  print(spec)
-  print("Evaluating:")
+
   run_passed = True
   for suite in spec["test"]["suites"]:
     setup = suite["setup"]
@@ -35,13 +33,19 @@ def main():
   if not run_passed:
     exit(-1)
 
+class TestError(Exception):
+  pass
+
 def run_test_case(idx,label, setup, case, teardown):
 
   case_failure = []
-  def expect(condition, message):
+  def record_failure(status, message):
     nonlocal case_failure
+    case_failure.append((status,message))
+
+  def expect(condition, message):
     if not condition:
-      case_failure.append(message)
+      record_failure("FAILED EXPECTATION", message)
 
   def fail():
     expect(False, "failure")
@@ -49,8 +53,8 @@ def run_test_case(idx,label, setup, case, teardown):
   def require(condition, message):
     nonlocal case_failure
     if not condition:
-      case_failure.append(message)
-      raise Exception(message)
+      record_failure("FAILED REQUIREMENT", message)
+      raise TestError
 
   def abort():
     require(False, "abort called")
@@ -58,14 +62,15 @@ def run_test_case(idx,label, setup, case, teardown):
   output = ""
   def print_out(msg):
     nonlocal output
-    output += str(msg) + "\n"
-    #try:
-    #  output += str(msg) + "\n"
-    #except Exception as e:
-    #  raise
+    #    output += str(msg) + "\n"
+    try:
+      output += str(msg) + "\n"
+    except Exception as e:
+      raise
 
   def call_allow_error(cmd):
     try:
+      print_out("# Calling: " + cmd)
       out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
       return_code = 0
     except subprocess.CalledProcessError as e:
@@ -83,47 +88,53 @@ def run_test_case(idx,label, setup, case, teardown):
     return out
 
   localVars={
+      # Meta info  about the test case
       "testcase_num":idx,
+      "testcase_id": label,
+
+      # Functions to execute processes
+      "call": call_no_error,
+      "call_may_fail": call_allow_error,
+
+      # Other functions available to the test suite
+      "uuid": uuid.uuid4,
+      "print":print_out,
+
+      # Function to fail the test
       "fail": fail,
       "expect": expect,
       "abort": abort,
       "require": require,
-      "uuid": uuid.uuid4,
-      "print":print_out,
-      "call": call_no_error,
-      "call_may_fail": call_allow_error}
+      }
 
   status_message = ""
-  print("\n==== Test case {:d}: \"{:s}\"".format(idx,label), end="")
-  #  print("-------- setup -----------------------------------")
-  exec(setup,{},localVars)
+  print("==== Test case {:d}: \"{:s}\"".format(idx,label), end="")
 
-  #  print("-------- test ------------------------------------")
-  try:
-    exec(case, {}, localVars)
-  except Exception as e:
-    status_message = "FAILED REQUIREMENT"
+  for stage in [("SETUP", setup), ("TEST", case), ("TEARDOWN", teardown)]:
+    try:
+      print_out("### Test case {0}\n".format(stage[0]))
+      exec(stage[1],localVars)
+    except TestError:
+      pass
+    except Exception as e:
+      record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish)", stage[0])
+      break
+
   if len(case_failure) > 0:
-    status_message = "FAILED EXPECTATION"
-    print(" FAILURE ====================")
+    print(" FAILED ====================")
     for failure in case_failure:
-      print("*** {0} \"{1}\"".format(status_message, failure))
-    print("*** Output:")
-    print(reindent(output, 4))
+      print("    {0} \"{1}\"".format(failure[0], failure[1]))
+    print("    Output:")
+    print(reindent(output, 4, "| ")+"\n")
   else:
     print(" PASSED ==============================")
 
-  #  print("-------- teardown --------------------------------")
-  exec(teardown, {}, localVars)
-  #  print("--------------------------------------------------")
+  return len(case_failure) == 0
 
-
-  return len(case_failure) == 0  # should also catch issues in abort and clean up
-
-  # from https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s12.html
-def reindent(s, numSpaces):
+# heavily adapted from from https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s12.html
+def reindent(s, numSpaces, prompt):
     s = s.split('\n')
-    s = [(numSpaces * ' ') + line for line in s]
+    s = [(numSpaces * ' ') + prompt + line for line in s]
     s = "\n".join(s)
     return s
 
