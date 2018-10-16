@@ -19,16 +19,19 @@ def main():
         print(exc)
 
   run_passed = True
-  for suite in spec["test"]["suites"]:
-    setup = suite["setup"]
-    teardown = suite["teardown"]
+  for suite_num, suite in enumerate(spec["test"]["suites"]):
+    if not suite.get("enabled", True):
+      continue
+    setup = suite.get("setup", "")
+    teardown = suite.get("teardown", "")
+    suite_name = suite.get("name","")
     suite_passed = True
     for idx, case in enumerate(suite["cases"]):
       suite_passed &=run_test_case(idx, case["id"], setup, case["code"], teardown)
     if suite_passed:
-      print("==== SUITE SUCCESS ========================================")
+      print("==== SUITE {}:{} SUCCESS ========================================".format(suite_num, suite_name))
     else:
-      print("==== SUITE FAILURE ========================================")
+      print("==== SUITE {}:{} FAILURE ========================================".format(suite_num, suite_name))
     run_passed &= suite_passed
   if not run_passed:
     exit(-1)
@@ -69,23 +72,30 @@ def run_test_case(idx,label, setup, case, teardown):
       raise
 
   def call_allow_error(cmd):
+    nonlocal output
     try:
-      print_out("# Calling: " + cmd)
+      print_out("\n# Calling: " + cmd)
       out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
       return_code = 0
     except subprocess.CalledProcessError as e:
       return_code = e.returncode
       out = e.output
+      output += "# ... call did not succeed"
       # return return_code, out
     except Exception as e:
       raise
     finally:
-      return return_code, out.decode("utf-8")
+      new_output=out.decode("utf-8")
+      output += new_output
+      return return_code, new_output
 
   def call_no_error(cmd):
     return_code, out = call_allow_error(cmd)
     require(return_code == 0, "call failed: \"{0}\"".format(cmd))
     return out
+
+  def get_uuid():
+    return str(uuid.uuid4())
 
   localVars={
       # Meta info  about the test case
@@ -97,7 +107,7 @@ def run_test_case(idx,label, setup, case, teardown):
       "call_may_fail": call_allow_error,
 
       # Other functions available to the test suite
-      "uuid": uuid.uuid4,
+      "uuid": get_uuid,
       "print":print_out,
 
       # Function to fail the test
@@ -112,12 +122,12 @@ def run_test_case(idx,label, setup, case, teardown):
 
   for stage in [("SETUP", setup), ("TEST", case), ("TEARDOWN", teardown)]:
     try:
-      print_out("### Test case {0}\n".format(stage[0]))
+      print_out("\n### Test case {0}".format(stage[0]))
       exec(stage[1],localVars)
     except TestError:
       pass
     except Exception as e:
-      record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish)", stage[0])
+      record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish): {}".format(e), stage[0])
       break
 
   if len(case_failure) > 0:
