@@ -27,7 +27,7 @@ def main():
     suite_name = suite.get("name","")
     suite_passed = True
     for idx, case in enumerate(suite["cases"]):
-      this_case = testcase.TestCase(idx, case["id"], setup, case["code"], teardown)
+      this_case = testcase.TestCase(idx, case["id"], setup, case["spec"], teardown)
       suite_passed &=this_case.run()
     if suite_passed:
       print("==== SUITE {}:{} SUCCESS ========================================".format(suite_num, suite_name))

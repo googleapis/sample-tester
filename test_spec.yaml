@@ -1,29 +1,32 @@
 test:
   suites:
   - name: "Product management"
-    setup: |
-      product_id=uuid()
-      print("Product ID for this test suite is {}".format(product_id))
-    teardown: |
-      # To be more robust, tear down should not use a sample like we're doing below burather a direct library call or RPC
-      call_may_fail("testdata/samples/vision/product-search/delete_product.py {}".format(product_id))
+    setup:
+    - code: |
+        product_id=uuid()
+        print("Product ID for this test suite is {}".format(product_id))
+    teardown:
+    - code: |
+        # To be more robust, tear down should not use a sample like we're doing below burather a direct library call or RPC
+        call_may_fail("testdata/samples/vision/product-search/delete_product.py {}".format(product_id))
 
     cases:
     - id: Product Life
-      code: |
-        out = call("testdata/samples/vision/product-search/list_products.py")
-        print("about to check")
-        require(product_id not in out, "the product {} should initially be absent".format(product_id))
-
-        call("testdata/samples/vision/product-search/create_product.py {} 'Fancy towel' homegoods".format(product_id))
-
-        out = call("testdata/samples/vision/product-search/list_products.py")
-        expect(product_id in out, "the product {} should be present after creation".format(product_id))
-
-        call("testdata/samples/vision/product-search/delete_product.py {}".format(product_id))
-
-        out = call("testdata/samples/vision/product-search/list_products.py")
-        require(product_id not in out, "the product {} should be absent after deletion".format(product_id))
+      spec:
+      - code: |
+          out = call("testdata/samples/vision/product-search/list_products.py")
+          print("about to check")
+          require(product_id not in out, "the product {} should initially be absent".format(product_id))
+  
+          call("testdata/samples/vision/product-search/create_product.py {} 'Fancy towel' homegoods".format(product_id))
+  
+          out = call("testdata/samples/vision/product-search/list_products.py")
+          expect(product_id in out, "the product {} should be present after creation".format(product_id))
+  
+          call("testdata/samples/vision/product-search/delete_product.py {}".format(product_id))
+  
+          out = call("testdata/samples/vision/product-search/list_products.py")
+          require(product_id not in out, "the product {} should be absent after deletion".format(product_id))
 
 
 

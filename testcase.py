@@ -88,15 +88,16 @@ class TestCase:
     status_message = ""
     print("==== Test case {:d}: \"{:s}\"".format(self.idx,self.label), end="")
 
-    for stage in [("SETUP", self.setup), ("TEST", self.case), ("TEARDOWN", self.teardown)]:
-      try:
-        self.print_out("\n### Test case {0}".format(stage[0]))
-        exec(stage[1],localVars)
-      except TestError:
-        pass
-      except Exception as e:
-        self.record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish): {}".format(e), stage[0])
-        break
+    for stage_name, stage_spec in [("SETUP", self.setup), ("TEST", self.case), ("TEARDOWN", self.teardown)]:
+      for spec_segment in stage_spec:
+        try:
+          self.print_out("\n### Test case {0}".format(stage_name))
+          self.run_segment(spec_segment,localVars)
+        except TestError:
+          pass
+        except Exception as e:
+          self.record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish): {}".format(e), stage_name)
+          break
 
     if len(self.case_failure) > 0:
       print(" FAILED ====================")
@@ -108,6 +109,10 @@ class TestCase:
       print(" PASSED ==============================")
 
     return len(self.case_failure) == 0
+
+  def run_segment(self, spec_segment, localVars):
+    if "code" in spec_segment:
+      exec(spec_segment["code"],localVars)
 
 
 class TestError(Exception):
