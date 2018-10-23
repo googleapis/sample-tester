@@ -6,9 +6,9 @@
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
 import yaml
-import uuid
 import string
-import subprocess
+import testcase
+
 
 
 def main():
@@ -27,7 +27,8 @@ def main():
     suite_name = suite.get("name","")
     suite_passed = True
     for idx, case in enumerate(suite["cases"]):
-      suite_passed &=run_test_case(idx, case["id"], setup, case["code"], teardown)
+      this_case = testcase.TestCase(idx, case["id"], setup, case["code"], teardown)
+      suite_passed &=this_case.run()
     if suite_passed:
       print("==== SUITE {}:{} SUCCESS ========================================".format(suite_num, suite_name))
     else:
@@ -36,117 +37,8 @@ def main():
   if not run_passed:
     exit(-1)
 
-class TestError(Exception):
-  pass
 
-def run_test_case(idx,label, setup, case, teardown):
 
-  case_failure = []
-  def record_failure(status, message):
-    nonlocal case_failure
-    case_failure.append((status,message))
-
-  def expect(condition, message):
-    if not condition:
-      record_failure("FAILED EXPECTATION", message)
-
-  def fail():
-    expect(False, "failure")
-
-  def require(condition, message):
-    nonlocal case_failure
-    if not condition:
-      record_failure("FAILED REQUIREMENT", message)
-      raise TestError
-
-  def abort():
-    require(False, "abort called")
-
-  output = ""
-  def print_out(msg):
-    nonlocal output
-    #    output += str(msg) + "\n"
-    try:
-      output += str(msg) + "\n"
-    except Exception as e:
-      raise
-
-  def call_allow_error(cmd):
-    nonlocal output
-    try:
-      print_out("\n# Calling: " + cmd)
-      out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-      return_code = 0
-    except subprocess.CalledProcessError as e:
-      return_code = e.returncode
-      out = e.output
-      output += "# ... call did not succeed"
-      # return return_code, out
-    except Exception as e:
-      raise
-    finally:
-      new_output=out.decode("utf-8")
-      output += new_output
-      return return_code, new_output
-
-  def call_no_error(cmd):
-    return_code, out = call_allow_error(cmd)
-    require(return_code == 0, "call failed: \"{0}\"".format(cmd))
-    return out
-
-  def get_uuid():
-    return str(uuid.uuid4())
-
-  localVars={
-      # Meta info  about the test case
-      "testcase_num":idx,
-      "testcase_id": label,
-
-      # Functions to execute processes
-      "call": call_no_error,
-      "call_may_fail": call_allow_error,
-
-      # Other functions available to the test suite
-      "uuid": get_uuid,
-      "print":print_out,
-
-      # Function to fail the test
-      "fail": fail,
-      "expect": expect,
-      "abort": abort,
-      "require": require,
-      }
-
-  status_message = ""
-  print("==== Test case {:d}: \"{:s}\"".format(idx,label), end="")
-
-  for stage in [("SETUP", setup), ("TEST", case), ("TEARDOWN", teardown)]:
-    try:
-      print_out("\n### Test case {0}".format(stage[0]))
-      exec(stage[1],localVars)
-    except TestError:
-      pass
-    except Exception as e:
-      record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish): {}".format(e), stage[0])
-      break
-
-  if len(case_failure) > 0:
-    print(" FAILED ====================")
-    for failure in case_failure:
-      print("    {0} \"{1}\"".format(failure[0], failure[1]))
-    print("    Output:")
-    print(reindent(output, 4, "| ")+"\n")
-  else:
-    print(" PASSED ==============================")
-
-  return len(case_failure) == 0
-
-# heavily adapted from from https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s12.html
-def reindent(s, numSpaces, prompt):
-    s = s.split('\n')
-    s = [(numSpaces * ' ') + prompt + line for line in s]
-    s = "\n".join(s)
-    return s
 
 #  eval(spec["test"]["case"])
 
