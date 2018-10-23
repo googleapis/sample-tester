@@ -13,6 +13,31 @@ class TestCase:
     self.case = case
     self.teardown = teardown
 
+    self.last_return_code = 0
+    self.last_call_output = ""
+
+    self.localVars={
+        # Meta info  about the test case
+        "testcase_num":self.idx,
+        "testcase_id": self.label,
+
+        # Functions to execute processes
+        "call": self.call_no_error,
+        "call_may_fail": self.call_allow_error,
+
+        # Other functions available to the test suite
+        "uuid": self.get_uuid,
+        "print":self.print_out,
+
+        # Function to fail the test
+        "fail": self.fail,
+        "expect": self.expect,
+        "abort": self.abort,
+        "require": self.require,
+
+    }
+
+
   def get_uuid(self):
     return str(uuid.uuid4())
 
@@ -42,6 +67,9 @@ class TestCase:
       raise
 
   def call_allow_error(self, cmd):
+    self.last_return_code = 0
+    self.last_call_output = ""
+
     try:
       self.print_out("\n# Calling: " + cmd)
       out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
@@ -55,6 +83,8 @@ class TestCase:
       raise
     finally:
       new_output=out.decode("utf-8")
+      self.last_return_code = return_code
+      self.last_call_output = new_output
       self.output += new_output
       return return_code, new_output
 
@@ -63,59 +93,78 @@ class TestCase:
     self.require(return_code == 0, "call failed: \"{0}\"".format(cmd))
     return out
 
+  def last_output_contains(self, substr):
+    return substr in self.last_call_output
+
+  def expect_contains(self, substr):
+    self.expect(self.last_output_contains(substr), 'expect "{}" in preceding output')
+
+  def require_contains(self, substr):
+    self.require(self.last_output_contains(substr), 'expect "{}" in preceding output')
+
+  def expect_not_contains(self, substr):
+    self.expect(not self.last_output_contains(substr), 'expect "{}" in preceding output')
+
+  def require_not_contains(self, substr):
+    self.require(not self.last_output_contains(substr), 'expect "{}" in preceding output')
+
   def run(self):
-    localVars={
-        # Meta info  about the test case
-        "testcase_num":self.idx,
-        "testcase_id": self.label,
-
-        # Functions to execute processes
-        "call": self.call_no_error,
-        "call_may_fail": self.call_allow_error,
-
-        # Other functions available to the test suite
-        "uuid": self.get_uuid,
-        "print":self.print_out,
-
-        # Function to fail the test
-        "fail": self.fail,
-        "expect": self.expect,
-        "abort": self.abort,
-        "require": self.require,
-
-        }
 
     status_message = ""
-    print("==== Test case {:d}: \"{:s}\"".format(self.idx,self.label), end="")
+    print("---- Test case {:d}: \"{:s}\"".format(self.idx,self.label), end="")
 
     for stage_name, stage_spec in [("SETUP", self.setup), ("TEST", self.case), ("TEARDOWN", self.teardown)]:
+      self.print_out("\n### Test case {0}".format(stage_name))
       for spec_segment in stage_spec:
         try:
-          self.print_out("\n### Test case {0}".format(stage_name))
-          self.run_segment(spec_segment,localVars)
+          self.run_segment(spec_segment)
         except TestError:
           pass
         except Exception as e:
           self.record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish): {}".format(e), stage_name)
           break
 
+    print_output = True
     if len(self.case_failure) > 0:
-      print(" FAILED ====================")
+      print(" FAILED --------------------")
       for failure in self.case_failure:
         print("    {0} \"{1}\"".format(failure[0], failure[1]))
+        print_output = True
+    else:
+      print(" PASSED ------------------------------")
+    if print_output:
       print("    Output:")
       print(reindent(self.output, 4, "| ")+"\n")
-    else:
-      print(" PASSED ==============================")
 
     return len(self.case_failure) == 0
 
-  def run_segment(self, spec_segment, localVars):
+  def run_segment(self, spec_segment):
+    if len(spec_segment) > 1:
+      raise ConfigError
     if "code" in spec_segment:
-      exec(spec_segment["code"],localVars)
+      exec(spec_segment["code"], self.localVars)
+    if "uuid" in spec_segment:
+      var_name = spec_segment["uuid"]
+      self.localVars[var_name] = self.get_uuid()
+    if "print" in spec_segment:
+      parts = spec_segment["print"]
+      self.print_out(self.args_to_string(parts))
+    if "call_may_fail" in spec_segment:
+      parts = spec_segment["call_may_fail"]
+      self.call_allow_error(self.args_to_string(parts))
 
+  def args_to_string(self, parts):
+    if len(parts) == 0:
+      return ""
+    if len(parts) == 1:
+      return parts[0]
+    if len(parts) > 1:
+      return parts[0].format(*[self.localVars[p] for p in parts[1:]])
 
 class TestError(Exception):
+  pass
+
+class ConfigError(Exception):
   pass
 
 # heavily adapted from from https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s12.html
