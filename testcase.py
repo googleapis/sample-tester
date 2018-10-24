@@ -1,5 +1,6 @@
 import uuid
 import subprocess
+import traceback
 
 class TestCase:
 
@@ -16,30 +17,54 @@ class TestCase:
     self.last_return_code = 0
     self.last_call_output = ""
 
-    self.localVars={
+    # The key is the external binding available through `code` and directly through yaml keys.
+    #
+    # The value is a pair. The first element is the class variable or
+    # function. The second element, if not None, indicates how to prepare the
+    # YAML arguments to call the class function.
+
+    # TODO: use decorators for this:
+    # https://stackoverflow.com/a/25827070
+    self.builtins={
         # Meta info  about the test case
-        "testcase_num":self.idx,
-        "testcase_id": self.label,
+        "testcase_num":(self.idx, None),
+        "testcase_id": (self.label, None),
 
         # Functions to execute processes
-        "call": self.call_no_error,
-        "call_may_fail": self.call_allow_error,
+        "call": (self.call_no_error, self.yaml_args_string),
+        "call_may_fail": (self.call_allow_error, self.yaml_args_string),
 
         # Other functions available to the test suite
-        "uuid": self.get_uuid,
-        "print":self.print_out,
+        "uuid": (self.get_uuid, self.yaml_get_uuid),
+        "print":(self.print_out, self.yaml_args_string),
 
-        # Function to fail the test
-        "fail": self.fail,
-        "expect": self.expect,
-        "abort": self.abort,
-        "require": self.require,
+        # Code
+        "code": (self.execute, lambda p: [p]),
 
+        # Functions to fail the test: these are intended for code only
+        "fail": (self.fail, None),
+        "expect": (self.expect, None),
+        "abort": (self.abort, None),
+        "require": (self.require, None),
+
+        # Functions to fail the test: intended for YAML, may be used in code as well
+        "require_not_contains": (self.require_not_contains, self.get_yaml_values),
     }
 
+    self.localVars={}
+    for symbol, info in self.builtins.items():
+      self.localVars[symbol] = info[0]
+
+
+  def execute(self, code):
+    exec(code, self.localVars)
 
   def get_uuid(self):
     return str(uuid.uuid4())
+
+  def yaml_get_uuid(self, var_name):
+    self.localVars[var_name] = self.get_uuid()
+    return None
 
   def record_failure(self, status, message, *args):
     self.case_failure.append((status,message))
@@ -133,11 +158,12 @@ class TestCase:
       self.print_out("\n### Test case {0}".format(stage_name))
       for spec_segment in stage_spec:
         try:
-          self.run_segment(spec_segment)
+          self.run_segment(spec_segment)  # this is a list of maps!
         except TestError:
           pass
         except Exception as e:
           self.record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish): {}".format(e), stage_name)
+          traceback.print_tb(e.__traceback__)
           break
 
     print_output = True
@@ -158,24 +184,26 @@ class TestCase:
     if len(spec_segment) > 1:
       raise ConfigError
 
-    # Make everything below into a lookup table
-    if "code" in spec_segment:
-      exec(spec_segment["code"], self.localVars)
-    if "uuid" in spec_segment:
-      var_name = spec_segment["uuid"]
-      self.localVars[var_name] = self.get_uuid()
-    if "print" in spec_segment:
-      parts = spec_segment["print"]
-      self.print_out(self.args_to_string(parts))
-    if "call_may_fail" in spec_segment:
-      parts = spec_segment["call_may_fail"]
-      self.call_allow_error(parts[0], *(self.lookup_values(parts[1:])))
-    if "call" in spec_segment:
-      parts = spec_segment["call"]
-      self.call_no_error(parts[0], *(self.lookup_values(parts[1:])))
-    if "require_not_contains" in spec_segment:
-      items = spec_segment["require_not_contains"]
-      self.require_not_contains(*self.get_yaml_values(items))
+    for dir, seg in spec_segment.items():
+      directive = dir
+      segment = seg
+
+    if directive not in self.builtins:
+      raise ConfigError("unknown YAML directive: " + str(directive))
+
+    howto = self.builtins[directive]
+    if howto[1] == None:
+      raise ConfigError("directive only available inside a code directive" + directive)
+
+    params = howto[1](segment)
+    if params is None:
+      return
+
+    howto[0](*params)
+
+
+  def yaml_args_string(self, parts):
+    return [parts[0]] + self.lookup_values(parts[1:])
 
   def get_yaml_values(self, list):
     values = []
@@ -200,7 +228,8 @@ class TestError(Exception):
   pass
 
 class ConfigError(Exception):
-  pass
+  def __init__(self, msg):
+    self.msg = msg
 
 # heavily adapted from from https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s12.html
 def reindent(s, numSpaces, prompt):
