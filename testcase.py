@@ -41,35 +41,47 @@ class TestCase:
   def get_uuid(self):
     return str(uuid.uuid4())
 
-  def record_failure(self, status, message):
+  def record_failure(self, status, message, *args):
     self.case_failure.append((status,message))
 
-  def expect(self, condition, message):
+  def expect(self, condition, message, *args):
     if not condition:
-      self.record_failure("FAILED EXPECTATION", message)
+      self.record_failure("FAILED EXPECTATION", message, *args)
 
   def fail(self):
     self.expect(False, "failure")
 
-  def require(self, condition, message):
+  def require(self, condition, message, *args):
     if not condition:
-      self.record_failure("FAILED REQUIREMENT", message)
+      self.record_failure("FAILED REQUIREMENT", message, *args)
       raise TestError
 
   def abort(self):
     self.require(False, "abort called")
 
-  def print_out(self, msg):
+  def print_out(self, msg, *args):
     #    self.output += str(msg) + "\n"
     try:
-      self.output += str(msg) + "\n"
+      self.output += self.format_string(str(msg), *args) + "\n"
     except Exception as e:
       raise
 
-  def call_allow_error(self, cmd):
+  # helper
+  def format_string(self, msg, *args):
+    if len(args) == 0:
+      return msg
+    count = msg.count("{}")
+    missing = len(args) - count
+    if missing > 0:
+      msg = msg + ": " + "{} "*missing
+    formatted = msg.format(*args)
+    return formatted
+
+  def call_allow_error(self, cmd, *args):
     self.last_return_code = 0
     self.last_call_output = ""
 
+    cmd = self.format_string(cmd, *args)
     try:
       self.print_out("\n# Calling: " + cmd)
       out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
@@ -88,8 +100,8 @@ class TestCase:
       self.output += new_output
       return return_code, new_output
 
-  def call_no_error(self, cmd):
-    return_code, out = self.call_allow_error(cmd)
+  def call_no_error(self, cmd, *args):
+    return_code, out = self.call_allow_error(cmd, *args)
     self.require(return_code == 0, "call failed: \"{0}\"".format(cmd))
     return out
 
@@ -157,10 +169,10 @@ class TestCase:
       self.print_out(self.args_to_string(parts))
     if "call_may_fail" in spec_segment:
       parts = spec_segment["call_may_fail"]
-      self.call_allow_error(self.args_to_string(parts))
+      self.call_allow_error(parts[0], *(self.lookup_values(parts[1:])))
     if "call" in spec_segment:
       parts = spec_segment["call"]
-      self.call_no_error(self.args_to_string(parts))
+      self.call_no_error(parts[0], *(self.lookup_values(parts[1:])))
     if "require_not_contains" in spec_segment:
       items = spec_segment["require_not_contains"]
       self.require_not_contains(*self.get_yaml_values(items))
@@ -172,6 +184,9 @@ class TestCase:
         item = self.localVars[item]
       values.append(item)
     return values
+
+  def lookup_values(self, variables):
+    return [self.localVars[p] for p in variables]
 
   def args_to_string(self, parts):
     if len(parts) == 0:
