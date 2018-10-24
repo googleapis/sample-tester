@@ -96,17 +96,21 @@ class TestCase:
   def last_output_contains(self, substr):
     return substr in self.last_call_output
 
-  def expect_contains(self, substr):
-    self.expect(self.last_output_contains(substr), 'expect "{}" in preceding output')
+  def expect_contains(self, *values):
+    for substr in values:
+      self.expect(self.last_output_contains(substr), 'expected "{}" present in preceding output'.format(substr))
 
-  def require_contains(self, substr):
-    self.require(self.last_output_contains(substr), 'expect "{}" in preceding output')
+  def require_contains(self, *values):
+    for substr in values:
+      self.require(self.last_output_contains(substr), 'required "{}" present in preceding output'.format(substr))
 
-  def expect_not_contains(self, substr):
-    self.expect(not self.last_output_contains(substr), 'expect "{}" in preceding output')
+  def expect_not_contains(self, *values):
+    for substr in values:
+      self.expect(not self.last_output_contains(substr), 'expected "{}" absent in preceding output'.format(substr))
 
-  def require_not_contains(self, substr):
-    self.require(not self.last_output_contains(substr), 'expect "{}" in preceding output')
+  def require_not_contains(self, *values):
+    for substr in values:
+      self.require(not self.last_output_contains(substr), 'required "{}" absent in preceding output'.format(substr))
 
   def run(self):
 
@@ -141,6 +145,8 @@ class TestCase:
   def run_segment(self, spec_segment):
     if len(spec_segment) > 1:
       raise ConfigError
+
+    # Make everything below into a lookup table
     if "code" in spec_segment:
       exec(spec_segment["code"], self.localVars)
     if "uuid" in spec_segment:
@@ -152,6 +158,20 @@ class TestCase:
     if "call_may_fail" in spec_segment:
       parts = spec_segment["call_may_fail"]
       self.call_allow_error(self.args_to_string(parts))
+    if "call" in spec_segment:
+      parts = spec_segment["call"]
+      self.call_no_error(self.args_to_string(parts))
+    if "require_not_contains" in spec_segment:
+      items = spec_segment["require_not_contains"]
+      self.require_not_contains(*self.get_yaml_values(items))
+
+  def get_yaml_values(self, list):
+    values = []
+    for type, item in enumerate(list):
+      if type == "symbol":
+        item = self.localVars[item]
+      values.append(item)
+    return values
 
   def args_to_string(self, parts):
     if len(parts) == 0:
