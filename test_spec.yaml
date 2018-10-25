@@ -4,56 +4,41 @@ test:
     setup:
     - uuid: product_id
     - print:
-        - "Got UUID! 100% sure"
-    - print:
         - "UUID is {}"
         - product_id
-    - code:
+    - code: | # Note that we can intersperse code if we wish. It's just another YAML directive.
         print("Product ID for this test suite is {}", product_id)
     teardown:
     - call_may_fail:
         - "testdata/samples/vision/product-search/delete_product.py {} # foo"
         - product_id
     - code: |
-        # To be more robust, tear down should not use a sample like we're doing below burather a direct library call or RPC
-        call_may_fail("testdata/samples/vision/product-search/delete_product.py {}", product_id)
-
     cases:
     - id: Product Life
       spec:
-      - call:
-          - "testdata/samples/vision/product-search/list_products.py # here"
-      - print: ["about to check D"]
+      - call: ["testdata/samples/vision/product-search/list_products.py"]
       - require_not_contains:
-          variable: product_id
+          - variable: product_id
       - call:
-          - "testdata/samples/vision/product-search/create_product.py {} 'Fancy towel' homegoods # 100% D?"
+          - "testdata/samples/vision/product-search/create_product.py {} 'Fancy towel' homegoods"
           - product_id
-      - code: |
-          out = call("testdata/samples/vision/product-search/list_products.py")
-          print("about to check P")
-          require(product_id not in out, "the product {} should initially be absent", product_id)
-  
-          call("testdata/samples/vision/product-search/create_product.py {} 'Fancy towel' homegoods # P", product_id)
-  
-          out = call("testdata/samples/vision/product-search/list_products.py")
-          expect(product_id in out, "the product {} should be present after creation", product_id)
-  
-          call("testdata/samples/vision/product-search/delete_product.py {}", product_id)
-  
-          out = call("testdata/samples/vision/product-search/list_products.py")
-          require(product_id not in out, "the product {} should be absent after deletion", product_id)
+      - call: ["testdata/samples/vision/product-search/list_products.py"]
+      - expect_contains:
+          - variable: product_id
+          - literal: "towel"
+      - call: ["testdata/samples/vision/product-search/delete_product.py {}", product_id]
+      - call:  ["testdata/samples/vision/product-search/list_products.py"]
+      - expect_not_contains:
+          - variable: product_id
 
 
   - name:  "Procedural test"
-    enabled: False
     setup:
     - code: |
         product_id=uuid()
         print("Product ID for this test suite is {}", product_id)
     teardown:
     - code: |
-        # To be more robust, tear down should not use a sample like we're doing below burather a direct library call or RPC
         call_may_fail("testdata/samples/vision/product-search/delete_product.py {}", product_id)
 
     cases:
@@ -61,7 +46,6 @@ test:
       spec:
       - code: |
           out = call("testdata/samples/vision/product-search/list_products.py")
-          print("about to check")
           require(product_id not in out, "the product {} should initially be absent", product_id)
   
           call("testdata/samples/vision/product-search/create_product.py {} 'Fancy towel' homegoods", product_id)
