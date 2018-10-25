@@ -19,12 +19,11 @@ class TestCase:
 
     # The key is the external binding available through `code` and directly through yaml keys.
     #
-    # The value is a pair. The first element is the class variable or
-    # function. The second element, if not None, indicates how to prepare the
-    # YAML arguments to call the class function.
-
-    # TODO: use decorators for this:
-    # https://stackoverflow.com/a/25827070
+    # The value is a pair. The first element is the test variable or
+    # function. The second element, if not None, is the "yaml_prep" function
+    # that prepares the arguments in the YAML for passing to the function; if
+    # the yaml_prep returns None, the test function is not called (this is
+    # useful to provide an alternate representation in the YAML)
     self.builtins={
         # Meta info  about the test case
         "testcase_num":(self.idx, None),
@@ -48,60 +47,60 @@ class TestCase:
         "require": (self.require, None),
 
         # Functions to fail the test: intended for YAML, may be used in code as well
+        "expect_contains": (self.expect_contains, self.get_yaml_values),
+        "require_contains": (self.require_contains, self.get_yaml_values),
+        "expect_not_contains": (self.expect_not_contains, self.get_yaml_values),
         "require_not_contains": (self.require_not_contains, self.get_yaml_values),
     }
 
-    self.localVars={}
+    self.local_symbols={}
     for symbol, info in self.builtins.items():
-      self.localVars[symbol] = info[0]
+      self.local_symbols[symbol] = info[0]
 
-
-  def execute(self, code):
-    exec(code, self.localVars)
-
-  def get_uuid(self):
-    return str(uuid.uuid4())
-
-  def yaml_get_uuid(self, var_name):
-    self.localVars[var_name] = self.get_uuid()
-    return None
-
+  # Records a single failure in this TestCase.
   def record_failure(self, status, message, *args):
     self.case_failure.append((status,message))
 
+  # Expects condition or records failure.
   def expect(self, condition, message, *args):
     if not condition:
       self.record_failure("FAILED EXPECTATION", message, *args)
 
+  # Explicitly fails the test.
   def fail(self):
     self.expect(False, "failure")
 
+  # Expects condition or records failure, soft-aborting the test.
   def require(self, condition, message, *args):
     if not condition:
       self.record_failure("FAILED REQUIREMENT", message, *args)
       raise TestError
 
+  # Explicitly fails and soft-aborts the test.
   def abort(self):
     self.require(False, "abort called")
 
+  # Formats `msg` according to `args` and records it in the TestCase output.
   def print_out(self, msg, *args):
-    #    self.output += str(msg) + "\n"
     try:
       self.output += self.format_string(str(msg), *args) + "\n"
     except Exception as e:
       raise
 
-  # helper
-  def format_string(self, msg, *args):
-    if len(args) == 0:
-      return msg
-    count = msg.count("{}")
-    missing = len(args) - count
-    if missing > 0:
-      msg = msg + ": " + "{} "*missing
-    formatted = msg.format(*args)
-    return formatted
+  # Executes YAML directive "code".
+  def execute(self, code):
+    exec(code, self.local_symbols)
 
+  # Gets a UUID via code.
+  def get_uuid(self):
+    return str(uuid.uuid4())
+
+  # Gets a UUID via YAML.
+  def yaml_get_uuid(self, var_name):
+    self.local_symbols[var_name] = self.get_uuid()
+    return None
+
+  # Invokes `cmd` (formatted with `args`). Does not fail in case of error.
   def call_allow_error(self, cmd, *args):
     self.last_return_code = 0
     self.last_call_output = ""
@@ -125,32 +124,33 @@ class TestCase:
       self.output += new_output
       return return_code, new_output
 
+  # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
   def call_no_error(self, cmd, *args):
     return_code, out = self.call_allow_error(cmd, *args)
     self.require(return_code == 0, "call failed: \"{0}\"".format(cmd))
     return out
 
-  def last_output_contains(self, substr):
-    return substr in self.last_call_output
-
+  # Expectation on the output of the last call.
   def expect_contains(self, *values):
     for substr in values:
       self.expect(self.last_output_contains(substr), 'expected "{}" present in preceding output'.format(substr))
 
+  # Requirement on the output of the last call.
   def require_contains(self, *values):
     for substr in values:
       self.require(self.last_output_contains(substr), 'required "{}" present in preceding output'.format(substr))
 
+  # Negative expectation on the output of the last call.
   def expect_not_contains(self, *values):
     for substr in values:
       self.expect(not self.last_output_contains(substr), 'expected "{}" absent in preceding output'.format(substr))
 
+  # Negative requirement on the output of the last call.
   def require_not_contains(self, *values):
     for substr in values:
       self.require(not self.last_output_contains(substr), 'required "{}" absent in preceding output'.format(substr))
 
   def run(self):
-
     status_message = ""
     print("---- Test case {:d}: \"{:s}\"".format(self.idx,self.label), end="")
 
@@ -201,28 +201,39 @@ class TestCase:
 
     howto[0](*params)
 
+  #### Helper methods
+
+  def last_output_contains(self, substr):
+    return substr in self.last_call_output
+
+  def format_string(self, msg, *args):
+    if len(args) == 0:
+      return msg
+    count = msg.count("{}")
+    missing = len(args) - count
+    if missing > 0:
+      msg = msg + ": " + "{} "*missing
+    formatted = msg.format(*args)
+    return formatted
 
   def yaml_args_string(self, parts):
     return [parts[0]] + self.lookup_values(parts[1:])
 
+  # gets values from a list of maps
   def get_yaml_values(self, list):
     values = []
-    for type, item in enumerate(list):
-      if type == "symbol":
-        item = self.localVars[item]
-      values.append(item)
+    for map in list:
+      for type, item in map.items():
+        if type == "variable":
+          item = self.local_symbols[item]
+        elif type != "literal":
+          raise ConfigError('expected "variable" or "literal", got "{}:{}"'.format(type, item))
+        values.append(item)
     return values
 
   def lookup_values(self, variables):
-    return [self.localVars[p] for p in variables]
+    return [self.local_symbols[p] for p in variables]
 
-  def args_to_string(self, parts):
-    if len(parts) == 0:
-      return ""
-    if len(parts) == 1:
-      return parts[0]
-    if len(parts) > 1:
-      return parts[0].format(*[self.localVars[p] for p in parts[1:]])
 
 class TestError(Exception):
   pass
