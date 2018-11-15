@@ -6,7 +6,7 @@
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
 import logging
-import os.path
+import os
 import string
 import sys
 import testcase
@@ -44,11 +44,12 @@ def read_args(argv):
   config_files = []
   test_files = []
   for filename in argv[1:]:
+    filepath = os.path.abspath(filename)
     ext = os.path.splitext(filename)[-1]
     if ext == ".py":
-      config_files.append(filename)
+      config_files.append(filepath)
     elif ext == ".yaml":
-      test_files.append(filename)
+      test_files.append(filepath)
     else:
       msg = 'unknown file type: "{}"'.format(filename)
       logging.critical(msg)
