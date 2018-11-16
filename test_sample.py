@@ -5,6 +5,8 @@
 # https://docs.python.org/3/library/functions.html#exec
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
+# run with ./test_sample.py example/test_spec.yaml example/cloud.py
+
 import logging
 import os
 import string
@@ -12,13 +14,17 @@ import sys
 import testcase
 import yaml
 
+import testenv
+
 def main():
   logging.basicConfig(level=logging.INFO)
   logging.info("argv: {}".format(sys.argv))
 
   config_files, test_files = read_args(sys.argv)
-  environments = create_environments(config_files)
+  environments = testenv.from_files(config_files)
   test_suites = gather_test_suites(test_files)
+
+  logging.info("envs: {}".format(environments.list()))
 
   run_passed = True
   for suite_num, suite in enumerate(test_suites):
@@ -56,15 +62,6 @@ def read_args(argv):
       raise ValueError(msg)
   return config_files, test_files
 
-# TODO(vchudnov): Move this to an "environment" module
-def create_environments(config_files):
-  environments = []
-  for filename in config_files:
-    logging.info('Reading config file "{}"'.format(filename))
-    # TODO(vchudnov) Pass the `register_test_environment()` function as a local
-    # symbol, and have that function modify `environments`
-    exec(open(filename).read())
-  return environments
 
 def gather_test_suites(test_files):
   suites = []
