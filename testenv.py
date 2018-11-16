@@ -27,8 +27,13 @@ class Registry:
     symbols = {'register_test_environment': self.add_environment}
     exec(code, symbols)
 
-  def list(self):
+  def get_names(self):
     return list(self.envs.keys())
+
+  def list(self):
+    return self.envs.values()
+
+
 
 class TestEnvironment:
   def __init__(self, name, setup, teardown, call_mapper):

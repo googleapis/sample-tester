@@ -21,27 +21,30 @@ def main():
   logging.info("argv: {}".format(sys.argv))
 
   config_files, test_files = read_args(sys.argv)
-  environments = testenv.from_files(config_files)
+  environment_registry = testenv.from_files(config_files)
   test_suites = gather_test_suites(test_files)
 
-  logging.info("envs: {}".format(environments.list()))
+  logging.info("envs: {}".format(environment_registry.get_names()))
 
   run_passed = True
-  for suite_num, suite in enumerate(test_suites):
-    if not suite.get("enabled", True):
-      continue
-    setup = suite.get("setup", "")
-    teardown = suite.get("teardown", "")
-    suite_name = suite.get("name","")
-    suite_passed = True
-    for idx, case in enumerate(suite["cases"]):
-      this_case = testcase.TestCase(idx, case["id"], setup, case["spec"], teardown)
-      suite_passed &=this_case.run()
-    if suite_passed:
-      print("==== SUITE {}:{} SUCCESS ========================================".format(suite_num, suite_name))
-    else:
-      print("==== SUITE {}:{} FAILURE ========================================".format(suite_num, suite_name))
-    run_passed &= suite_passed
+  for environment in environment_registry.list():
+    for suite_num, suite in enumerate(test_suites):
+      if not suite.get("enabled", True):
+        continue
+      setup = suite.get("setup", "")
+      teardown = suite.get("teardown", "")
+      suite_name = suite.get("name","")
+      print("==== SUITE {}:{}:{} START  ==========================================".format(environment.name, suite_num, suite_name))
+      print("     {}".format(suite["source"]))
+      suite_passed = True
+      for idx, case in enumerate(suite["cases"]):
+        this_case = testcase.TestCase(environment, idx, case["id"], setup, case["spec"], teardown)
+        suite_passed &=this_case.run()
+      if suite_passed:
+        print("==== SUITE {}:{}:{} SUCCESS ========================================".format(environment.name, suite_num, suite_name))
+      else:
+        print("==== SUITE {}:{}:{} FAILURE ========================================".format(environment.name, suite_num, suite_name))
+      run_passed &= suite_passed
   if not run_passed:
     exit(-1)
 
@@ -62,15 +65,17 @@ def read_args(argv):
       raise ValueError(msg)
   return config_files, test_files
 
-
 def gather_test_suites(test_files):
-  suites = []
+  all_suites = []
   for filename in test_files:
     logging.info('Reading test file "{}"'.format(filename))
     with open(filename, 'r') as stream:
       spec = yaml.load(stream)
-      suites.extend(spec["test"]["suites"])
-  return suites
+      these_suites = spec["test"]["suites"]
+      for suite in these_suites:
+        suite["source"] = filename
+      all_suites.extend(these_suites)
+  return all_suites
 
 
 #  eval(spec["test"]["case"])

@@ -1,13 +1,15 @@
 import uuid
 import subprocess
 import traceback
+from testenv import TestEnvironment
 
 class TestCase:
 
-  def __init__(self, idx, label, setup, case, teardown):
+  def __init__(self, environment: TestEnvironment, idx:int, label: str, setup, case, teardown):
     self.case_failure = []
     self.output = ""
 
+    self.idx = environment
     self.idx = idx
     self.label = label
     self.setup = setup
