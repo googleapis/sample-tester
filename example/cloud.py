@@ -1,9 +1,14 @@
 print('*** in cloud.py!')
 
-def stub0():
-  print('*** in stub0!')
+def setup():
+  print('*** stub: cloud.py setup')
 
-def stub5(a,b,c,d,e):
-  print('*** in stub5!')
+def teardown():
+  print('*** stub: cloud.py teardown')
 
-register_test_environment('example_env', stub0, stub0, stub5)
+# TODO(vchudnov): Make a testenv Call class that encapsulates the different parts of the call
+def call_mapper(full_call, service, rpc, sample, params):
+  # TODO(vchudnov): Add support for calling convention
+  return full_call + "  # cloud.py"
+
+register_test_environment('example_env', setup, teardown, call_mapper)

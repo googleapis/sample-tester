@@ -59,7 +59,7 @@ def check_signatures(name, *expected):
       continue
     actual_nargs = len(inspect.signature(fn).parameters)
     if actual_nargs != nargs:
-      msg.append('{} function ("{}") has {} args, expected {}'.format(label, fn.__name__, actual_nargs, nargs))
+      msg.append('{} function ("{}") has {} arguments, expected {}'.format(label, fn.__name__, actual_nargs, nargs))
   if len(msg) > 0:
     msg = 'Error setting up environment "{}": '.format(name) +  '; '.join(msg)
     logging.critical(msg)

@@ -28,6 +28,8 @@ def main():
 
   run_passed = True
   for environment in environment_registry.list():
+    environment.setup()
+
     for suite_num, suite in enumerate(test_suites):
       if not suite.get("enabled", True):
         continue
@@ -45,6 +47,8 @@ def main():
       else:
         print("==== SUITE {}:{}:{} FAILURE ========================================".format(environment.name, suite_num, suite_name))
       run_passed &= suite_passed
+
+    environment.teardown()
   if not run_passed:
     exit(-1)
 

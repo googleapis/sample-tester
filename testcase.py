@@ -9,7 +9,7 @@ class TestCase:
     self.case_failure = []
     self.output = ""
 
-    self.idx = environment
+    self.environment = environment
     self.idx = idx
     self.label = label
     self.setup = setup
@@ -107,7 +107,8 @@ class TestCase:
     self.last_return_code = 0
     self.last_call_output = ""
 
-    cmd = self.format_string(cmd, *args)
+    # TODO(vchudnov): Pass the args as a dict
+    cmd = self.environment.call_mapper(self.format_string(cmd, *args), None, None, None, None)
     try:
       self.print_out("\n# Calling: " + cmd)
       out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
@@ -212,9 +213,12 @@ class TestCase:
     if len(args) == 0:
       return msg
     count = msg.count("{}")
+
+    # Add any missing placeholders
     missing = len(args) - count
     if missing > 0:
       msg = msg + ": " + "{} "*missing
+
     formatted = msg.format(*args)
     return formatted
 
