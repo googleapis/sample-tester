@@ -4,5 +4,6 @@ SAMPLE_DIRECTORY=${SAMPLE_DIRECTORY:-../../../../../python-docs-samples/vision/c
 
 pushd ${SAMPLE_DIRECTORY} >& /dev/null || { echo ">> Pretend call to create_product $@" ; exit 0 ; }
 python3 ./product_management.py --project_id actools-sample-tester create_product "$@"
+ret=$?
 popd >& /dev/null
-exit $?
+exit $ret

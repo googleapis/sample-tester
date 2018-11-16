@@ -70,6 +70,9 @@ def read_args(argv):
   return config_files, test_files
 
 def gather_test_suites(test_files):
+
+  # TODO(vchudnov): Append line number info to aid in error messages
+  # cf: https://stackoverflow.com/a/13319530
   all_suites = []
   for filename in test_files:
     logging.info('Reading test file "{}"'.format(filename))

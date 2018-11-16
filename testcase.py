@@ -2,6 +2,7 @@ import uuid
 import subprocess
 import traceback
 from testenv import TestEnvironment
+import logging
 
 class TestCase:
 
@@ -32,8 +33,9 @@ class TestCase:
         "testcase_id": (self.label, None),
 
         # Functions to execute processes
-        "call": (self.call_no_error, self.yaml_args_string),
-        "call_may_fail": (self.call_allow_error, self.yaml_args_string),
+        "call": (self.call_no_error, self.params_for_call),
+        "call_may_fail": (self.call_allow_error, self.params_for_call),
+        "shell": (self.shell, self.yaml_args_string),
 
         # Other functions available to the test suite
         "uuid": (self.get_uuid, self.yaml_get_uuid),
@@ -49,10 +51,10 @@ class TestCase:
         "require": (self.require, None),
 
         # Functions to fail the test: intended for YAML, may be used in code as well
-        "expect_contains": (self.expect_contains, self.get_yaml_values),
-        "require_contains": (self.require_contains, self.get_yaml_values),
-        "expect_not_contains": (self.expect_not_contains, self.get_yaml_values),
-        "require_not_contains": (self.require_not_contains, self.get_yaml_values),
+        "expect_contains": (self.expect_contains, self.params_for_contains),
+        "require_contains": (self.require_contains, self.params_for_contains),
+        "expect_not_contains": (self.expect_not_contains, self.params_for_contains),
+        "require_not_contains": (self.require_not_contains, self.params_for_contains),
     }
 
     self.local_symbols={}
@@ -102,13 +104,17 @@ class TestCase:
     self.local_symbols[var_name] = self.get_uuid()
     return None
 
-  # Invokes `cmd` (formatted with `args`). Does not fail in case of error.
-  def call_allow_error(self, cmd, *args):
+  # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
+  def call_allow_error(self, cmd, params):
+    return self._call_external(self.environment.call_mapper(cmd, None, None, None, params))
+
+  def shell(self, cmd, *args):
+    return self._call_external(self.format_string(cmd, *args))
+
+  def _call_external(self, cmd):
     self.last_return_code = 0
     self.last_call_output = ""
 
-    # TODO(vchudnov): Pass the args as a dict
-    cmd = self.environment.call_mapper(self.format_string(cmd, *args), None, None, None, None)
     try:
       self.print_out("\n# Calling: " + cmd)
       out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
@@ -116,7 +122,8 @@ class TestCase:
     except subprocess.CalledProcessError as e:
       return_code = e.returncode
       out = e.output
-      self.output += "# ... call did not succeed"
+      # TODO(vchudnov): Prefix the error output with comments
+      self.output += "# ... call did not succeed  "
       # return return_code, out
     except Exception as e:
       raise
@@ -128,30 +135,41 @@ class TestCase:
       return return_code, new_output
 
   # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
-  def call_no_error(self, cmd, *args):
-    return_code, out = self.call_allow_error(cmd, *args)
+  def call_no_error(self, cmd, params):
+    return_code, out = self.call_allow_error(cmd, params)
     self.require(return_code == 0, "call failed: \"{0}\"".format(cmd))
     return out
 
   # Expectation on the output of the last call.
-  def expect_contains(self, *values):
-    for substr in values:
-      self.expect(self.last_output_contains(substr), 'expected "{}" present in preceding output'.format(substr))
+  def expect_contains(self, message, *values):
+    self._contain_check(self.expect, lambda substr: self.last_output_contains(substr), message, values)
 
   # Requirement on the output of the last call.
   def require_contains(self, *values):
-    for substr in values:
-      self.require(self.last_output_contains(substr), 'required "{}" present in preceding output'.format(substr))
+    self._contain_check(self.require, lambda substr: self.last_output_contains(substr), message, values)
 
   # Negative expectation on the output of the last call.
-  def expect_not_contains(self, *values):
-    for substr in values:
-      self.expect(not self.last_output_contains(substr), 'expected "{}" absent in preceding output'.format(substr))
+  def expect_not_contains(self, message, *values):
+    self._contain_check(self.expect, lambda substr: not self.last_output_contains(substr), message, values)
 
   # Negative requirement on the output of the last call.
-  def require_not_contains(self, *values):
-    for substr in values:
-      self.require(not self.last_output_contains(substr), 'required "{}" absent in preceding output'.format(substr))
+  def require_not_contains(self, message, *values):
+    self._contain_check(self.require, lambda substr: not self.last_output_contains(substr), message, values)
+
+
+  def _contain_check(self, check, condition, message, values):
+    """
+    Utility function for the `expect_*` and `require_*` calls. Runs `check` on
+    `condition` for each element of `values` reporting any errors either with
+    the default error message or `message`, if non-empty.
+    """
+    default_message = len(message) == 0
+    label = "required" if check == self.require else "expected"
+    for substr in values[1:]:
+      if default_message:
+        message = '{} "{}" absent in preceding output'.format(label, substr)
+      check(condition(substr), message)
+    
 
   def run(self):
     status_message = ""
@@ -210,6 +228,10 @@ class TestCase:
     return substr in self.last_call_output
 
   def format_string(self, msg, *args):
+    """
+    Formats `msg` formatted with `*args`. This automatically adds any `{}`
+    placeholders needed to match `len(args)`.
+    """
     if len(args) == 0:
       return msg
     count = msg.count("{}")
@@ -223,19 +245,70 @@ class TestCase:
     return formatted
 
   def yaml_args_string(self, parts):
+    """
+    Interprets `parts` as a list whose first element is a print format string
+    and whose subsequent elements are local symbol names.
+
+    Returns the list with the names of the symbols substituted by their value sin the self.local_symbols.
+    """
     return [parts[0]] + self.lookup_values(parts[1:])
 
-  # gets values from a list of maps
+  def params_for_call(self, parts):
+    key_cmd = 'target'
+    key_params='params'
+    if len(parts) < 1 or not key_cmd in parts:
+      log_raise(logging.critical, ValueError, 'when calling artifacts, the first parameter must be "- {}: TARGET"'.format(key_cmd))
+
+    cmd = parts[key_cmd]
+    params = {}
+    if len(parts) == 1:
+      return [cmd, params]
+    
+    if not key_params in parts:
+      log_raise(logging.critical, ValueError, 'expected parameters under "- {}"'.format(key_params))
+
+    for name, value in parts[key_params].items():
+      params[name] = self.get_variable_or_literal(value)
+    return [cmd, params]
+
+
+  def params_for_contains(self, parts):
+    return self.string_and_params('message', parts)
+
+
+  def string_and_params(self, name: str, parts, *, strict: bool=False):
+    if name in parts[0]:
+      params = [parts[0][name]]
+      start = 1
+    else:
+      if strict:
+        log_raise(logging.critical, ValueError, 'expected field "{}"'.format(name))
+      params=['']
+      start=0
+    params.extend(self.get_yaml_values(parts[start:])) 
+    return params
+
   def get_yaml_values(self, list):
+    """
+    Gets values from the `list` of maps, each map containing at most the keys
+    "variable" or "literal".
+
+    Returns a list of the values of all the variables and literals specified.
+    """
     values = []
     for map in list:
+        values.append(self.get_variable_or_literal(map))
+    return values
+
+  def get_variable_or_literal(self, map):
+      if len(map) > 1:
+        log_raise(logging.critical, ValueError, 'expected each element to contain only one of "variable", "test", but got {}'.format(map))
       for type, item in map.items():
         if type == "variable":
           item = self.local_symbols[item]
         elif type != "literal":
-          raise ConfigError('expected "variable" or "literal", got "{}:{}"'.format(type, item))
-        values.append(item)
-    return values
+          raise ConfigError('expected "variable" or "literal", got "{}":""{}"'.format(type, item))
+      return item
 
   def lookup_values(self, variables):
     return [self.local_symbols[p] for p in variables]
@@ -254,3 +327,8 @@ def reindent(s, numSpaces, prompt):
     s = [(numSpaces * ' ') + prompt + line for line in s]
     s = "\n".join(s)
     return s
+
+# TODO(vchudnov): Move to a more central place?
+def log_raise(log_fn, exception, message):
+  log_fn(message)
+  raise exception(message)
