@@ -16,7 +16,7 @@ def call_mapper(full_call, service, rpc, sample, params):
   positional_params = []
   named_params = []
   for name in params:
-    if name.startswith('.'):
+    if name.startswith('arg'):
       positional_params.append(name)
     else:
       names.append(name)

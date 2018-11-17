@@ -42,7 +42,7 @@ class TestCase:
         "print":(self.print_out, self.yaml_args_string),
 
         # Code
-        "code": (self.execute, lambda p: [p]),
+        "code": (self.execute, lambda p: ([p], {})),
 
         # Functions to fail the test: these are intended for code only
         "fail": (self.fail, None),
@@ -102,10 +102,10 @@ class TestCase:
   # Gets a UUID via YAML.
   def yaml_get_uuid(self, var_name):
     self.local_symbols[var_name] = self.get_uuid()
-    return None
+    return None, None
 
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
-  def call_allow_error(self, cmd, params):
+  def call_allow_error(self, cmd, **params):
     return self._call_external(self.environment.call_mapper(cmd, None, None, None, params))
 
   def shell(self, cmd, *args):
@@ -135,8 +135,8 @@ class TestCase:
       return return_code, new_output
 
   # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
-  def call_no_error(self, cmd, params):
-    return_code, out = self.call_allow_error(cmd, params)
+  def call_no_error(self, cmd, **params):
+    return_code, out = self.call_allow_error(cmd, **params)
     self.require(return_code == 0, "call failed: \"{0}\"".format(cmd))
     return out
 
@@ -216,11 +216,11 @@ class TestCase:
     if howto[1] == None:
       raise ConfigError("directive only available inside a code directive" + directive)
 
-    params = howto[1](segment)
-    if params is None:
+    args, kwargs = howto[1](segment)
+    if args is None:
       return
 
-    howto[0](*params)
+    howto[0](*args, **kwargs)
 
   #### Helper methods
 
@@ -251,7 +251,7 @@ class TestCase:
 
     Returns the list with the names of the symbols substituted by their value sin the self.local_symbols.
     """
-    return [parts[0]] + self.lookup_values(parts[1:])
+    return [parts[0]] + self.lookup_values(parts[1:]), {}
 
   def params_for_call(self, parts):
     key_cmd = 'target'
@@ -262,18 +262,18 @@ class TestCase:
     cmd = parts[key_cmd]
     params = {}
     if len(parts) == 1:
-      return [cmd, params]
+      return [cmd], params
     
     if not key_params in parts:
       log_raise(logging.critical, ValueError, 'expected parameters under "- {}"'.format(key_params))
 
     for name, value in parts[key_params].items():
       params[name] = self.get_variable_or_literal(value)
-    return [cmd, params]
+    return [cmd], params
 
 
   def params_for_contains(self, parts):
-    return self.string_and_params('message', parts)
+    return self.string_and_params('message', parts), {}
 
 
   def string_and_params(self, name: str, parts, *, strict: bool=False):

@@ -12,7 +12,7 @@ test:
     - call_may_fail:
         target: "testdata/samples/vision/product-search/delete_product.py  "
         params:
-          ".0":
+          "arg1":
             variable: product_id
     - code: |
     cases:
@@ -24,12 +24,12 @@ test:
           - variable: product_id
       - call:
           target: "testdata/samples/vision/product-search/create_product.py"
-          params:
-            ".1":
+          params:  # TODO(vchudnov): Allow args: to just be a list
+            "arg1":
               variable: product_id
-            ".2":
+            "arg2":
               literal: Fancier towel
-            ".3":
+            "arg3":
               literal: homegoods
       - call:
           target: "testdata/samples/vision/product-search/list_products.py"
@@ -39,7 +39,7 @@ test:
       - call:
           target: "testdata/samples/vision/product-search/delete_product.py"
           params:
-            ".0":
+            "arg1":
               variable: product_id
       - call:
           target: "testdata/samples/vision/product-search/list_products.py"
@@ -54,26 +54,21 @@ test:
         print("Product ID for this test suite is {}", product_id)
     teardown:
     - code: |
-        call_may_fail("testdata/samples/vision/product-search/delete_product.py",
-                      params={".0": product_id})
+        call_may_fail("testdata/samples/vision/product-search/delete_product.py", arg1=product_id)
 
     cases:
     - id: Product Life
       spec:
       - code: |
-          out = call("testdata/samples/vision/product-search/list_products.py", params={})  # TODO(vchudnov): Make **kwargs
+          out = call("testdata/samples/vision/product-search/list_products.py")
           require(product_id not in out, "the product {} should initially be absent", product_id)
   
-          call("testdata/samples/vision/product-search/create_product.py",
-            params={".1": product_id,
-                    ".2": "Fancier towel",
-                    ".3": "homegoods"
-                    })
+          call("testdata/samples/vision/product-search/create_product.py", arg1=product_id, arg2="Fancier towel",arg3="homegoods")
   
-          out = call("testdata/samples/vision/product-search/list_products.py", params={})
+          out = call("testdata/samples/vision/product-search/list_products.py")
           expect(product_id in out, "the product {} should be present after creation", product_id)
   
-          call("testdata/samples/vision/product-search/delete_product.py", params={".1":product_id})
+          call("testdata/samples/vision/product-search/delete_product.py", arg1=product_id)
   
-          out = call("testdata/samples/vision/product-search/list_products.py", params={})
+          out = call("testdata/samples/vision/product-search/list_products.py")
           require(product_id not in out, "the product {} should be absent after deletion", product_id)
