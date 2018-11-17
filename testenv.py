@@ -43,7 +43,7 @@ class TestEnvironment:
     check_signatures(name,
                      ('setup', setup, 0),
                      ('teardown', teardown, 0),
-                     ('call_mapper', call_mapper, 5))
+                     ('call_mapper', call_mapper, 6))
     self.setup = setup
     self.teardown = teardown
     self.call_mapper = call_mapper

@@ -105,8 +105,8 @@ class TestCase:
     return None, None
 
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
-  def call_allow_error(self, cmd, **params):
-    return self._call_external(self.environment.call_mapper(cmd, None, None, None, params))
+  def call_allow_error(self, *args, **kwargs):
+    return self._call_external(self.environment.call_mapper(args[0], None, None, None, args[1:], kwargs))
 
   def shell(self, cmd, *args):
     return self._call_external(self.format_string(cmd, *args))
@@ -135,9 +135,9 @@ class TestCase:
       return return_code, new_output
 
   # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
-  def call_no_error(self, cmd, **params):
-    return_code, out = self.call_allow_error(cmd, **params)
-    self.require(return_code == 0, "call failed: \"{0}\"".format(cmd))
+  def call_no_error(self, *args, **kwargs):
+    return_code, out = self.call_allow_error(*args, **kwargs)
+    self.require(return_code == 0, "call failed: \"{0}\"".format(args))
     return out
 
   # Expectation on the output of the last call.
@@ -214,11 +214,13 @@ class TestCase:
 
     howto = self.builtins[directive]
     if howto[1] == None:
-      raise ConfigError("directive only available inside a code directive" + directive)
+      raise ConfigError("directive only available inside a code directive: " + directive)
 
     args, kwargs = howto[1](segment)
-    if args is None:
+    if args is None and kwargs is None:
       return
+    args = args or []
+    kwargs = kwargs or {}
 
     howto[0](*args, **kwargs)
 
@@ -256,20 +258,31 @@ class TestCase:
   def params_for_call(self, parts):
     key_cmd = 'target'
     key_params='params'
+    key_args='args'
     if len(parts) < 1 or not key_cmd in parts:
       log_raise(logging.critical, ValueError, 'when calling artifacts, the first parameter must be "- {}: TARGET"'.format(key_cmd))
 
     cmd = parts[key_cmd]
     params = {}
+    args = []
     if len(parts) == 1:
       return [cmd], params
-    
-    if not key_params in parts:
-      log_raise(logging.critical, ValueError, 'expected parameters under "- {}"'.format(key_params))
 
-    for name, value in parts[key_params].items():
-      params[name] = self.get_variable_or_literal(value)
-    return [cmd], params
+    for key, val in parts.items():
+      if key==key_cmd:
+        if val != cmd:
+          log_raise(logging.critical, ValueError, 'encountered multiple "- {}": "{}" vs "{}"'.format(key_cmd, cmd, val))
+        continue
+      if key==key_params:
+        for name, value in val.items():
+          params[name] = self.get_variable_or_literal(value)
+        continue
+      if key==key_args:
+        for value in val:
+          args.append(self.get_variable_or_literal(value))
+        continue
+      log_raise(logging.critical, ValueError, 'unknown argument to function call "- {}"'.format(key))
+    return [cmd] + args, params
 
 
   def params_for_contains(self, parts):
