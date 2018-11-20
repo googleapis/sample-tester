@@ -2,6 +2,7 @@ import uuid
 import subprocess
 import traceback
 from testenv import TestEnvironment
+from testenv import Call
 import logging
 
 class TestCase:
@@ -106,7 +107,7 @@ class TestCase:
 
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
   def call_allow_error(self, *args, **kwargs):
-    return self._call_external(self.environment.call_mapper(args[0], None, None, None, args[1:], kwargs))
+    return self._call_external(self.environment.call_mapper(Call(args[0], args[1:], kwargs)))
 
   def shell(self, cmd, *args):
     return self._call_external(self.format_string(cmd, *args))

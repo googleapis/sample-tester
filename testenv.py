@@ -43,7 +43,7 @@ class TestEnvironment:
     check_signatures(name,
                      ('setup', setup, 0),
                      ('teardown', teardown, 0),
-                     ('call_mapper', call_mapper, 6))
+                     ('call_mapper', call_mapper, 1))
     self.setup = setup
     self.teardown = teardown
     self.call_mapper = call_mapper
@@ -64,3 +64,32 @@ def check_signatures(name, *expected):
     msg = 'Error setting up environment "{}": '.format(name) +  '; '.join(msg)
     logging.critical(msg)
     raise ValueError(msg)
+
+
+class Call:
+  def __init__(self, call, args, kwargs):
+    self.args = args
+    self.kwargs = kwargs
+    self.full = call
+    self.service = None
+    self.version = None
+    self.rpc = None
+    self.sample=None
+
+    # parse the call into parts
+    call_parts = call.split(':')
+    if len(call_parts) > 2:
+      raise ValueError('cannot parse call "{}"'.format(call))
+
+    if len(call_parts) == 1:
+      return
+
+    # Service[.Subservice ...].Version.RPC:sample
+    self.sample = call_parts[1]
+    rpc_parts = call_parts[0].split('.')
+    if len(rpc_parts) > 0:
+      self.rpc = rpc_parts.pop()
+    if len(rpc_parts) > 0:
+      self.version = rpc_parts.pop()
+    if len(rpc_parts) > 0:
+      self.service = '.'.join(rpc_parts)
