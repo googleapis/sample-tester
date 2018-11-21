@@ -67,19 +67,20 @@ def check_signatures(name, *expected):
 
 
 class Call:
-  def __init__(self, call, args, kwargs):
-    self.args = args
+  def __init__(self, env, args, kwargs):
+    self.args = args[1:]
     self.kwargs = kwargs
-    self.full = call
+    self.full = args[0]
     self.service = None
     self.version = None
     self.rpc = None
     self.sample=None
+    self.env = env
 
     # parse the call into parts
-    call_parts = call.split(':')
+    call_parts = self.full.split(':')
     if len(call_parts) > 2:
-      raise ValueError('cannot parse call "{}"'.format(call))
+      raise ValueError('cannot parse call "{}"'.format(self.full))
 
     if len(call_parts) == 1:
       return
@@ -93,3 +94,34 @@ class Call:
       self.version = rpc_parts.pop()
     if len(rpc_parts) > 0:
       self.service = '.'.join(rpc_parts)
+
+  def cmd(self):
+    """
+    Resolves the binary that the current call resolves to under the given
+    environment, and returns the fully qualified path to that binary.
+    """
+    positional_kwargs = []
+    named_kwargs = []
+    for name in self.kwargs:
+      if name.startswith('_'):
+        positional_kwargs.append(name)
+      else:
+        named_kwargs.append(name)
+        positional_kwargs.sort()
+        named_kwargs.sort()
+
+    cmd_args = []
+    for name in named_kwargs:
+      cmd_args.append('--{}={}'.format(name, quote(self.kwargs[name])))
+    for name in positional_kwargs:
+      cmd_args.append(quote(self.kwargs[name]))
+    cmd_args.extend([quote(a) for a in self.args])
+
+    if not self.rpc:
+      # this is a direct binary call
+      return '{} {} # cloud.py from within {}'.format(self.full, ' '.join(cmd_args), self.env.name)
+
+    return env.call_mapper(self)
+
+def quote(s: str):
+  return '"{}"'.format(s)
