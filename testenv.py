@@ -2,12 +2,14 @@ import logging
 from typing import Iterable
 import inspect
 
-def from_files(config_files: Iterable[str]):
+def from_files(config_files: Iterable[str], base_dirs : Iterable[str] = None):
   """Returns a new registry instantiated from the config_files."""
+  if not base_dirs:
+    base_dirs = []
   registry = Registry()
   for filename in config_files:
     logging.info('Reading config file "{}"'.format(filename))
-    registry.configure(open(filename).read())
+    registry.configure(open(filename).read(),base_dirs)
   return registry
 
 class Registry:
@@ -23,8 +25,11 @@ class Registry:
     """
     self.envs[name] = TestEnvironment(name, setup, teardown, call_mapper)
 
-  def configure(self, code):
-    symbols = {'register_test_environment': self.add_environment}
+  def configure(self, code, base_dirs : Iterable[str]):
+    symbols = {
+        'register_test_environment': self.add_environment,
+        'base_dirs': base_dirs.copy(),
+    }
     exec(code, symbols)
 
   def get_names(self):
@@ -68,6 +73,7 @@ def check_signatures(name, *expected):
 
 class Call:
   def __init__(self, env, args, kwargs):
+    args=list(args)
     self.args = args[1:]
     self.kwargs = kwargs
     self.full = args[0]
@@ -76,6 +82,7 @@ class Call:
     self.rpc = None
     self.sample=None
     self.env = env
+    self.cli_arguments = ''
 
     # parse the call into parts
     call_parts = self.full.split(':')
@@ -116,12 +123,13 @@ class Call:
     for name in positional_kwargs:
       cmd_args.append(quote(self.kwargs[name]))
     cmd_args.extend([quote(a) for a in self.args])
+    self.cli_arguments = ' '.join(cmd_args)
 
     if not self.rpc:
       # this is a direct binary call
-      return '{} {} # cloud.py from within {}'.format(self.full, ' '.join(cmd_args), self.env.name)
+      return '{} {} # cloud.py from within {}'.format(self.full, self.cli_arguments, self.env.name)
 
-    return env.call_mapper(self)
+    return self.env.call_mapper(self)
 
 def quote(s: str):
   return '"{}"'.format(s)

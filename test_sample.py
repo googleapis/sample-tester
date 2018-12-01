@@ -20,8 +20,9 @@ def main():
   logging.basicConfig(level=logging.INFO)
   logging.info("argv: {}".format(sys.argv))
 
-  config_files, test_files = read_args(sys.argv)
-  environment_registry = testenv.from_files(config_files)
+  config_files, test_files, base_dirs = read_args(sys.argv)
+  environment_registry = testenv.from_files(config_files, base_dirs)
+
   test_suites = gather_test_suites(test_files)
 
   logging.info("envs: {}".format(environment_registry.get_names()))
@@ -56,8 +57,13 @@ def main():
 def read_args(argv):
   config_files = []
   test_files = []
+  base_dirs = []
   for filename in argv[1:]:
     filepath = os.path.abspath(filename)
+    if os.path.isdir(filepath):
+      base_dirs.append(filepath)
+      continue
+
     ext = os.path.splitext(filename)[-1]
     if ext == ".py":
       config_files.append(filepath)
@@ -67,7 +73,7 @@ def read_args(argv):
       msg = 'unknown file type: "{}"'.format(filename)
       logging.critical(msg)
       raise ValueError(msg)
-  return config_files, test_files
+  return config_files, test_files, base_dirs
 
 def gather_test_suites(test_files):
 

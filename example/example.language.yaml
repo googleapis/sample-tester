@@ -1,0 +1,16 @@
+test:
+  suites:
+  - name:  "Language samples test"
+    cases:
+    - id: Sentiment from text, direct call
+      spec:
+      - code: |
+          out = call("python3 ../googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py", content="happy happy smile hope")
+          require("score" in out, "score in out")
+          require("magnitude" in out, "magnitude in out")
+    - id: Sentiment from text, API call convention
+      spec:
+      - code: |
+          out = call("Google.Cloud.Language.v1.AnalyzeSentiment:analyze_sentiment_request_language_sentiment_text", content="happy happy smile hope")
+          require("score" in out, "score in out")
+          require("magnitude" in out, "magnitude in out")
