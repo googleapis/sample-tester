@@ -9,17 +9,17 @@ test:
           
           import re
 
-          # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`
+          # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
 
-          score_found = re.search('score: ([0123456789.]+)', out)
+          score_found = re.search('score: ([0123456789.]+)', out)  # TODO: Can this be negative?
           require(score_found is not None, 'score matches regexp')
           score = float(score_found.group(1))
-          require(score > 0.7, 'score is positive')
+          require(score > 0.7, 'score is high')
 
           magnitude_found = re.search('magnitude: ([0123456789.]+)', out)
           require(magnitude_found is not None, 'magnitude matches regexp')
           magnitude = float(magnitude_found.group(1))
-          require(magnitude > 0.7, 'magnitude is positive')
+          require(magnitude > 0.7, 'magnitude is high')
 
     - id: Sentiment from text, API call convention
       spec:
@@ -28,14 +28,14 @@ test:
           
           import re
           
-          # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`
+          # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
 
-          score_found = re.search('score: ([0123456789.]+)', out)
+          score_found = re.search('score: ([0123456789.]+)', out)  # TODO: Can this be negative?
           require(score_found is not None, 'score matches regexp')
           score = float(score_found.group(1))
-          require(score > 0.7, 'score is positive')
+          require(score > 0.7, 'score is high')
 
           magnitude_found = re.search('magnitude: ([0123456789.]+)', out)
           require(magnitude_found is not None, 'magnitude matches regexp')
           magnitude = float(magnitude_found.group(1))
-          require(magnitude > 0.7, 'magnitude is positive')
+          require(magnitude > 0.7, 'magnitude is high')
