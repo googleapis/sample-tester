@@ -104,8 +104,8 @@ class Call:
 
   def cmd(self):
     """
-    Resolves the binary that the current call resolves to under the given
-    environment, and returns the fully qualified path to that binary.
+    Returns the fully qualified path to the binary that the current call
+    resolves to under the given environment.
     """
     positional_kwargs = []
     named_kwargs = []
