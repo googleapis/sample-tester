@@ -70,6 +70,7 @@ class TestCase:
   def expect(self, condition, message, *args):
     if not condition:
       self.record_failure("FAILED EXPECTATION", message, *args)
+      self.print_out("# FAILED EXPECTATION", message, *args)
 
   # Explicitly fails the test.
   def fail(self):
@@ -79,6 +80,7 @@ class TestCase:
   def require(self, condition, message, *args):
     if not condition:
       self.record_failure("FAILED REQUIREMENT", message, *args)
+      self.print_out("# FAILED REQUIREMENT", message, *args)
       raise TestError
 
   # Explicitly fails and soft-aborts the test.
