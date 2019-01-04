@@ -54,6 +54,12 @@ class TestEnvironment:
     self.call_mapper = call_mapper
 
 def check_signatures(name, *expected):
+  """Checks that functions  have the correct number of arguments.
+
+  Args:
+    expected: A 3-tuple with a function label for error messages, the function
+      to check, and the expected number of arguments that function should have.
+  """
   msg = []
   for label, fn, nargs in expected:
     if not fn:
@@ -72,7 +78,27 @@ def check_signatures(name, *expected):
 
 
 class Call:
+  """Manages the resolution of a generic artifact invocation into a concrete disk artifact call.
+
+  The generic artifact name can be one of two forms, distinguished by whether it contains a `:` or not.
+  - a generic format `Service[.Service...].Version.RPC:sample` OR
+  - a specific path `PATH_TO/artifact`
+  """
+
   def __init__(self, env, args, kwargs):
+    """Initializes the call.
+
+    The call is invoked as: ARTIFACT KWARGS POSITIONAL_KW_ARGS POSITIONAL_ARGS
+
+    Args:
+      args: List of arguments that comprise the actual call. The zeroth arg is
+        the generic artifact name (see class description). Subsequent args are
+        positional args.
+      kwargs: Named arguments. Note that arguments whose names begin with an
+        underscore (`_`) are treated specially as "positional kw" args: they are
+        sorted, and then their values only are insertedas positional arguments
+        before the normal positional arguments.
+    """
     args=list(args)
     self.args = args[1:]
     self.kwargs = kwargs

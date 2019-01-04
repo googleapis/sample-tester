@@ -5,7 +5,7 @@
 # https://docs.python.org/3/library/functions.html#exec
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
-# run with ./test_sample.py example/test_spec.yaml example/cloud.py
+# run with ./test_sample.py example/test_spec.yaml example/cloud.py ../googleapis
 
 import logging
 import os
