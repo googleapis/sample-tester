@@ -1,7 +1,7 @@
 import unittest
-import catalog
+import sample_manifest
 
-class TestSampleCatalog(unittest.TestCase):
+class TestManifest(unittest.TestCase):
   def test_read_valid(self):
     """This is a white-box test of the implementation.
 
@@ -10,28 +10,28 @@ class TestSampleCatalog(unittest.TestCase):
 
     valid_manifest_file, expect_alice, expect_bob, expect_carol, expect_dan = self.get_valid_manifest()
 
-    manifest = catalog.SampleCatalog()
+    manifest = sample_manifest.Manifest()
     self.assertEqual(1, len(manifest.read_strings(valid_manifest_file)))
 
-    self.assertEqual(2, len(manifest.by_label))
-    self.assertEqual(4, len(manifest.by_label['python']))
-    self.assertEqual(2, len(manifest.by_label['python']['region_tag']))
-    self.assertEqual(1, len(manifest.by_label['python']['canonical']))
-    self.assertEqual(1, len(manifest.by_label['python']['tag']))
-    self.assertEqual(2, len(manifest.by_label['python']['path']))
-    self.assertEqual([expect_alice], manifest.by_label['python']['region_tag']['alice'])
-    self.assertEqual([expect_alice], manifest.by_label['python']['canonical']['trivial'])
-    self.assertEqual([expect_alice], manifest.by_label['python']['path'][expect_alice['path']])
-    self.assertEqual([expect_bob], manifest.by_label['python']['region_tag']['robert'])
-    self.assertEqual([expect_bob], manifest.by_label['python']['tag']['guide'])
-    self.assertEqual([expect_bob], manifest.by_label['python']['path'][expect_bob['path']])
+    self.assertEqual(2, len(manifest.tags))
+    self.assertEqual(4, len(manifest.tags['python']))
+    self.assertEqual(2, len(manifest.tags['python']['region_tag']))
+    self.assertEqual(1, len(manifest.tags['python']['canonical']))
+    self.assertEqual(1, len(manifest.tags['python']['tag']))
+    self.assertEqual(2, len(manifest.tags['python']['path']))
+    self.assertEqual([expect_alice], manifest.tags['python']['region_tag']['alice'])
+    self.assertEqual([expect_alice], manifest.tags['python']['canonical']['trivial'])
+    self.assertEqual([expect_alice], manifest.tags['python']['path'][expect_alice['path']])
+    self.assertEqual([expect_bob], manifest.tags['python']['region_tag']['robert'])
+    self.assertEqual([expect_bob], manifest.tags['python']['tag']['guide'])
+    self.assertEqual([expect_bob], manifest.tags['python']['path'][expect_bob['path']])
 
-    self.assertEqual(2, len(manifest.by_label['']))
-    self.assertEqual(1, len(manifest.by_label['']['region_tag']))
-    self.assertEqual(2, len(manifest.by_label['']['path']))
-    self.assertEqual([expect_carol], manifest.by_label['']['path'][expect_carol['path']])
-    self.assertEqual([expect_dan], manifest.by_label['']['path'][expect_dan['path']])
-    math = list(manifest.by_label['']['region_tag']['math'])
+    self.assertEqual(2, len(manifest.tags['']))
+    self.assertEqual(1, len(manifest.tags['']['region_tag']))
+    self.assertEqual(2, len(manifest.tags['']['path']))
+    self.assertEqual([expect_carol], manifest.tags['']['path'][expect_carol['path']])
+    self.assertEqual([expect_dan], manifest.tags['']['path'][expect_dan['path']])
+    math = list(manifest.tags['']['region_tag']['math'])
     for x in [expect_carol, expect_dan]:
       math.remove(x)
     self.assertEqual(0, len(math))
@@ -47,7 +47,7 @@ class TestSampleCatalog(unittest.TestCase):
         '      region_tag: alice   \n'+
         '      canonical: trivial   \n')
 
-    manifest = catalog.SampleCatalog()
+    manifest = sample_manifest.Manifest()
     with self.assertRaises(Exception):
       manifest.read_strings(manifest_file)
 
@@ -63,14 +63,14 @@ class TestSampleCatalog(unittest.TestCase):
         '      region_tag: alice   \n'+
         '      canonical: trivial   \n')
 
-    manifest = catalog.SampleCatalog()
+    manifest = sample_manifest.Manifest()
     with self.assertRaises(Exception):
       manifest.read_strings(manifest_file)
 
   def test_get_(self):
     valid_manifest_file, expect_alice, expect_bob, expect_carol, expect_dan = self.get_valid_manifest()
 
-    manifest = catalog.SampleCatalog()
+    manifest = sample_manifest.Manifest()
     manifest.read_strings(valid_manifest_file)
 
     self.assertEqual([expect_alice], manifest.get('python','region_tag','alice'))
@@ -94,7 +94,7 @@ class TestSampleCatalog(unittest.TestCase):
   def test_get_one(self):
     valid_manifest_file, expect_alice, expect_bob, expect_carol, expect_dan = self.get_valid_manifest()
 
-    manifest = catalog.SampleCatalog()
+    manifest = sample_manifest.Manifest()
     manifest.read_strings(valid_manifest_file)
 
     self.assertEqual(expect_alice, manifest.get_one('python','region_tag','alice'))
