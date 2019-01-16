@@ -24,6 +24,7 @@ class TestManifest(unittest.TestCase):
 
     manifest = sample_manifest.Manifest('language','region_tag')
     manifest.read_sources([manifest_source])
+    manifest.index()
 
     self.assertEqual([expect_alice], manifest.get('python','alice'))
     self.assertEqual([expect_alice], manifest.get('python','alice', canonical='trivial'))
@@ -49,6 +50,7 @@ class TestManifest(unittest.TestCase):
 
     manifest = sample_manifest.Manifest('language', 'region_tag')
     manifest.read_sources([manifest_source])
+    manifest.index()
 
     self.assertEqual(expect_alice, manifest.get_one('python','alice'))
     self.assertEqual(expect_alice, manifest.get_one('python','alice', canonical='trivial'))

@@ -12,13 +12,19 @@ class Manifest:
 
 
   def __init__(self, *indices: str):
-    self.interpreter = {"1": self.parse_manifest_v1}
+    self.interpreter = {"1": self.index_source_v1}
 
     # tags[key1][key2]...[keyn] == [metadata, metadata, ...]
     # eg with self.indices == ["language", "region_tag"]:
     #    tags["python"]["analyze_sentiment"] = [ sentiment_john_meta, sentiment_mary_meta ]
     self.tags = {}
 
+    # sources is a list of (name, parsed-yaml, interpreter) pairs
+    self.sources=[]
+
+    self.set_indices(*indices)
+
+  def set_indices(self, *indices: str):
     self.indices = indices or [None]
 
   def read_files(self, *files: str):
@@ -53,12 +59,7 @@ class Manifest:
       if not interpreter:
         err_no_interpreter.append(name)
         continue
-
-      try:
-        interpreter(manifest)
-      except Exception as e:
-        logging.error('error parsing manifest file "{}": {}'.format(filename, e))
-        raise
+      self.sources.append((name, manifest, interpreter))
 
     error = []
     if len(err_no_version) > 0:
@@ -71,7 +72,18 @@ class Manifest:
       raise Exception(error_msg)
     return sources_read
 
-  def parse_manifest_v1(self, input):
+  def index(self):
+    """ Indexes all the items in self.sources using the appropriate interpreter"""
+    self.tags = {}
+    for name, manifest, interpreter in self.sources:
+      try:
+        interpreter(manifest)
+      except Exception as e:
+        logging.error('error parsing manifest source "{}": {}'.format(name, e))
+        raise
+
+
+  def index_source_v1(self, input):
     max_idx = len(self.indices) - 1
 
     for sample_set in input.get(self.SETS_KEY):
