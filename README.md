@@ -9,7 +9,11 @@ Refer to spec at [go/actools-sample-tester](go/actools-sample-tester).
 
 ## Setup
 1. Ensure you have credentials set up
-   export `GOOGLE_APPLICATION_CREDENTIALS= /path/to/your/creds.json`
+
+```shell
+   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/creds.json
+```
+   
 2. Install the necessary packages in your PIP environment
    The virtual environment set up for running artman should be sufficient (thought not all the those packages may be necessary)
    TODO: trim down the list of packages
@@ -40,7 +44,7 @@ Set up the test plan as in `./example/example.language.yaml`. That sample test h
 ## Running the test
 1. Run as
 
-   ```
+   ```shell
    ./test_sample.py PATH_TO_TEST_YAML example/cloud.py PATH_TO_GOOGLEAPIS
    ```
    
@@ -58,8 +62,3 @@ Set up the test plan as in `./example/example.language.yaml`. That sample test h
 
 * The canonical artifact path convention is in the process of changing in prep for v1 of the tester. I'm working on this on a separate branch. This will change `cloud.py`
 * I am also in the process of implementing the feedback on [go/actools-sample-tester](go/actools-sample-tester). This will reduce the number of available directives, and rename some of them.
-
-
-
-   
-   
