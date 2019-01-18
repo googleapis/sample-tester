@@ -1,13 +1,12 @@
 import uuid
 import subprocess
 import traceback
-from testenv import TestEnvironment
-from testenv import Call
+from testenv import BaseTestEnvironment
 import logging
 
 class TestCase:
 
-  def __init__(self, environment: TestEnvironment, idx:int, label: str, setup, case, teardown):
+  def __init__(self, environment: BaseTestEnvironment, idx:int, label: str, setup, case, teardown):
     self.case_failure = []
     self.output = ""
 
@@ -109,7 +108,7 @@ class TestCase:
 
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
   def call_allow_error(self, *args, **kwargs):
-    return self._call_external(Call(self.environment, args, kwargs).cmd())
+    return self._call_external(self.environment.get_call(*args, **kwargs))
 
   def shell(self, cmd, *args):
     return self._call_external(self.format_string(cmd, *args))
