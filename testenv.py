@@ -15,16 +15,19 @@ def from_files(config_files: Iterable[str], base_dirs : Iterable[str] = None):
 
 class BaseTestEnvironment:
   def __init__(self, name='#BaseTestEnvironment'):
-    self.name = name
+    self._name = name
 
   def name():
-    return self.name
+    return self._name
 
   def setup(self):
-    logging.info('{}: setup'.format(self.name))
+    logging.info('{}: setup'.format(self._name))
 
   def teardown(self):
-    logging.info('{}: teardown'.format(self.name))
+    logging.info('{}: teardown'.format(self._name))
+
+  def get_call(self, *args, **kwargs):
+    logging.fatal('get_call() invoked on BaseTestEnvironment (should be overridden)')
 
 class Registry:
   """Stores the registered test execution environments."""
@@ -33,11 +36,11 @@ class Registry:
     self.envs = {}
 
   def add_environment(self, environment):
-    """Instantiates and stores a new TestEnvironment with the given parameters.
+    """Instantiates and stores a new BaseTestEnvironment with the given parameters.
 
     This function is primarily meant to be called by user-provided init code.
     """
-    self.envs[environment.name] = environment
+    self.envs[environment.name()] = environment
 
   def configure(self, code, base_dirs : Iterable[str]):
     symbols = {
@@ -47,9 +50,11 @@ class Registry:
     exec(code, symbols)
 
   def get_names(self):
+    """Returns the names of all the registered environments."""
     return list(self.envs.keys())
 
   def list(self):
+    """Return all the registered environments."""
     return self.envs.values()
 
 
