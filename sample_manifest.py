@@ -5,13 +5,43 @@ import os.path
 import yaml
 
 class Manifest:
-  """Maintains a manifest of auto-generated sample artifacts."""
+  """Maintains a manifest of auto-generated sample artifacts.
+
+  A manifest is a list of artifacts (read from one or more external sources,
+  such as files or arrays). Each artifact on the list is associated with any
+  number of labels. An artifact can be any value, but in our application is a
+  filepath to a sample. It is possible for more than one artifact to share the
+  same set of labels.
+
+  A label contains a "label name" (a name of some category) and a "label value"
+  (the value within that category). Neither values nor names need to be
+  pre-defined.
+
+  A manifest can be "indexed" by any number of labels. This is done by
+  specifying the label name corresponding to the index keys. Look up by index
+  (ie label value for the indexed label names) is O(1). Look up by a non-index
+  key (label name/value pairs for non-indexed labels) is O(n) in the number of
+  labels.
+
+  For simplicity, we refer to the sequence of index label values (order
+  determined by which the label names were configured) as the "keys", and the
+  unordered list of un-indexed label name/value pairs as "filters".
+
+  A typical look-up involves specifying the keys and filters.
+  """
+
   VERSION_KEY = "version"
   SETS_KEY = "_sets"
   ELEMENTS_KEY = "_items"
 
 
   def __init__(self, *indices: str):
+  """Initializes manifest.
+
+    Args:
+      indices: An optional list of labels by which to index the manifest read in
+        from various sources
+    """
     self.interpreter = {"1": self.index_source_v1}
 
     # tags[key1][key2]...[keyn] == [metadata, metadata, ...]
@@ -19,7 +49,8 @@ class Manifest:
     #    tags["python"]["analyze_sentiment"] = [ sentiment_john_meta, sentiment_mary_meta ]
     self.tags = {}
 
-    # sources is a list of (name, parsed-yaml, interpreter) pairs
+    # sources is a list of (name, parsed-yaml, interpreter) tuples, set by
+    # read_sources() and used by index()
     self.sources=[]
 
     self.set_indices(*indices)
@@ -34,10 +65,13 @@ class Manifest:
     self.read_sources(strings_to_yaml(*sources))
 
   def read_sources(self, sources):
-    """ Reads a sample manifest.
+    """Reads a sample manifest.
 
     Args:
-      sources: An iterable of (name, manifest) pairs
+      sources: An iterable of (name, manifest) pairs. Here, `manifest` is a dict
+        with a key `VERSION_KEY` and with the other keys structured as expected
+        by the interpreter for the version specified as the value of
+        `VERSION_KEY`.
 
     Returns:
       the list of sources successfully read
@@ -63,9 +97,11 @@ class Manifest:
 
     error = []
     if len(err_no_version) > 0:
-      error.append('no version specified in manifest sources: "{}"'.format('", "'.join(err_no_version,)))
+      error.append('no version specified in manifest sources: "{}"'
+                   .format('", "'.join(err_no_version,)))
     if len(err_no_interpreter) > 0:
-      error.append('invalid version specified in manifest sources: "{}"'.format('", "'.join(err_no_interpreter)))
+      error.append('invalid version specified in manifest sources: "{}"'
+                   .format('", "'.join(err_no_interpreter)))
     if len(error) > 0:
       error_msg = 'error reading manifest data:\n {}'.format('\n'.join(error))
       logging.error(error_msg)
@@ -107,8 +143,21 @@ class Manifest:
 
         logging.info('read "{}"'.format(element))
 
+  #TODO: add test
+  def get_keys(self, *specified_keys):
+    """ Returns the keys at the next level after specified_keys have been resolved"""
+
+    if self.indices == [None]: # no indices
+      return None
+    if len(specified_keys) >= len(self.indices) - 1:
+      return None
+    tags = self.tags
+    for idx in range (0, len(specified_keys)):
+        tags = tags[keys[idx]]
+    return list(tags.keys())
+
   def get(self, *keys, **filters):
-    """Returns the list of values associated with label_type, label_value"""
+    """Returns the list of artifacts associated with these keys and filters"""
     keys = keys or [None]
     try:
       tags = self.tags
@@ -119,7 +168,7 @@ class Manifest:
       return None
 
   def get_one(self, *keys, **filters):
-    """Returns the single value associated with label_type, label_value, or None otherwise"""
+    """Returns the single artifact associated with these keys and filters, or None otherwise"""
     values = self.get(*keys, **filters)
     if values is None or len(values) != 1:
       return None
