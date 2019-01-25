@@ -6,9 +6,7 @@
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
 # run with:
-#   python3 ./test_sample.py example/language.test.yaml convention/cloud.py example/googleapis
-
-
+#   python3 ./test_sample.py convention/cloud/ex.language.test.yaml convention/cloud/cloud.py testdata/googleapis
 
 import logging
 import os

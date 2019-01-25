@@ -69,7 +69,7 @@ class CloudRepos:
         'python': PythonSamplesEnvironment,
     }
     self.repos = {}
-    self.get_langs_and_repos(base_dirs or [os.getcwd()])
+    self.get_langs_and_repos(user_paths or [os.getcwd()])
 
   def get_langs_and_repos(self, api_dirs):
     """

@@ -42,10 +42,10 @@ class Registry:
     """
     self.envs[environment.name()] = environment
 
-  def configure(self, code, base_dirs : Iterable[str]):
+  def configure(self, code, user_paths : Iterable[str]):
     symbols = {
         'register_test_environment': self.add_environment,
-        'base_dirs': base_dirs.copy(),
+        'user_paths': user_paths.copy(),
     }
     exec(code, symbols)
 
