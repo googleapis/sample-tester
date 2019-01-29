@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # pip install pyyaml
 
@@ -6,10 +6,10 @@
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
 # run with "cloud" convention:
-#   python3 ./test_sample.py convention/cloud/ex.language.test.yaml convention/cloud/cloud.py testdata/googleapis
+#   ./test_sample.py convention/cloud/ex.language.test.yaml convention/cloud/cloud.py testdata/googleapis
 #
 # run with "manifest" convention (still need to change sample.manifest to a real manifest of the test samples; this fails at the moment because of that):
-#  python3 ./test_sample.py convention/manifest/ex.language.test.yaml  convention/manifest/id_by_region.py convention/manifest/sample.manifest
+#  ./test_sample.py convention/manifest/ex.language.test.yaml  convention/manifest/id_by_region.py convention/manifest/ex.language.manifest.yaml
 
 import logging
 import os
@@ -20,12 +20,22 @@ import yaml
 
 import testenv
 
+usage_message = """\nUsage:
+{} TEST.yaml CONVENTION.py [TEST.yaml ...] [USERPATH ...]
+
+CONVENTION.py is one of `convention/manifest/id_by_region.py` or
+   `convention/cloud/cloud.py`
+
+USERPATH depends on CONVENTION. For `id_by_region`, it should be a path to a
+   `MANIFEST.manifest.yaml` file.
+""".format(os.path.basename(__file__))
+
 def main():
   logging.basicConfig(level=logging.INFO)
   logging.info("argv: {}".format(sys.argv))
 
-  config_files, test_files, base_dirs = read_args(sys.argv)
-  environment_registry = testenv.from_files(config_files, base_dirs)
+  config_files, test_files, user_paths = read_args(sys.argv)
+  environment_registry = testenv.from_files(config_files, user_paths)
 
   test_suites = gather_test_suites(test_files)
 
@@ -57,35 +67,32 @@ def main():
   if not run_passed:
     exit(-1)
 
-# TODO: need to change this to either
-#   - always require manifest file
-#   OR
-#   - have something like test_sample testplan.yaml -e="env.py:env.py" manifest....
-#    using argparse.REMAINDER for the manifests. This way the main program does not need to know about manifests. As far as it's concened, these are just args to the environments
-#
 # cf https://docs.python.org/3/library/argparse.html
 def read_args(argv):
   config_files = []
   test_files = []
-  base_dirs = []
+  user_paths = []
   for filename in argv[1:]:
     filepath = os.path.abspath(filename)
     if os.path.isdir(filepath):
-      base_dirs.append(filepath)
+      user_paths.append(filepath)
       continue
 
-    ext = os.path.splitext(filename)[-1]
+    ext_split = os.path.splitext(filename)
+    ext = ext_split[-1]
     if ext == ".py":
       config_files.append(filepath)
     elif ext == ".yaml":
-      test_files.append(filepath)
+      prev_ext = os.path.splitext(ext_split[0])[-1]
+      if prev_ext == ".manifest":
+        user_paths.append(filepath)
+      else:
+        test_files.append(filepath)
     else:
-      # TODO: Fix this!
-      base_dirs.append(filepath)
-      # msg = 'unknown file type: "{}"'.format(filename)
-      # logging.critical(msg)
-      # raise ValueError(msg)
-  return config_files, test_files, base_dirs
+      msg = 'unknown file type: "{}"\n{}'.format(filename, usage_message)
+      logging.critical(msg)
+      raise ValueError(msg)
+  return config_files, test_files, user_paths
 
 def gather_test_suites(test_files):
 
