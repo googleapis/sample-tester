@@ -42,17 +42,24 @@ Set up the test plan as in `./example/example.language.yaml`. That sample test h
 
 
 ## Running the test
-1. Run as
+The usage is:
 
-   ```shell
-   ./test_sample.py PATH_TO_TEST_YAML example/cloud.py PATH_TO_GOOGLEAPIS
-   ```
+    ```
+    ./test_sample.py TEST.yaml [CONVENTION.py] [TEST.yaml ...] [USERPATH ...]`
+    ```
+
+    where `CONVENTION.py` is one of `convention/manifest/id_by_region.py` (default) or
+    `convention/cloud/cloud.py`
+
+    `USERPATH` depends on `CONVENTION`. For `id_by_region`, it should be a path to a
+    `MANIFEST.manifest.yaml` file.
    
-   For example, my own invocation to run the sample test is
    
-   ```
-   ./test_sample.py example/example.language.yaml example/cloud.py ../googleapis
-   ```
+    For example, my own invocation to run a test on the fake samples under `testdata/` is
+   
+     ```
+     ./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
+     ```
    
 
     
@@ -60,5 +67,4 @@ Set up the test plan as in `./example/example.language.yaml`. That sample test h
 
 **tl;dr: some things will change soon**
 
-* The canonical artifact path convention is in the process of changing in prep for v1 of the tester. I'm working on this on a separate branch. This will change `cloud.py`
 * I am also in the process of implementing the feedback on [go/actools-sample-tester](go/actools-sample-tester). This will reduce the number of available directives, and rename some of them.
