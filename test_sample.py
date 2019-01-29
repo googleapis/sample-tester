@@ -5,8 +5,11 @@
 # https://docs.python.org/3/library/functions.html#exec
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
-# run with:
+# run with "cloud" convention:
 #   python3 ./test_sample.py convention/cloud/ex.language.test.yaml convention/cloud/cloud.py testdata/googleapis
+#
+# run with "manifest" convention (still need to change sample.manifest to a real manifest of the test samples; this fails at the moment because of that):
+#  python3 ./test_sample.py convention/manifest/ex.language.test.yaml  convention/manifest/id_by_region.py convention/manifest/sample.manifest
 
 import logging
 import os
@@ -54,7 +57,13 @@ def main():
   if not run_passed:
     exit(-1)
 
-
+# TODO: need to change this to either
+#   - always require manifest file
+#   OR
+#   - have something like test_sample testplan.yaml -e="env.py:env.py" manifest....
+#    using argparse.REMAINDER for the manifests. This way the main program does not need to know about manifests. As far as it's concened, these are just args to the environments
+#
+# cf https://docs.python.org/3/library/argparse.html
 def read_args(argv):
   config_files = []
   test_files = []
@@ -71,9 +80,11 @@ def read_args(argv):
     elif ext == ".yaml":
       test_files.append(filepath)
     else:
-      msg = 'unknown file type: "{}"'.format(filename)
-      logging.critical(msg)
-      raise ValueError(msg)
+      # TODO: Fix this!
+      base_dirs.append(filepath)
+      # msg = 'unknown file type: "{}"'.format(filename)
+      # logging.critical(msg)
+      # raise ValueError(msg)
   return config_files, test_files, base_dirs
 
 def gather_test_suites(test_files):

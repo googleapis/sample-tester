@@ -17,7 +17,7 @@ class BaseTestEnvironment:
   def __init__(self, name='#BaseTestEnvironment'):
     self._name = name
 
-  def name():
+  def name(self):
     return self._name
 
   def setup(self):

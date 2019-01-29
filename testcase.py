@@ -139,7 +139,7 @@ class TestCase:
   # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
   def call_no_error(self, *args, **kwargs):
     return_code, out = self.call_allow_error(*args, **kwargs)
-    self.require(return_code == 0, "call failed: \"{0}\"".format(args))
+    self.require(return_code == 0, 'call failed: \"{0}\"'.format(args))
     return out
 
   # Expectation on the output of the last call.
@@ -147,7 +147,7 @@ class TestCase:
     self._contain_check(self.expect, lambda substr: self.last_output_contains(substr), message, values)
 
   # Requirement on the output of the last call.
-  def require_contains(self, *values):
+  def require_contains(self, message, *values):
     self._contain_check(self.require, lambda substr: self.last_output_contains(substr), message, values)
 
   # Negative expectation on the output of the last call.
@@ -193,7 +193,7 @@ class TestCase:
     if len(self.case_failure) > 0:
       print(" FAILED --------------------")
       for failure in self.case_failure:
-        print("    {0} \"{1}\"".format(failure[0], failure[1]))
+        print('    {0} {1}'.format(failure[0], failure[1]))
         print_output = True
     else:
       print(" PASSED ------------------------------")

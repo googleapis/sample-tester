@@ -36,7 +36,7 @@ class Manifest:
 
 
   def __init__(self, *indices: str):
-  """Initializes manifest.
+    """Initializes manifest.
 
     Args:
       indices: An optional list of labels by which to index the manifest read in
