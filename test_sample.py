@@ -5,11 +5,12 @@
 # https://docs.python.org/3/library/functions.html#exec
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
-# run with "cloud" convention:
-#   ./test_sample.py convention/cloud/ex.language.test.yaml convention/cloud/cloud.py testdata/googleapis
-#
 # run with "manifest" convention (still need to change sample.manifest to a real manifest of the test samples; this fails at the moment because of that):
-#  ./test_sample.py convention/manifest/ex.language.test.yaml  convention/manifest/id_by_region.py convention/manifest/ex.language.manifest.yaml
+#  ./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
+#
+# run with "cloud" convention:
+#   ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis
+#
 
 import logging
 import os
@@ -20,10 +21,12 @@ import yaml
 
 import testenv
 
-usage_message = """\nUsage:
-{} TEST.yaml CONVENTION.py [TEST.yaml ...] [USERPATH ...]
+default_convention='convention/manifest/id_by_region.py'
 
-CONVENTION.py is one of `convention/manifest/id_by_region.py` or
+usage_message = """\nUsage:
+{} TEST.yaml [CONVENTION.py] [TEST.yaml ...] [USERPATH ...]
+
+CONVENTION.py is one of `convention/manifest/id_by_region.py` (default) or
    `convention/cloud/cloud.py`
 
 USERPATH depends on CONVENTION. For `id_by_region`, it should be a path to a
@@ -34,8 +37,11 @@ def main():
   logging.basicConfig(level=logging.INFO)
   logging.info("argv: {}".format(sys.argv))
 
-  config_files, test_files, user_paths = read_args(sys.argv)
-  environment_registry = testenv.from_files(config_files, user_paths)
+  convention_files, test_files, user_paths = read_args(sys.argv)
+  if not convention_files or len(convention_files) == 0:
+    convention_files = [default_convention]
+
+  environment_registry = testenv.from_files(convention_files, user_paths)
 
   test_suites = gather_test_suites(test_files)
 
@@ -69,7 +75,7 @@ def main():
 
 # cf https://docs.python.org/3/library/argparse.html
 def read_args(argv):
-  config_files = []
+  convention_files = []
   test_files = []
   user_paths = []
   for filename in argv[1:]:
@@ -81,7 +87,7 @@ def read_args(argv):
     ext_split = os.path.splitext(filename)
     ext = ext_split[-1]
     if ext == ".py":
-      config_files.append(filepath)
+      convention_files.append(filepath)
     elif ext == ".yaml":
       prev_ext = os.path.splitext(ext_split[0])[-1]
       if prev_ext == ".manifest":
@@ -92,7 +98,7 @@ def read_args(argv):
       msg = 'unknown file type: "{}"\n{}'.format(filename, usage_message)
       logging.critical(msg)
       raise ValueError(msg)
-  return config_files, test_files, user_paths
+  return convention_files, test_files, user_paths
 
 def gather_test_suites(test_files):
 

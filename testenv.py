@@ -2,14 +2,17 @@ import logging
 from typing import Iterable
 import inspect
 
-def from_files(config_files: Iterable[str], base_dirs : Iterable[str] = None):
-  """Returns a new registry instantiated from the config_files."""
-  if not base_dirs:
-    base_dirs = []
+def from_files(convention_files: Iterable[str], user_paths : Iterable[str] = None):
+  """Returns a new registry instantiated from the convention_files.
+
+  Each convention gets passed the user_paths.
+  """
+  if not user_paths:
+    user_paths = []
   registry = Registry()
-  for filename in config_files:
+  for filename in convention_files:
     logging.info('Reading config file "{}"'.format(filename))
-    registry.configure(open(filename).read(),base_dirs)
+    registry.configure(open(filename).read(),user_paths)
   return registry
 
 
