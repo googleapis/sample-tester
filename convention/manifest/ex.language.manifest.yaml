@@ -1,9 +1,9 @@
 version: 1
-_sets:
+sets:
 - language: python
   bin: "python3"
   path: "testdata/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/"
-  _items:
+  __items__:
   - path: "analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py"
     region_tag: "language_analyze_sentiment_text"
     

@@ -1,8 +1,8 @@
 version: 1
-_sets:
+sets:
 - language: python
   path: "/home/nobody/api/samples/"
-  _items:
+  __items__:
   - path: "trivial/method/sample_alice"
     region_tag: "alice"
     canonical: "trivial"
@@ -10,7 +10,7 @@ _sets:
     region_tag: "robert"
     tag: "guide"
 - path: "/tmp/"
-  _items:
+  __items__:
   - path: "newer/carol"
     region_tag: "math"
   - path: "newest/dan"

@@ -31,8 +31,8 @@ class Manifest:
   """
 
   VERSION_KEY = "version"
-  SETS_KEY = "_sets"
-  ELEMENTS_KEY = "_items"
+  SETS_KEY = "sets"
+  ELEMENTS_KEY = "__items__"
 
 
   def __init__(self, *indices: str):
