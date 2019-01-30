@@ -39,6 +39,7 @@ Set up the test plan as in `./example/example.language.yaml`. That sample test h
   - `expect_not_contains`: expect the given variable to not contain a string
   - `require_not_contains`: require the given variable to not contain a string
   - `code`: execute the argument as a chunk of Python code. The other directives above are available as Python calls.
+5. In the usual case, you will be using the "manifest" convention. Thus, you will need one or more manifest files (`*.manifest.yaml`) listing the path and identifiers for each sample. See `convention/manifest/sample.manifest.yaml` for an explanation of the structure of the `*.manifest.yaml` files.
 
 
 ## Running the test
