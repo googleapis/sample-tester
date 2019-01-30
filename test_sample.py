@@ -36,10 +36,12 @@ USERPATH depends on CONVENTION. For `id_by_region`, it should be a path to a
 def main():
   logging.basicConfig(level=logging.INFO)
   logging.info("argv: {}".format(sys.argv))
+  __abs_file__ = os.path.abspath(__file__)
+  __abs_file_path__ = os.path.split(__abs_file__)[0]
 
   convention_files, test_files, user_paths = read_args(sys.argv)
   if not convention_files or len(convention_files) == 0:
-    convention_files = [default_convention]
+    convention_files = [os.path.join(__abs_file_path__, default_convention)]
 
   environment_registry = testenv.from_files(convention_files, user_paths)
 
