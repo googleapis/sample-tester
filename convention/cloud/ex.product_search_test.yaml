@@ -19,7 +19,7 @@ test:
       spec:
       - call:
           target: "testdata/samples/vision/product-search/list_products.py"
-      - require_not_contains:
+      - assert_not_contains:
           - variable: product_id
       - call:
           target: "testdata/samples/vision/product-search/create_product.py"
@@ -29,7 +29,7 @@ test:
           - literal: homegoods
       - call:
           target: "testdata/samples/vision/product-search/list_products.py"
-      - expect_contains:
+      - assert_contains:
           - variable: product_id
           - literal: "towel"
       - call:
@@ -38,7 +38,7 @@ test:
           - variable: product_id
       - call:
           target: "testdata/samples/vision/product-search/list_products.py"
-      - expect_not_contains:
+      - assert_not_contains:
           - variable: product_id
 
 
@@ -56,14 +56,14 @@ test:
       spec:
       - code: |
           out = call("testdata/samples/vision/product-search/list_products.py")
-          require(product_id not in out, "the product {} should initially be absent", product_id)
+          assert_that(product_id not in out, "the product {} should initially be absent", product_id)
   
           call("testdata/samples/vision/product-search/create_product.py", product_id, "Fancier towel", "homegoods")
   
           out = call("testdata/samples/vision/product-search/list_products.py")
-          expect(product_id in out, "the product {} should be present after creation", product_id)
+          assert_that(product_id in out, "the product {} should be present after creation", product_id)
   
           call("testdata/samples/vision/product-search/delete_product.py", product_id)
   
           out = call("testdata/samples/vision/product-search/list_products.py")
-          require(product_id not in out, "the product {} should be absent after deletion", product_id)
+          assert_that(product_id not in out, "the product {} should be absent after deletion", product_id)

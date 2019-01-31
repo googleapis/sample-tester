@@ -10,9 +10,9 @@ Refer to spec at [go/actools-sample-tester](go/actools-sample-tester).
 ## Setup
 1. Ensure you have credentials set up
 
-```shell
+   ```shell
    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/creds.json
-```
+   ```
    
 2. Install the necessary packages in your PIP environment
    The virtual environment set up for running artman should be sufficient (thought not all the those packages may be necessary)
@@ -30,22 +30,19 @@ Set up the test plan as in `./example/example.language.yaml`. That sample test h
   - `shell`: run in the shell the command specified in the argument
   - `uuid`: return a uuid (if called from yaml, assign it to the variable names as an argument)
   - `print`: print the arguments, printf style
-  - `fail`: mark the test as having failed, but continue executing
-  - `abort`: mark the test as having failed and stop executing
-  - `expect`: if the condition in the first argument is false, fail the test
-  - `require`: if the condition in the first argument is false, abort the test
-  - `expect_contains`: expect the given variable to contain a string
-  - `require_contains`: require the given variable to contain a string
-  - `expect_not_contains`: expect the given variable to not contain a string
-  - `require_not_contains`: require the given variable to not contain a string
-  - `code`: execute the argument as a chunk of Python code. The other directives above are available as Python calls.
+  - `assert_contains`: require the given variable to contain a string
+  - `assert_not_contains`: require the given variable to not contain a string
+  - `code`: execute the argument as a chunk of Python code. The other directives above are available as Python calls with the names above. In addition, the following functions are available inside Python code only:  
+     - `fail`: mark the test as having failed, but continue executing
+     - `abort`: mark the test as having failed and stop executing
+     - `assert_that`: if the condition in the first argument is false, abort the test
 5. In the usual case, you will be using the "manifest" convention. Thus, you will need one or more manifest files (`*.manifest.yaml`) listing the path and identifiers for each sample. See `convention/manifest/sample.manifest.yaml` for an explanation of the structure of the `*.manifest.yaml` files.
 
 ## Manifest File
 
 A manifest file is a YAML file that associates each artifact (sample) of interest on disk with a series of tags that can be used to uniquely identify that artifact. Right now only version "1" of the manifest file format is supported, but we have the version as the first field in the file to support different schemas in the future.
 
-The fundamental unit in a manifest is the "item", which is a collection of label name/value pairs; each unit should correspond to exactly one artifact on disk. Some labels are of special interest to the sample test runner, such as those named "language", "path", "bin", and "region_tag". These four are interpreted, respectively, as the programming language of the given artifact, the path to that artifact on disk, the binary used to execute the artifact (if the artifact is not itself executable), and the unique region tag by which to quickly identify the artifact for the given language. In particular, artifacts with the same region_tag but different languages are taken to represent the same conceptual sample, but implemented in the different programming languages; this allows a test specification to refer to the region_tags only and the runner  will then run that test for each of the languages available.
+The fundamental unit in a manifest is the "item", which is a collection of label name/value pairs; each unit should correspond to exactly one artifact on disk. Some labels are of special interest to the sample test runner, such as those named `language`, `path`, `bin`, and `region_tag`. These four are interpreted, respectively, as the programming language of the given artifact, the path to that artifact on disk, the binary used to execute the artifact (if the artifact is not itself executable), and the unique region tag by which to quickly identify the artifact for the given language. In particular, artifacts with the same `region_tag` but different `language`s are taken to represent the same conceptual sample, but implemented in the different programming languages; this allows a test specification to refer to the `region_tag`s only and the runner  will then run that test for each of the `language`s available.
 
 Since a lot of the artifacts will share part or all of some labels (for example, the initial directory components, or the binary used to execute them), "items" are grouped into "sets". Each set may define its own label name/value pairs. These pairs are applied to each of the items inside the set as follows:
 

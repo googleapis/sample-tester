@@ -18,14 +18,14 @@ test:
           # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
 
           score_found = re.search('score: ([0123456789.]+)', out)  # TODO: Can this be negative?
-          require(score_found is not None, 'score matches regexp')
+          assert_that(score_found is not None, 'score matches regexp')
           score = float(score_found.group(1))
-          require(score > 0.7, 'score is high')
+          assert_that(score > 0.7, 'score is high')
 
           magnitude_found = re.search('magnitude: ([0123456789.]+)', out)
-          require(magnitude_found is not None, 'magnitude matches regexp')
+          assert_that(magnitude_found is not None, 'magnitude matches regexp')
           magnitude = float(magnitude_found.group(1))
-          require(magnitude > 0.7, 'magnitude is high')
+          assert_that(magnitude > 0.7, 'magnitude is high')
 
     - id: Sentiment from text, manifest call convention
       spec:
@@ -36,14 +36,14 @@ test:
           # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
 
           score_found = re.search('score: ([0123456789.]+)', out)  # TODO: Can this be negative?
-          require(score_found is not None, 'score matches regexp')
+          assert_that(score_found is not None, 'score matches regexp')
           score = float(score_found.group(1))
-          require(score > 0.7, 'score is high')
+          assert_that(score > 0.7, 'score is high')
 
           magnitude_found = re.search('magnitude: ([0123456789.]+)', out)
-          require(magnitude_found is not None, 'magnitude matches regexp')
+          assert_that(magnitude_found is not None, 'magnitude matches regexp')
           magnitude = float(magnitude_found.group(1))
-          require(magnitude > 0.7, 'magnitude is high')
+          assert_that(magnitude > 0.7, 'magnitude is high')
     - id: Sentiment from text, manifest call convention, yaml directives
       spec:
       - call:
@@ -51,10 +51,10 @@ test:
           params:
             content:
               literal: "happy happy smile hope"
-      - require_contains:
+      - assert_contains:
           - message: "Score is very positive"
           - literal: "score: 0.8"
-      - require_contains:
+      - assert_contains:
           - message: "Magnitude is very positive"
           - literal: "magnitude: 0.8"
                 

@@ -28,7 +28,7 @@ class TestCase:
     # the yaml_prep returns None, the test function is not called (this is
     # useful to provide an alternate representation in the YAML)
     self.builtins={
-        # Meta info  about the test case
+        # Meta info about the test case
         "testcase_num":(self.idx, None),
         "testcase_id": (self.label, None),
 
@@ -48,13 +48,16 @@ class TestCase:
         "fail": (self.fail, None),
         "expect": (self.expect, None),
         "abort": (self.abort, None),
-        "require": (self.require, None),
+        "assert_that": (self.assert_that, None),
 
-        # Functions to fail the test: intended for YAML, may be used in code as well
-        "expect_contains": (self.expect_contains, self.params_for_contains),
-        "require_contains": (self.require_contains, self.params_for_contains),
-        "expect_not_contains": (self.expect_not_contains, self.params_for_contains),
-        "require_not_contains": (self.require_not_contains, self.params_for_contains),
+        # Functions to fail the test: intended for YAML, may be used in code as well.
+        # Due to feedback in the spec, we only allow assert_ functions (which exit
+        # the test case immediately) and not expect_ functions (which would allow
+        # the test to continue even if an expectation is not met).
+        "assert_contains": (self.assert_contains, self.params_for_contains),
+        "assert_not_contains": (self.assert_not_contains, self.params_for_contains),
+        # "expect_contains": (self.expect_contains, self.params_for_contains),
+        # "expect_not_contains": (self.expect_not_contains, self.params_for_contains),
     }
 
     self.local_symbols={}
@@ -76,7 +79,7 @@ class TestCase:
     self.expect(False, "failure")
 
   # Expects condition or records failure, soft-aborting the test.
-  def require(self, condition, message, *args):
+  def assert_that(self, condition, message, *args):
     if not condition:
       self.record_failure("FAILED REQUIREMENT", message, *args)
       self.print_out("# FAILED REQUIREMENT", message, *args)
@@ -84,7 +87,7 @@ class TestCase:
 
   # Explicitly fails and soft-aborts the test.
   def abort(self):
-    self.require(False, "abort called")
+    self.assert_that(False, "abort called")
 
   # Formats `msg` according to `args` and records it in the TestCase output.
   def print_out(self, msg, *args):
@@ -139,7 +142,7 @@ class TestCase:
   # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
   def call_no_error(self, *args, **kwargs):
     return_code, out = self.call_allow_error(*args, **kwargs)
-    self.require(return_code == 0, 'call failed: \"{0}\"'.format(args))
+    self.assert_that(return_code == 0, 'call failed: \"{0}\"'.format(args))
     return out
 
   # Expectation on the output of the last call.
@@ -147,31 +150,31 @@ class TestCase:
     self._contain_check(self.expect, lambda substr: self.last_output_contains(substr), message, values)
 
   # Requirement on the output of the last call.
-  def require_contains(self, message, *values):
-    self._contain_check(self.require, lambda substr: self.last_output_contains(substr), message, values)
+  def assert_contains(self, message, *values):
+    self._contain_check(self.assert_that, lambda substr: self.last_output_contains(substr), message, values)
 
   # Negative expectation on the output of the last call.
   def expect_not_contains(self, message, *values):
     self._contain_check(self.expect, lambda substr: not self.last_output_contains(substr), message, values)
 
-  # Negative requirement on the output of the last call.
-  def require_not_contains(self, message, *values):
-    self._contain_check(self.require, lambda substr: not self.last_output_contains(substr), message, values)
+  # Negative assertment on the output of the last call.
+  def assert_not_contains(self, message, *values):
+    self._contain_check(self.assert_that, lambda substr: not self.last_output_contains(substr), message, values)
 
 
   def _contain_check(self, check, condition, message, values):
     """
-    Utility function for the `expect_*` and `require_*` calls. Runs `check` on
+    Utility function for the `expect_*` and `assert_*` calls. Runs `check` on
     `condition` for each element of `values` reporting any errors either with
     the default error message or `message`, if non-empty.
     """
     default_message = len(message) == 0
-    label = "required" if check == self.require else "expected"
+    label = "required" if check == self.assert_that else "expected"
     for substr in values[1:]:
       if default_message:
         message = '{} "{}" absent in preceding output'.format(label, substr)
       check(condition(substr), message)
-    
+
 
   def run(self):
     status_message = ""
@@ -300,7 +303,7 @@ class TestCase:
         log_raise(logging.critical, ValueError, 'expected field "{}"'.format(name))
       params=['']
       start=0
-    params.extend(self.get_yaml_values(parts[start:])) 
+    params.extend(self.get_yaml_values(parts[start:]))
     return params
 
   def get_yaml_values(self, list):
