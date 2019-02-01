@@ -2,16 +2,18 @@ test:
   suites:
   - name:  "Language samples test"
     setup:
-      - code:
-          log('In setup')
+      - log:
+        - 'In setup {}'
+        - hi
     teardown:
       - code:
-          log('In teardown')
+          log('In teardown {}', 'bye')
     cases:
     - name: Sentiment from text, direct call
       spec:
       - code: |
           out = call("python3 testdata/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py", content="happy happy smile hope")
+          assert_success()
 
           import re
 

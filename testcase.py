@@ -51,12 +51,14 @@ class TestCase:
         "assert_that": (self.assert_that, None),
 
         # Functions to fail the test: intended for YAML, may be used in code as well.
+        "assert_contains": (self.assert_contains, self.params_for_contains),
+        "assert_not_contains": (self.assert_not_contains, self.params_for_contains),
+        "assert_success": (self.assert_success, self.yaml_args_string),
+        "assert_failure": (self.assert_failure, self.yaml_args_string),
         # Due to feedback in the spec, we only allow assert_ functions (which exit
         # the test case immediately) and not expect_ functions (which would allow
         # the test to continue even if an expectation is not met).
-        "assert_contains": (self.assert_contains, self.params_for_contains),
-        "assert_not_contains": (self.assert_not_contains, self.params_for_contains),
-        # "expect_contains": (self.expect_contains, self.params_for_contains),
+       # "expect_contains": (self.expect_contains, self.params_for_contains),
         # "expect_not_contains": (self.expect_not_contains, self.params_for_contains),
     }
 
@@ -78,11 +80,11 @@ class TestCase:
   def fail(self):
     self.expect(False, "failure")
 
-  # Expects condition or records failure, soft-aborting the test.
+  # Asserts condition or records failure, soft-aborting the test.
   def assert_that(self, condition, message, *args):
     if not condition:
-      self.record_failure("FAILED REQUIREMENT", message, *args)
-      self.print_out("# FAILED REQUIREMENT " + message, *args)
+      self.record_failure("FAILED ASSERTION", message, *args)
+      self.print_out("# FAILED ASSERTION: " + message, *args)
       raise TestError
 
   # Explicitly fails and soft-aborts the test.
@@ -157,10 +159,19 @@ class TestCase:
   def expect_not_contains(self, message, *values):
     self._contain_check(self.expect, lambda substr: not self.last_output_contains(substr), message, values)
 
-  # Negative assertment on the output of the last call.
+  # Negative assertion on the output of the last call.
   def assert_not_contains(self, message, *values):
     self._contain_check(self.assert_that, lambda substr: not self.last_output_contains(substr), message, values)
 
+  # Assertion on the return value of the last call indicating success.
+  def assert_success(self, message=[], *args):
+    mesage = message or "expected last call to succeed"
+    self.assert_that(self.last_return_code == 0, message, *args)
+
+  # Assertion on the return value of the last call indicating failure.
+  def assert_failure(self, message=[], *args):
+    message = message or "expected last call to fail"
+    self.assert_that(self.last_return_code != 0, message, *args)
 
   def _contain_check(self, check, condition, message, values):
     """
@@ -257,8 +268,10 @@ class TestCase:
     Interprets `parts` as a list whose first element is a print format string
     and whose subsequent elements are local symbol names.
 
-    Returns the list with the names of the symbols substituted by their value sin the self.local_symbols.
+    Returns the list with the names of the symbols substituted by their values in the self.local_symbols.
     """
+    if parts is None or len(parts) == 0:
+      return [], {}
     return [parts[0]] + self.lookup_values(parts[1:]), {}
 
   def params_for_call(self, parts):
@@ -330,7 +343,7 @@ class TestCase:
       return item
 
   def lookup_values(self, variables):
-    return [self.local_symbols[p] for p in variables]
+    return [self.local_symbols.get(p, '"{}"'.format(str(p))) for p in variables]
 
 
 class TestError(Exception):

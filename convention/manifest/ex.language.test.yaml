@@ -13,6 +13,12 @@ test:
       - code: |
           out = call("python3 testdata/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py", content="happy happy smile hope")
 
+      # the following shows how to interleave yaml and code
+      - assert_success:
+        - "that should have worked {}"  # try `assert_failure` to see message
+        - well
+
+      - code: |
           import re
 
           # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
@@ -31,6 +37,7 @@ test:
       spec:
       - code: |
           out = call("language_analyze_sentiment_text", content="happy happy smile hope")
+          assert_success("that should have worked", "well")
           import re
 
           # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
@@ -51,6 +58,7 @@ test:
           params:
             content:
               literal: "happy happy smile hope"
+      - assert_success: [] # try assert_failure
       - assert_contains:
           - message: "Score is very positive"
           - literal: "score: 0.8"
