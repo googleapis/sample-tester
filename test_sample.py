@@ -59,7 +59,7 @@ def main():
       setup = suite.get("setup", "")
       teardown = suite.get("teardown", "")
       suite_name = suite.get("name","")
-      print("==== SUITE {}:{}:{} START  ==========================================".format(environment.name(), suite_num, suite_name))
+      print("\n==== SUITE {}:{}:{} START  ==========================================".format(environment.name(), suite_num, suite_name))
       print("     {}".format(suite["source"]))
       suite_passed = True
       for idx, case in enumerate(suite["cases"]):
@@ -69,6 +69,7 @@ def main():
         print("==== SUITE {}:{}:{} SUCCESS ========================================".format(environment.name(), suite_num, suite_name))
       else:
         print("==== SUITE {}:{}:{} FAILURE ========================================".format(environment.name(), suite_num, suite_name))
+      print()
       run_passed &= suite_passed
 
     environment.teardown()
