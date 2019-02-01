@@ -15,7 +15,7 @@ test:
         - variable: product_id
     - code: |
     cases:
-    - id: Product Life
+    - name: Product Life
       spec:
       - call:
           target: "testdata/samples/vision/product-search/list_products.py"
@@ -52,7 +52,7 @@ test:
         call_may_fail("testdata/samples/vision/product-search/delete_product.py", product_id)
 
     cases:
-    - id: Product Life
+    - name: Product Life
       spec:
       - code: |
           out = call("testdata/samples/vision/product-search/list_products.py")

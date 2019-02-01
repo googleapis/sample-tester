@@ -8,7 +8,7 @@ test:
       - code:
           print('In teardown')           
     cases:
-    - id: Sentiment from text, direct call
+    - name: Sentiment from text, direct call
       spec:
       - code: |
           out = call("python3 testdata/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py", content="happy happy smile hope")
@@ -27,7 +27,7 @@ test:
           magnitude = float(magnitude_found.group(1))
           assert_that(magnitude > 0.7, 'magnitude is high')
 
-    - id: Sentiment from text, API call convention
+    - name: Sentiment from text, API call convention
       spec:
       - code: |
           out = call("Google.Cloud.Language.v1.AnalyzeSentiment:analyze_sentiment_request_language_sentiment_text", content="happy happy smile hope")

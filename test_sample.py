@@ -10,7 +10,7 @@
 #
 # run with "cloud" convention:
 #   ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis
-#
+#   ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.product_search_test.yaml testdata/googleapis
 
 import logging
 import os
@@ -49,21 +49,34 @@ def main():
 
   logging.info("envs: {}".format(environment_registry.get_names()))
 
+  SUITE_ENABLED="enabled"
+  SUITE_SETUP="setup"
+  SUITE_TEARDOWN="teardown"
+  SUITE_NAME="name"
+  SUITE_SOURCE="source"
+  SUITE_CASES="cases"
+  CASE_NAME="name"
+  CASE_SPEC="spec"
+
   run_passed = True
   for environment in environment_registry.list():
     environment.setup()
 
     for suite_num, suite in enumerate(test_suites):
-      if not suite.get("enabled", True):
+      if not suite.get(SUITE_ENABLED, True):
         continue
-      setup = suite.get("setup", "")
-      teardown = suite.get("teardown", "")
-      suite_name = suite.get("name","")
+      setup = suite.get(SUITE_SETUP, "")
+      teardown = suite.get(SUITE_TEARDOWN, "")
+      suite_name = suite.get(SUITE_NAME,"")
       print("\n==== SUITE {}:{}:{} START  ==========================================".format(environment.name(), suite_num, suite_name))
-      print("     {}".format(suite["source"]))
+      print("     {}".format(suite[SUITE_SOURCE]))
       suite_passed = True
-      for idx, case in enumerate(suite["cases"]):
-        this_case = testcase.TestCase(environment, idx, case["id"], setup, case["spec"], teardown)
+      for idx, case in enumerate(suite[SUITE_CASES]):
+        this_case = testcase.TestCase(environment, idx,
+                                      case.get(CASE_NAME, "(missing name)"),
+                                      setup,
+                                      case.get(CASE_SPEC,""),
+                                      teardown)
         suite_passed &=this_case.run()
       if suite_passed:
         print("==== SUITE {}:{}:{} SUCCESS ========================================".format(environment.name(), suite_num, suite_name))
@@ -73,6 +86,7 @@ def main():
       run_passed &= suite_passed
 
     environment.teardown()
+
   if not run_passed:
     exit(-1)
 
