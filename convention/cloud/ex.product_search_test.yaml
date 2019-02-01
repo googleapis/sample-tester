@@ -61,7 +61,7 @@ test:
           call("testdata/samples/vision/product-search/create_product.py", product_id, "Fancier towel", "homegoods")
   
           out = call("testdata/samples/vision/product-search/list_products.py")
-          assert_that(product_id in out, "the product {} should be present after creation", product_id)
+          assert_that(product_id in out, "the product {} should be {} quite present after creation", product_id, "really")
   
           call("testdata/samples/vision/product-search/delete_product.py", product_id)
   

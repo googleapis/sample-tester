@@ -66,7 +66,7 @@ class TestCase:
 
   # Records a single failure in this TestCase.
   def record_failure(self, status, message, *args):
-    self.case_failure.append((status,message))
+    self.case_failure.append((status,message, args))
 
   # Expects condition or records failure.
   def expect(self, condition, message, *args):
@@ -82,7 +82,7 @@ class TestCase:
   def assert_that(self, condition, message, *args):
     if not condition:
       self.record_failure("FAILED REQUIREMENT", message, *args)
-      self.print_out("# FAILED REQUIREMENT", message, *args)
+      self.print_out("# FAILED REQUIREMENT " + message, *args)
       raise TestError
 
   # Explicitly fails and soft-aborts the test.
@@ -142,7 +142,7 @@ class TestCase:
   # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
   def call_no_error(self, *args, **kwargs):
     return_code, out = self.call_allow_error(*args, **kwargs)
-    self.assert_that(return_code == 0, 'call failed: \"{0}\"'.format(args))
+    self.assert_that(return_code == 0, 'call failed: "{}"', args)
     return out
 
   # Expectation on the output of the last call.
@@ -188,7 +188,8 @@ class TestCase:
         except TestError:
           pass
         except Exception as e:
-          self.record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish): {}".format(e), stage_name)
+          self.record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish)",
+                              " {} in stage {} ", e, stage_name)
           traceback.print_tb(e.__traceback__)
           break
 
@@ -196,7 +197,7 @@ class TestCase:
     if len(self.case_failure) > 0:
       print(" FAILED --------------------")
       for failure in self.case_failure:
-        print('    {0} {1}'.format(failure[0], failure[1]))
+        print('    {}: {}'.format(failure[0], self.format_string(failure[1], *failure[2])))
         print_output = True
     else:
       print(" PASSED ------------------------------")
