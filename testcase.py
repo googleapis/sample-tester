@@ -39,7 +39,7 @@ class TestCase:
 
         # Other functions available to the test suite
         "uuid": (self.get_uuid, self.yaml_get_uuid),
-        "print":(self.print_out, self.yaml_args_string),
+        "log":(self.print_out, self.yaml_args_string),
 
         # Code
         "code": (self.execute, lambda p: ([p], {})),

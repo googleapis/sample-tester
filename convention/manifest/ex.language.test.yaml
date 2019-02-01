@@ -3,16 +3,16 @@ test:
   - name:  "Language samples test"
     setup:
       - code:
-          print('In setup')
+          log('In setup')
     teardown:
       - code:
-          print('In teardown')           
+          log('In teardown')
     cases:
     - name: Sentiment from text, direct call
       spec:
       - code: |
           out = call("python3 testdata/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py", content="happy happy smile hope")
-          
+
           import re
 
           # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
@@ -32,7 +32,7 @@ test:
       - code: |
           out = call("language_analyze_sentiment_text", content="happy happy smile hope")
           import re
-          
+
           # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
 
           score_found = re.search('score: ([0123456789.]+)', out)  # TODO: Can this be negative?
@@ -57,4 +57,3 @@ test:
       - assert_contains:
           - message: "Magnitude is very positive"
           - literal: "magnitude: 0.8"
-                

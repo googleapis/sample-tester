@@ -29,7 +29,7 @@ Set up the test plan as in `./example/example.language.yaml`. That sample test h
   - `call_may_fail`: call the artifact named in the argument, do not error even if the call fails
   - `shell`: run in the shell the command specified in the argument
   - `uuid`: return a uuid (if called from yaml, assign it to the variable names as an argument)
-  - `print`: print the arguments, printf style
+  - `log`: print the arguments, printf style
   - `assert_contains`: require the given variable to contain a string
   - `assert_not_contains`: require the given variable to not contain a string
   - `code`: execute the argument as a chunk of Python code. The other directives above are available as Python calls with the names above. In addition, the following functions are available inside Python code only:  

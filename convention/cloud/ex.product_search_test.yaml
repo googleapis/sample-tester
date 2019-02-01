@@ -3,11 +3,11 @@ test:
   - name: "Declarative test"
     setup:
     - uuid: product_id
-    - print:
+    - log:
         - "UUID is {}"
         - product_id
     - code: | # Note that we can intersperse code if we wish. It's just another YAML directive.
-        print("Product ID for this test suite is {}", product_id)
+        log("Product ID for this test suite is {}", product_id)
     teardown:
     - call_may_fail:
         target: "testdata/samples/vision/product-search/delete_product.py  "
@@ -46,7 +46,7 @@ test:
     setup:
     - code: |
         product_id=uuid()
-        print("Product ID for this test suite is {}", product_id)
+        log("Product ID for this test suite is {}", product_id)
     teardown:
     - code: |
         call_may_fail("testdata/samples/vision/product-search/delete_product.py", product_id)
