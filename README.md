@@ -54,22 +54,22 @@ See `convention/manifest/sample.manifest.yaml` for a concrete, commented example
 ## Running the test
 The usage is:
 
-    ```
-    ./test_sample.py TEST.yaml [CONVENTION.py] [TEST.yaml ...] [USERPATH ...]`
-    ```
+``
+/test_sample.py TEST.yaml [CONVENTION.py] [TEST.yaml ...] [USERPATH ...]`
+``
 
-    where `CONVENTION.py` is one of `convention/manifest/id_by_region.py` (default) or
-    `convention/cloud/cloud.py`
+here `CONVENTION.py` is one of `convention/manifest/id_by_region.py` (default) or
+convention/cloud/cloud.py`
 
-    `USERPATH` depends on `CONVENTION`. For `id_by_region`, it should be a path to a
-    `MANIFEST.manifest.yaml` file.
-   
-   
-    For example, my own invocation to run a test on the fake samples under `testdata/` is
-   
-     ```
-     ./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
-     ```
+USERPATH` depends on `CONVENTION`. For `id_by_region`, it should be a path to a
+MANIFEST.manifest.yaml` file.
+
+
+or example, my own invocation to run a test on the fake samples under `testdata/` is
+
+```
+./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
+```
    
 
     
