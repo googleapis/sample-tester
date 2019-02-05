@@ -181,7 +181,7 @@ class TestCase:
     """
     default_message = len(message) == 0
     label = "required" if check == self.assert_that else "expected"
-    for substr in values[1:]:
+    for substr in values:
       if default_message:
         message = '{} "{}" absent in preceding output'.format(label, substr)
       check(condition(substr), message)
