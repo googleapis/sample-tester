@@ -11,12 +11,23 @@
 # run with "cloud" convention:
 #   ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis
 #   ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.product_search_test.yaml testdata/googleapis
+#
+#
+# Run all tests:
+#  python3 -m unittest discover -s . -p '*_test.py' -v
+#
+# Quick verification everything works:
+#  python3 -m unittest discover -s . -p '*_test.py' -v && ./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml && echo -e "\n\nOK" || echo -e "\n\nERROR above"
+#
 
 import logging
 import os
 import string
 import sys
-import test_suite
+import testenv
+import runner
+import convention
+
 
 
 usage_message = """\nUsage:
@@ -33,9 +44,11 @@ def main():
   logging.basicConfig(level=logging.INFO)
   logging.info("argv: {}".format(sys.argv))
   convention_files, test_files, user_paths = read_args(sys.argv)
+  convention_files = convention_files or [convention.default]
 
+  environment_registry = testenv.from_files(convention_files, user_paths)
 
-  run_passed = test_suite.run(convention_files, test_files, user_paths)
+  run_passed = runner.run(environment_registry, test_files)
 
   if not run_passed:
     exit(-1)

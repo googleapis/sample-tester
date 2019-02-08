@@ -1,19 +1,9 @@
 import logging
-import os
 import testcase
-import testenv
 import yaml
 
-# TODO(vchudnov): Move to convention directory
-default_convention='convention/manifest/id_by_region.py'
 
-def run(convention_files, test_files, user_paths):
-  __abs_file__ = os.path.abspath(__file__)
-  __abs_file_path__ = os.path.split(__abs_file__)[0]
-  if not convention_files or len(convention_files) == 0:
-    convention_files = [os.path.join(__abs_file_path__, default_convention)]
-
-  environment_registry = testenv.from_files(convention_files, user_paths)
+def run(environment_registry, test_files):
 
   test_suites = gather_test_suites(test_files)
 
