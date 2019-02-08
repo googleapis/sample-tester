@@ -1,0 +1,34 @@
+test:
+  suites:
+  - name: Passing directives test
+    cases:
+    - name: "Code block"
+      spec:
+        - code: |
+            out = call('/bin/echo', '"Hello there"')
+            assert_success("echo should have succeeded")
+            assert_contains("there")
+            assert_not_contains("goodbye")
+            assert_that('ello' in out, 'expected "ello" in the preceding output')
+            expect('ello' in out, 'expected "ello" in the preceding output')
+            call_may_fail('/nonexistent/dir/foobar')
+            assert_failure("foobar call should have failed")
+    - name: "YAML"
+      spec:
+        - call:
+            target: "/bin/echo"
+            args:
+            - literal: "Hello there"
+        - assert_success:
+          - message: "echo should have succeeded"
+        - assert_contains:
+          - message: "Expected 'there'"
+          - literal: "there"
+        - assert_not_contains:
+          - message: "Expected no 'goodbye'"            
+          - literal: "goodbye"
+        - call_may_fail:
+            target: '/nonexistent/dir/foobar'
+        - assert_failure:
+          - message: "foobar call should have failed"
+

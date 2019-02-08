@@ -23,7 +23,7 @@ class ManifestEnvironment(testenv.BaseTestEnvironment):
   def get_call(self, *args, **kwargs):
     full_call, cli_args = testenv.process_args(*args, **kwargs)
 
-    if '.' in full_call:
+    if '/' in full_call:
       artifact = full_call
     else:
       indices = self.const_indices.copy()
@@ -50,6 +50,8 @@ class LanguageRegionManifestEnvironmentProvider:
     self.manifest.read_files(*all_manifests)
     self.manifest.index()
     self.languages = self.manifest.get_keys()
+    if len(self.languages) == 0:
+      self.languages = ["(nolang)"]
     self.resolver={}
     for language in self.languages:
       name = '{} region resolver'.format(language)

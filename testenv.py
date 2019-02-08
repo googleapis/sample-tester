@@ -12,7 +12,8 @@ def from_files(convention_files: Iterable[str], user_paths : Iterable[str] = Non
   registry = Registry()
   for filename in convention_files:
     logging.info('Reading config file "{}"'.format(filename))
-    registry.configure(open(filename).read(),user_paths)
+    with open(filename) as config:
+      registry.configure(config.read(),user_paths)
   return registry
 
 
