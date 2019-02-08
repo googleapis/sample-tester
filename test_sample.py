@@ -48,7 +48,7 @@ def main():
 
   environment_registry = testenv.from_files(convention_files, user_paths)
 
-  run_passed = runner.run(environment_registry, test_files)
+  run_passed = runner.run(environment_registry, runner.suites_from(test_files))
 
   if not run_passed:
     exit(-1)

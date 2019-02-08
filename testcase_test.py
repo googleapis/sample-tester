@@ -11,12 +11,18 @@ class TestTestCase(unittest.TestCase):
     self.__abs_file_path__ = os.path.split(__abs_file__)[0]
     self.environment_registry = testenv.from_files([convention.default], [])
 
-  def pathTo(self, dir):
+  def path_to(self, dir):
     return os.path.join(self.__abs_file_path__, dir)
 
+  def suites_from(self, directories):
+    return runner.suites_from([self.path_to(dir) for dir in directories])
+
   def test_passing(self):
-    success = runner.run(self.environment_registry, [self.pathTo('testdata/testcase_passing.yaml')])
+    success = runner.run(self.environment_registry, self.suites_from(['testdata/testcase_passing.yaml']))
     self.assertTrue(success, "expected valid test file to pass")
+
+  def test_execute(self):
+    pass
 
 if __name__ == '__main__':
     unittest.main()

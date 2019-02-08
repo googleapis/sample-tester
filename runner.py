@@ -3,11 +3,9 @@ import testcase
 import yaml
 
 
-def run(environment_registry, test_files):
+def run(environment_registry, test_suites):
 
-  test_suites = gather_test_suites(test_files)
-
-  logging.info("envs: {}".format(environment_registry.get_names()))
+  logging.debug("envs: {}".format(environment_registry.get_names()))
 
   SUITE_ENABLED="enabled"
   SUITE_SETUP="setup"
@@ -37,7 +35,7 @@ def run(environment_registry, test_files):
                                       setup,
                                       case.get(CASE_SPEC,""),
                                       teardown)
-        suite_passed &=this_case.run()
+        suite_passed &= this_case.run()
       if suite_passed:
         print("==== SUITE {}:{}:{} SUCCESS ========================================".format(environment.name(), suite_num, suite_name))
       else:
@@ -48,7 +46,7 @@ def run(environment_registry, test_files):
     environment.teardown()
     return run_passed
 
-def gather_test_suites(test_files):
+def suites_from(test_files):
 
   # TODO(vchudnov): Append line number info to aid in error messages
   # cf: https://stackoverflow.com/a/13319530
