@@ -27,6 +27,7 @@ import sys
 import testenv
 import runner
 import convention
+import testplan
 
 
 
@@ -47,8 +48,10 @@ def main():
   convention_files = convention_files or [convention.default]
 
   environment_registry = testenv.from_files(convention_files, user_paths)
+  test_suites = testplan.suites_from(test_files)
+  manager = testplan.Manager(environment_registry, test_suites)
 
-  run_passed = runner.run(environment_registry, runner.suites_from(test_files))
+  run_passed = manager.accept(runner.RunVisitor())
 
   if not run_passed:
     exit(-1)

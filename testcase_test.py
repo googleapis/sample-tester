@@ -4,6 +4,7 @@ import runner
 import os
 import convention
 import testenv
+import testplan
 
 class TestTestCase(unittest.TestCase):
   def setUp(self):
@@ -15,10 +16,11 @@ class TestTestCase(unittest.TestCase):
     return os.path.join(self.__abs_file_path__, dir)
 
   def suites_from(self, directories):
-    return runner.suites_from([self.path_to(dir) for dir in directories])
+    return testplan.suites_from([self.path_to(dir) for dir in directories])
 
   def test_passing(self):
-    success = runner.run(self.environment_registry, self.suites_from(['testdata/testcase_passing.yaml']))
+    manager = testplan.Manager(self.environment_registry, self.suites_from(['testdata/testcase_passing.yaml']))
+    success = manager.accept(runner.RunVisitor())
     self.assertTrue(success, "expected valid test file to pass")
 
   def test_execute(self):
