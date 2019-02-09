@@ -42,7 +42,7 @@ class TestTestCase(unittest.TestCase):
     __abs_file__ = os.path.abspath(__file__)
     self.__abs_file_path__ = os.path.split(__abs_file__)[0]
     self.environment_registry = testenv.from_files([convention.default], [])
-    self.manager = testplan.Manager(self.environment_registry, self.suites_from(['testdata/testcase_passing.yaml']))
+    self.manager = testplan.Manager(self.environment_registry, self.suites_from(['testdata/testcase_from_testplan.yaml']))
     self.results = Visitor()
     self.manager.accept(runner.Visitor())
     if self.manager.accept(self.results) is not None:
