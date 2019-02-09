@@ -6,7 +6,7 @@ import convention
 import testenv
 import testplan
 
-class TestVisitor(testplan.Visitor):
+class Visitor(testplan.Visitor):
   def __init__(self):
     self.environments = {}
     self.suites = {}
@@ -43,9 +43,8 @@ class TestTestCase(unittest.TestCase):
     self.__abs_file_path__ = os.path.split(__abs_file__)[0]
     self.environment_registry = testenv.from_files([convention.default], [])
     self.manager = testplan.Manager(self.environment_registry, self.suites_from(['testdata/testcase_passing.yaml']))
-    self.manager.accept(runner.RunVisitor())
-    self.results = TestVisitor()
-    self.manager.accept(runner.RunVisitor())
+    self.results = Visitor()
+    self.manager.accept(runner.Visitor())
     if self.manager.accept(self.results) is not None:
       self.fail('error running test plan: {}'.format(self.results.error))
 

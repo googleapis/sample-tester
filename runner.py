@@ -3,7 +3,7 @@ import testcase
 import yaml
 import testplan
 
-class RunVisitor(testplan.Visitor):
+class Visitor(testplan.Visitor):
 
   def __init__(self):
     self.run_passed = True

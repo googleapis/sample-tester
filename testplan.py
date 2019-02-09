@@ -44,7 +44,7 @@ CASE_NAME="name"
 CASE_SPEC="spec"
 
 class Manager:
-  def __init__(self,environment_registry, test_suites):
+  def __init__(self, environment_registry, test_suites):
     self.test_suites = test_suites
 
     logging.debug("envs: {}".format(environment_registry.get_names()))

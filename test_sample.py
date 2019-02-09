@@ -60,14 +60,14 @@ def main():
   test_suites = testplan.suites_from(test_files)
   manager = testplan.Manager(environment_registry, test_suites)
 
-  run_passed = manager.accept(runner.RunVisitor())
+  run_passed = manager.accept(runner.Visitor())
 
   if args.summary:
     print(manager.accept(summary.SummaryVisitor(args.verbose)))
     print()
 
   if args.xunit:
-    print(manager.accept(xunit.XUnitVisitor()))
+    print(manager.accept(xunit.Visitor()))
     print()
 
   if not run_passed:

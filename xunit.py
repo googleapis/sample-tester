@@ -2,7 +2,7 @@ import testplan
 
 # TODO(vchudnov): Use XML library
 
-class XUnitVisitor(testplan.Visitor):
+class Visitor(testplan.Visitor):
   def __init__(self):
     self.environment = None
 
