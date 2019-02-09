@@ -3,9 +3,9 @@ import subprocess
 import traceback
 from testenv import BaseTestEnvironment
 import logging
+import copy
 
 class TestCase:
-
   def __init__(self, environment: BaseTestEnvironment, idx:int, label: str, setup, case, teardown):
     self.case_failure = []
     self.output = ""
@@ -214,9 +214,12 @@ class TestCase:
       logging.info(log_entry_prefix + " PASSED ------------------------------")
     if print_output:
       logging.info("    Output:")
-      logging.info(reindent(self.output, 4, "| ")+"\n")
+      logging.info(self.get_output(4, "| ")+"\n")
 
     return len(self.case_failure) == 0
+
+  def get_output(self, indent=0, header=''):
+    return reindent(copy.deepcopy(self.output), indent, header)
 
   def run_segment(self, spec_segment):
     if len(spec_segment) > 1:

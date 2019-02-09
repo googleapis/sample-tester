@@ -1,7 +1,8 @@
 import testplan
 
 class SummaryVisitor(testplan.Visitor):
-  def __init__(self):
+  def __init__(self, verbose):
+    self.verbose = verbose
     self.lines = []
     self.indent = '  '
 
@@ -17,7 +18,10 @@ class SummaryVisitor(testplan.Visitor):
 
   def visit_testcase(self, idx, tcase):
     name = tcase.get(testplan.CASE_NAME, "(missing name)")
+    runner = tcase.get(testplan.CASE_RUNNER)
     self.lines.append(self.indent*2 + '{}: Case: "{}"'.format(status_str(tcase), name))
+    if self.verbose and runner:
+      self.lines.append(runner.get_output(6, '| '))
 
   def end_visit(self):
     return '\n'.join(self.lines)

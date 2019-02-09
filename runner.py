@@ -35,7 +35,7 @@ class RunVisitor(testplan.Visitor):
                                   setup,
                                   tcase.get(testplan.CASE_SPEC,""),
                                   teardown)
-    tcase['_runner'] = this_case
+    tcase[testplan.CASE_RUNNER] = this_case
     tcase[testplan.SUCCESS] = this_case.run()
     if not tcase[testplan.SUCCESS]:
       suite[testplan.SUCCESS] = False

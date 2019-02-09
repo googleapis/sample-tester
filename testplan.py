@@ -4,6 +4,7 @@ import testcase
 import yaml
 
 SUCCESS = '_success'
+CASE_RUNNER = '_runner'
 
 class Visitor:
   # Each visit function returns a visitor or two to the next level of the hierarchy, or

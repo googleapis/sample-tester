@@ -45,6 +45,8 @@ USERPATH depends on CONVENTION. For `id_by_region`, it should be a path to a
 def main():
   # logging.basicConfig(level=logging.INFO)
   logging.info("argv: {}".format(sys.argv))
+  verbose = True
+
   convention_files, test_files, user_paths = read_args(sys.argv)
   convention_files = convention_files or [convention.default]
 
@@ -53,7 +55,7 @@ def main():
   manager = testplan.Manager(environment_registry, test_suites)
 
   run_passed = manager.accept(runner.RunVisitor())
-  print(manager.accept(summary.SummaryVisitor()))
+  print(manager.accept(summary.SummaryVisitor(verbose)))
   print()
 
   if not run_passed:
