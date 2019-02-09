@@ -19,7 +19,7 @@
 #  python3 -m unittest discover -s . -p '*_test.py' -v
 #
 # Quick verification everything works:
-#  python3 -m unittest discover -s . -p '*_test.py' -v && ./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml && ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis && echo -e "\n\nOK" || echo -e "\n\nERROR above"
+#  FLAGS="--xunit FOO -s -v"; python3 -m unittest discover -s . -p '*_test.py' -v && ./test_sample.py $FLAGS convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml && ./test_sample.py $FLAGS convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis && echo -e "\n\nOK" || echo -e "\n\nERROR above"
 #
 
 import logging
@@ -61,6 +61,7 @@ def main():
   manager = testplan.Manager(environment_registry, test_suites)
 
   run_passed = manager.accept(runner.RunVisitor())
+
   if args.summary:
     print(manager.accept(summary.SummaryVisitor(args.verbose)))
     print()

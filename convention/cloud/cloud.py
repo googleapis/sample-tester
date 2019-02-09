@@ -46,6 +46,16 @@ class PythonSamplesEnvironment(testenv.BaseTestEnvironment):
   def name(self):
     return self.id()
 
+  def adjust_suite_name(self, name):
+    return self.adjust_name(name)
+
+  def adjust_case_name(self, name):
+    return self.adjust_name(name)
+
+  def adjust_name(self, name):
+    return '{}:python'.format(name)
+
+
 # from https://stackoverflow.com/a/1176023
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')

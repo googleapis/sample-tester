@@ -39,6 +39,15 @@ class ManifestEnvironment(testenv.BaseTestEnvironment):
         raise Exception('object "{}" does not contain "path": {}'.format(indices, e))
     return '{} {}'.format(artifact, cli_args)
 
+  def adjust_suite_name(self, name):
+    return self.adjust_name(name)
+
+  def adjust_case_name(self, name):
+    return self.adjust_name(name)
+
+  def adjust_name(self, name):
+    return '{}:{}'.format(name, ':'.join(self.const_indices))
+
 
 
 class LanguageRegionManifestEnvironmentProvider:
