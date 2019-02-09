@@ -216,7 +216,7 @@ class TestCase:
       logging.info("    Output:")
       logging.info(self.get_output(4, "| ")+"\n")
 
-    return len(self.case_failure) == 0
+    return len(self.case_failure)
 
   def get_output(self, indent=0, header=''):
     return reindent(copy.deepcopy(self.output), indent, header)

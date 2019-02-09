@@ -3,9 +3,6 @@ import logging
 import testcase
 import yaml
 
-SUCCESS = '_success'
-CASE_RUNNER = '_runner'
-
 class Visitor:
   # Each visit function returns a visitor or two to the next level of the hierarchy, or
   # None if the next level of the hierarchy is not to be traversed (for example,
@@ -51,9 +48,7 @@ class Manager:
     self.test_suites = test_suites
 
     logging.debug("envs: {}".format(environment_registry.get_names()))
-    self.environments = []
-    for test_env in environment_registry.list():
-      self.environments.append({'test_env': test_env, 'suites': copy.deepcopy(test_suites)})
+    self.environments = [Environment(env, test_suites) for env in environment_registry.list()]
 
 
   def accept(self, visitor: Visitor):
@@ -68,12 +63,12 @@ class Manager:
         continue
 
 
-      for suite_num, suite in enumerate(env['suites']):
+      for suite_num, suite in enumerate(env.suites):
         visit_testcase = visit_suite(suite_num, suite)
         if not visit_testcase:
           continue
 
-        for idx, case in enumerate(suite[SUITE_CASES]):
+        for idx, case in enumerate(suite.cases):
           visit_testcase(idx, case)
 
         if visit_suite_end is not None:
@@ -84,7 +79,7 @@ class Manager:
 
     return visitor.end_visit()
 
-def suites_from(test_files):
+def suite_configs_from(test_files):
 
   # TODO(vchudnov): Append line number info to aid in error messages
   # cf: https://stackoverflow.com/a/13319530
@@ -98,3 +93,66 @@ def suites_from(test_files):
         suite["source"] = filename
       all_suites.extend(these_suites)
   return all_suites
+
+def suite_objects_from(all_suites):
+  return [Suite(spec) for spec in all_suites]
+
+def suites_from(test_files):
+  return suite_objects_from(suite_configs_from(test_files))
+
+class Environment:
+  def __init__(self, env_config, test_suites):
+    self.config = env_config
+    self.suites = copy.deepcopy(test_suites)
+    self.num_errors = 0
+    self.num_failing_cases = 0
+    self.num_failing_suites = 0
+
+  def success(self):
+    return self.num_errors == 0
+
+  def name(self):
+    return self.config.name()
+
+
+
+class Suite:
+  def __init__(self, suite_config):
+    self.config = copy.deepcopy(suite_config)
+    self.cases = [TestCase(test_config) for test_config in suite_config.get(SUITE_CASES, [])]
+    self.config[SUITE_CASES] = None
+    self.num_errors = 0
+    self.num_failing_cases = 0
+
+  def enabled(self):
+    return self.config.get(SUITE_ENABLED, True)
+
+  def setup(self):
+    return self.config.get(SUITE_SETUP, "")
+
+  def teardown(self):
+    return self.config.get(SUITE_TEARDOWN, "")
+
+  def name(self):
+    return self.config.get(SUITE_NAME,"")
+
+  def source(self):
+    return self.config[SUITE_SOURCE]
+
+  def success(self):
+    return self.num_errors == 0
+
+class TestCase:
+  def __init__(self, test_config):
+    self.config = copy.deepcopy(test_config)
+    self.runner = None
+    self.num_errors = 0
+
+  def success(self):
+    return self.num_errors == 0
+
+  def name(self):
+    return self.config.get(CASE_NAME, "(missing name)")
+
+  def spec(self):
+    return self.config.get(CASE_SPEC,"")

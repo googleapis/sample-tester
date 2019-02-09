@@ -45,7 +45,7 @@ USERPATH depends on CONVENTION. For `id_by_region`, it should be a path to a
 def main():
   # logging.basicConfig(level=logging.INFO)
   logging.info("argv: {}".format(sys.argv))
-  verbose = True
+  verbose = False   # TODO: Make this a flag
 
   convention_files, test_files, user_paths = read_args(sys.argv)
   convention_files = convention_files or [convention.default]
