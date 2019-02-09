@@ -1,6 +1,6 @@
 test:
   suites:
-  - name: "Declarative test"
+  - name: "Declarative test, meant to fail"
     setup:
     - uuid: product_id
     - log:
@@ -42,7 +42,7 @@ test:
           - variable: product_id
 
 
-  - name:  "Procedural test"
+  - name:  "Procedural test, meant to fail"
     setup:
     - code: |
         product_id=uuid()

@@ -9,7 +9,9 @@
 #  ./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
 #
 # run with "cloud" convention:
+#   # a passing test:
 #   ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis
+#   # a failing test:
 #   ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.product_search_test.yaml testdata/googleapis
 #
 #
@@ -17,7 +19,7 @@
 #  python3 -m unittest discover -s . -p '*_test.py' -v
 #
 # Quick verification everything works:
-#  python3 -m unittest discover -s . -p '*_test.py' -v && ./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml && echo -e "\n\nOK" || echo -e "\n\nERROR above"
+#  python3 -m unittest discover -s . -p '*_test.py' -v && ./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml && ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis && echo -e "\n\nOK" || echo -e "\n\nERROR above"
 #
 
 import logging
@@ -30,7 +32,7 @@ import convention
 import testplan
 import summary
 import xunit
-
+import argparse
 
 
 usage_message = """\nUsage:
@@ -44,11 +46,14 @@ USERPATH depends on CONVENTION. For `id_by_region`, it should be a path to a
 """.format(os.path.basename(__file__))
 
 def main():
-  # logging.basicConfig(level=logging.INFO)
-  logging.info("argv: {}".format(sys.argv))
-  verbose = False   # TODO: Make this a flag
+  args = parse_cli()
 
-  convention_files, test_files, user_paths = read_args(sys.argv)
+  log_level=LOG_LEVELS[args.logging]
+  if log_level is not None:
+    logging.basicConfig(level=log_level)
+  logging.info("argv: {}".format(sys.argv))
+
+  convention_files, test_files, user_paths = get_files(args.files)
   convention_files = convention_files or [convention.default]
 
   environment_registry = testenv.from_files(convention_files, user_paths)
@@ -56,23 +61,43 @@ def main():
   manager = testplan.Manager(environment_registry, test_suites)
 
   run_passed = manager.accept(runner.RunVisitor())
-  print(manager.accept(summary.SummaryVisitor(verbose)))
-  print()
+  if args.summary:
+    print(manager.accept(summary.SummaryVisitor(args.verbose)))
+    print()
 
-  print(manager.accept(xunit.XUnitVisitor()))
-  print()
+  if args.xunit:
+    print(manager.accept(xunit.XUnitVisitor()))
+    print()
 
   if not run_passed:
     print('Tests failed')
     exit(-1)
   print('Tests passed')
 
+
+LOG_LEVELS = {
+    "none": None,
+    "info": logging.INFO,
+    "debug": logging.DEBUG
+}
+
+def parse_cli():
+  parser = argparse.ArgumentParser(description="A tool to run tests on equivalent samples in different languages")
+  parser.add_argument("--xunit", metavar='FILE', help="xunit output file")
+  parser.add_argument("-s", "--summary", help="show test status summary on stdout", action="store_true")
+  parser.add_argument("-v", "--verbose", help="if -s, be verbose", action="store_true")
+  parser.add_argument("-l", "--logging", metavar='LEVEL', help="show logs at the specified level", choices=list(LOG_LEVELS.keys()), default="none")
+
+  parser.add_argument('files', nargs=argparse.REMAINDER)
+  return  parser.parse_args()
+
+
 # cf https://docs.python.org/3/library/argparse.html
-def read_args(argv):
+def get_files(files):
   convention_files = []
   test_files = []
   user_paths = []
-  for filename in argv[1:]:
+  for filename in files:
     filepath = os.path.abspath(filename)
     if os.path.isdir(filepath):
       user_paths.append(filepath)
