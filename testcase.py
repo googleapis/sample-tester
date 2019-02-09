@@ -189,7 +189,7 @@ class TestCase:
 
   def run(self):
     status_message = ""
-    print("---- Test case {:d}: \"{:s}\"".format(self.idx,self.label), end="")
+    log_entry_prefix = "---- Test case {:d}: \"{:s}\"".format(self.idx,self.label)
 
     for stage_name, stage_spec in [("SETUP", self.setup), ("TEST", self.case), ("TEARDOWN", self.teardown)]:
       self.print_out("\n### Test case {0}".format(stage_name))
@@ -206,15 +206,15 @@ class TestCase:
 
     print_output = True
     if len(self.case_failure) > 0:
-      print(" FAILED --------------------")
+      logging.info(log_entry_prefix + " FAILED --------------------")
       for failure in self.case_failure:
-        print('    {}: {}'.format(failure[0], self.format_string(failure[1], *failure[2])))
+        logging.info('    {}: {}'.format(failure[0], self.format_string(failure[1], *failure[2])))
         print_output = True
     else:
-      print(" PASSED ------------------------------")
+      logging.info(log_entry_prefix + " PASSED ------------------------------")
     if print_output:
-      print("    Output:")
-      print(reindent(self.output, 4, "| ")+"\n")
+      logging.info("    Output:")
+      logging.info(reindent(self.output, 4, "| ")+"\n")
 
     return len(self.case_failure) == 0
 

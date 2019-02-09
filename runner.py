@@ -4,18 +4,17 @@ import yaml
 import testplan
 
 class RunVisitor(testplan.Visitor):
-  SUCCESS = '_success'
 
   def __init__(self):
     self.run_passed = True
 
   def start_visit(self):
-    print("========== Running test!")
+    logging.info("========== Running test!")
     return self.visit_environment, self.visit_environment_end
 
   def visit_environment(self, environment):
     environment['test_env'].setup()
-    environment[self.SUCCESS] = True
+    environment[testplan.SUCCESS] = True
     return (lambda idx, suite: self.visit_suite(idx, suite, environment),
             lambda idx, suite: self.visit_suite_end(idx, suite, environment))
 
@@ -25,9 +24,9 @@ class RunVisitor(testplan.Visitor):
     setup = suite.get(testplan.SUITE_SETUP, "")
     teardown = suite.get(testplan.SUITE_TEARDOWN, "")
     suite_name = suite.get(testplan.SUITE_NAME,"")
-    print("\n==== SUITE {}:{}:{} START  ==========================================".format(environment['test_env'].name(), idx, suite_name))
-    print("     {}".format(suite[testplan.SUITE_SOURCE]))
-    suite[self.SUCCESS] = True
+    logging.info("\n==== SUITE {}:{}:{} START  ==========================================".format(environment['test_env'].name(), idx, suite_name))
+    logging.info("     {}".format(suite[testplan.SUITE_SOURCE]))
+    suite[testplan.SUCCESS] = True
     return lambda idx, testcase: self.visit_testcase(idx, testcase, environment['test_env'], suite, setup, teardown)
 
   def visit_testcase(self, idx, tcase, environment, suite, setup, teardown):
@@ -37,24 +36,23 @@ class RunVisitor(testplan.Visitor):
                                   tcase.get(testplan.CASE_SPEC,""),
                                   teardown)
     tcase['_runner'] = this_case
-    tcase[self.SUCCESS] = this_case.run()
-    if not tcase[self.SUCCESS]:
-      suite[self.SUCCESS] = False
+    tcase[testplan.SUCCESS] = this_case.run()
+    if not tcase[testplan.SUCCESS]:
+      suite[testplan.SUCCESS] = False
 
   def visit_suite_end(self, idx, suite, environment):
     suite_name = suite.get(testplan.SUITE_NAME,"")
-    if suite[self.SUCCESS]:
-      print("==== SUITE {}:{}:{} SUCCESS ========================================".format(environment['test_env'].name(), idx, suite_name))
+    if suite[testplan.SUCCESS]:
+      logging.info("==== SUITE {}:{}:{} SUCCESS ========================================".format(environment['test_env'].name(), idx, suite_name))
     else:
-      environment[self.SUCCESS] = False
-      print("==== SUITE {}:{}:{} FAILURE ========================================".format(environment['test_env'].name(), idx, suite_name))
-    print()
+      environment[testplan.SUCCESS] = False
+      logging.info("==== SUITE {}:{}:{} FAILURE ========================================".format(environment['test_env'].name(), idx, suite_name))
 
   def visit_environment_end(self, environment):
-    if not environment[self.SUCCESS]:
+    if not environment[testplan.SUCCESS]:
       self.run_passed = False
     environment['test_env'].teardown()
 
   def end_visit(self):
-    print("========== Finished running test")
+    logging.info("========== Finished running test")
     return self.run_passed

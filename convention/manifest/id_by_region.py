@@ -54,7 +54,7 @@ class LanguageRegionManifestEnvironmentProvider:
       self.languages = ["(nolang)"]
     self.resolver={}
     for language in self.languages:
-      name = '{} region resolver'.format(language)
+      name = '{}, region tags'.format(language)
       resolver = ManifestEnvironment(name, self.manifest, [language])
       self.resolver[language] = resolver
       register_test_environment(resolver)

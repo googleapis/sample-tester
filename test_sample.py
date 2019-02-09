@@ -28,6 +28,7 @@ import testenv
 import runner
 import convention
 import testplan
+import summary
 
 
 
@@ -42,7 +43,7 @@ USERPATH depends on CONVENTION. For `id_by_region`, it should be a path to a
 """.format(os.path.basename(__file__))
 
 def main():
-  logging.basicConfig(level=logging.INFO)
+  # logging.basicConfig(level=logging.INFO)
   logging.info("argv: {}".format(sys.argv))
   convention_files, test_files, user_paths = read_args(sys.argv)
   convention_files = convention_files or [convention.default]
@@ -52,9 +53,13 @@ def main():
   manager = testplan.Manager(environment_registry, test_suites)
 
   run_passed = manager.accept(runner.RunVisitor())
+  print(manager.accept(summary.SummaryVisitor()))
+  print()
 
   if not run_passed:
+    print('Tests failed')
     exit(-1)
+  print('Tests passed')
 
 # cf https://docs.python.org/3/library/argparse.html
 def read_args(argv):

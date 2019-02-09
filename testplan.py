@@ -3,6 +3,8 @@ import logging
 import testcase
 import yaml
 
+SUCCESS = '_success'
+
 class Visitor:
   # Each visit function returns a visitor or two to the next level of the hierarchy, or
   # None if the next level of the hierarchy is not to be traversed (for example,
