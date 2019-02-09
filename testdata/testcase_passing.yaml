@@ -1,34 +1,99 @@
 test:
+  # For this test, suite names should contain the strings "Passing" or
+  # "Failing" so the text fixture knows what to expect.
+  #
+  # The test case  # names should be just "yaml" or "code".  
   suites:
   - name: Passing directives test
     cases:
-    - name: "Code block"
+    - name: "code"
       spec:
         - code: |
-            out = call('/bin/echo', '"Hello there"')
+            out = call('/bin/echo', '"It was the best of times"')
             assert_success("echo should have succeeded")
-            assert_contains("there")
-            assert_not_contains("goodbye")
-            assert_that('ello' in out, 'expected "ello" in the preceding output')
-            expect('ello' in out, 'expected "ello" in the preceding output')
+            assert_contains("best")
+            assert_not_contains("worst")
+            assert_that('ime' in out, 'expected "ime" in the preceding output')
+            expect('ime' in out, 'expected "ime" in the preceding output')
             call_may_fail('/nonexistent/dir/foobar')
             assert_failure("foobar call should have failed")
-    - name: "YAML"
+    - name: "yaml"
       spec:
         - call:
             target: "/bin/echo"
             args:
-            - literal: "Hello there"
+            - literal: "It was the best of times"
         - assert_success:
-          - message: "echo should have succeeded"
+          - "echo should have succeeded"
         - assert_contains:
-          - message: "Expected 'there'"
-          - literal: "there"
+          - message: "Expected 'best'"
+          - literal: "best"
         - assert_not_contains:
-          - message: "Expected no 'goodbye'"            
-          - literal: "goodbye"
+          - message: "Expected no 'worst'"            
+          - literal: "worst"
         - call_may_fail:
             target: '/nonexistent/dir/foobar'
         - assert_failure:
           - message: "foobar call should have failed"
+  - name: Failing call
+    cases:
+    - name: code
+      spec:
+      - code: out=call('/foo/foo')
+    - name: yaml
+      spec:
+      - call:
+          target: '/foo/foo'
+  - name: Failing assert_success
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call_may_fail('/bin/ls', '/foo/foo')
+          assert_success('claim this passes')
+    - name: yaml
+      spec:
+      - code: out=call_may_fail('/bin/ls', '/foo/foo')
+      - assert_success:
+        - "claim this passes"
+  - name: Failing assert_failure
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call_may_fail('/bin/echo', 'Hello')
+          assert_failure('claim this fails')
+    - name: yaml
+      spec:
+      - code: out = call_may_fail('/bin/echo', 'Hello')
+      - assert_failure:
+        - "claim this fails"
+  - name: Failing assert_contains
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call('/bin/echo', 'It was the best of times')
+          assert_contains('claim this is in there', 'worst')  # TODO: reverse these args; they're counterintuitive
+    - name: yaml
+      spec:
+      - code: out = call('/bin/echo', 'It was the best of times')
+      - assert_contains:
+        - message: "claim this is in there"
+        - literal: "worst"
+  - name: Failing assert_not_contains
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call('/bin/echo', 'It was the best of times')
+          assert_not_contains('claim this is not in there', 'best')  # TODO: reverse these args; they're counterintuitive
+    - name: yaml
+      spec:
+      - code: out = call('/bin/echo', 'It was the best of times')
+      - assert_not_contains:
+        - message: "claim this is not in there"
+        - literal: "best"
+
+          
 

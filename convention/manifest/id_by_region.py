@@ -15,8 +15,8 @@ class ManifestEnvironment(testenv.BaseTestEnvironment):
   if it is not executable.
   """
 
-  def __init__(self, name: str, manifest: Manifest, indices: Iterable[str]):
-    super().__init__(name)
+  def __init__(self, name: str, description:str, manifest: Manifest, indices: Iterable[str]):
+    super().__init__(name, description)
     self.manifest = manifest
     self.const_indices = indices
 
@@ -63,8 +63,9 @@ class LanguageRegionManifestEnvironmentProvider:
       self.languages = ["(nolang)"]
     self.resolver={}
     for language in self.languages:
-      name = '{}, region tags'.format(language)
-      resolver = ManifestEnvironment(name, self.manifest, [language])
+      description = 'Language, region_tags:{}'.format(language)
+      name=language
+      resolver = ManifestEnvironment(name, description, self.manifest, [language])
       self.resolver[language] = resolver
       register_test_environment(resolver)
 

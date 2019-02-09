@@ -199,8 +199,10 @@ class TestCase:
         except TestError:
           pass
         except Exception as e:
-          self.record_failure("UNHANDLED EXCEPTION (check state: clean-up did not finish)",
-                              " {} in stage {} ", e, stage_name)
+          status = "UNHANDLED EXCEPTION (check state: clean-up did not finish) {}".format(e)
+          description = " in stage {} ".format(stage_name)
+          self.record_failure(status, description)
+          print(status + description)
           traceback.print_tb(e.__traceback__)
           break
 

@@ -18,8 +18,9 @@ def from_files(convention_files: Iterable[str], user_paths : Iterable[str] = Non
 
 
 class BaseTestEnvironment:
-  def __init__(self, name='#BaseTestEnvironment'):
+  def __init__(self, name='#BaseTestEnvironment', description=''):
     self._name = name
+    self._description = description
 
   def name(self):
     return self._name
