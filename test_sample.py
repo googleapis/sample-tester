@@ -29,6 +29,7 @@ import runner
 import convention
 import testplan
 import summary
+import xunit
 
 
 
@@ -56,6 +57,9 @@ def main():
 
   run_passed = manager.accept(runner.RunVisitor())
   print(manager.accept(summary.SummaryVisitor(verbose)))
+  print()
+
+  print(manager.accept(xunit.XUnitVisitor()))
   print()
 
   if not run_passed:
