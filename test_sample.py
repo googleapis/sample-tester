@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
 
-# pip install pyyaml
+# See README.md for set-up instructions.
 
 # https://docs.python.org/3/library/functions.html#exec
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
 # run with "manifest" convention (still need to change sample.manifest to a real manifest of the test samples; this fails at the moment because of that):
-#  ./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
+#  ./sampletester convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
 #
 # run with "cloud" convention:
 #   # a passing test:
-#   ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis
+#   ./sampletester convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis
 #   # a failing test:
-#   ./test_sample.py convention/cloud/cloud.py convention/cloud/ex.product_search_test.yaml testdata/googleapis
+#   ./sampletester convention/cloud/cloud.py convention/cloud/ex.product_search_test.yaml testdata/googleapis
 #
 #
 # Run all tests:
 #  python3 -m unittest discover -s . -p '*_test.py' -v
 #
 # Quick verification everything works:
-#  FLAGS="--xunit FOO -s -v"; python3 -m unittest discover -s . -p '*_test.py' -v && ./test_sample.py $FLAGS convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml && ./test_sample.py $FLAGS convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis && echo -e "\n\nOK" || echo -e "\n\nERROR above"
+#  FLAGS="--xunit FOO -s -v"; python3 -m unittest discover -s . -p '*_test.py' -v && ./sampletester $FLAGS convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml && ./sampletester $FLAGS convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis && echo -e "\n\nOK" || echo -e "\n\nERROR above"
 #
+# To find all TODOs:
+#  grep -r TODO | grep -v '~' | grep -v /lib/
+
+# TODO(vchudnov): Change the name of this file to sampletester.py
 
 import logging
 import os

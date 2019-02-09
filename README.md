@@ -14,7 +14,7 @@ Refer to spec at [go/actools-sample-tester](go/actools-sample-tester).
    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/creds.json
    ```
    
-2. Install the necessary packages in your PIP environment
+2. Install the necessary packages in your PIP environment. In particular, you will need to `pip install pyyaml`
    The virtual environment set up for running artman should be sufficient (thought not all the those packages may be necessary)
    TODO: trim down the list of packages
 
@@ -57,7 +57,7 @@ See `convention/manifest/sample.manifest.yaml` for a concrete, commented example
 The usage is:
 
 ``
-/test_sample.py TEST.yaml [CONVENTION.py] [TEST.yaml ...] [USERPATH ...]`
+./sampletester TEST.yaml [CONVENTION.py] [TEST.yaml ...] [USERPATH ...]`
 ``
 
 here `CONVENTION.py` is one of `convention/manifest/id_by_region.py` (default) or
@@ -70,9 +70,13 @@ MANIFEST.manifest.yaml` file.
 or example, my own invocation to run a test on the fake samples under `testdata/` is
 
 ```
-./test_sample.py convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
+./sampletester -s convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
 ```
    
+Flags of interest:
+
+* `-s` and `-s -v` to get a test summary in stdout, without or with textual output from each testcase
+* `--xunit=FILE` to output a test summary in xUnit format to `FILE` (in progress; currently spits out bare-bones output to stdout)
 
     
 ## NOTES
