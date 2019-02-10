@@ -76,7 +76,7 @@ def main():
       with smart_open(args.xunit) as xunit_output:
         xunit_output.write(manager.accept(xunit.Visitor()))
       if args.summary:
-        print('xunit output written to "{}"'.format(args.xunit))
+        print('xUnit output written to "{}"'.format(args.xunit))
     except Exception as e:
       print('could not write xunit output to {}: {}'.format(args.xunit, e))
       exit(EXITCODE_FLAGS)

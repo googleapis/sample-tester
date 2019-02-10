@@ -16,7 +16,7 @@ class Visitor(testplan.Visitor):
   def visit_suite(self, idx, suite):
     self.lines.append('{}<testsuite name="{}" failures="{}" errors="{}" timestamp="{}" time="{}">'
           .format(self.indent,
-                  self.environment.config.adjust_suite_name(suite.name()),
+                  html.escape(self.environment.config.adjust_suite_name(suite.name())),
                   suite.num_failures,
                   suite.num_errors,
                   suite.start_time.isoformat(),
@@ -26,20 +26,20 @@ class Visitor(testplan.Visitor):
   def visit_testcase(self, idx, tcase):
     self.lines.append('{}<testcase name="{}" failures="{}" errors="{}" timestamp="{}" time="{}">'
           .format(self.indent*2,
-                  self.environment.config.adjust_suite_name(tcase.name()),
+                  html.escape(self.environment.config.adjust_suite_name(tcase.name())),
                   tcase.num_failures,
                   tcase.num_errors,
                   tcase.start_time.isoformat(),
                   tcase.duration().total_seconds()) )
 
     for failure in tcase.runner.get_failures():
-      self.lines.append('{}<failure type="{}">'.format(self.indent*3, failure[0].lower()))
-      self.lines.append('{}{}'.format(self.indent*4, failure[1]))
+      self.lines.append('{}<failure type="{}">'.format(self.indent*3, html.escape(failure[0].lower())))
+      self.lines.append('{}{}'.format(self.indent*4, html.escape(failure[1])))
       self.lines.append('{}</failure>'.format(self.indent*3))
 
     for error in tcase.runner.get_errors():
-      self.lines.append('{}<error type="{}">'.format(self.indent*3, error[0].lower()))
-      self.lines.append('{}{}'.format(self.indent*4, error[1]))
+      self.lines.append('{}<error type="{}">'.format(self.indent*3, html.escape(error[0].lower())))
+      self.lines.append('{}{}'.format(self.indent*4, html.escape(error[1])))
       self.lines.append('{}</error>'.format(self.indent*3))
 
     self.lines.append('{}<system-out>{}\n{}</system-out>'
