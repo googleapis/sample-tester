@@ -52,4 +52,7 @@ class Visitor(testplan.Visitor):
 
   def end_visit(self):
     logging.info("========== Finished running test")
+    return self.success()
+
+  def success(self):
     return self.run_passed

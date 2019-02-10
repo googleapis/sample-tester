@@ -81,6 +81,14 @@ Flags of interest:
     
 ## NOTES
 
-**tl;dr: some things will change soon**
+**tl;dr: things are in flux**
+
+* Recent changes of interest:
+  * the executable is now `sampletester`, which is a symlink to `test_sample.py`. In a future release, the name of this Python file will change to `sampletester.py`
+  * most of the time you will want to run with the `-s` flag. If you want to debug a test failure, you'll want `-s -v`
+  
+* Contemplated upcoming changes: *feedback welcome*
+  * full xUnit output support via `--xunit`
+  
 
 * I am also in the process of implementing the feedback on [go/actools-sample-tester](go/actools-sample-tester). This will reduce the number of available directives, and rename some of them.

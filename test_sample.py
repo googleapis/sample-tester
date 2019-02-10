@@ -19,7 +19,7 @@
 #  python3 -m unittest discover -s . -p '*_test.py' -v
 #
 # Quick verification everything works:
-#  FLAGS="--xunit FOO -s -v"; python3 -m unittest discover -s . -p '*_test.py' -v && ./sampletester $FLAGS convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml && ./sampletester $FLAGS convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis && echo -e "\n\nOK" || echo -e "\n\nERROR above"
+#  FLAGS="-s -v --xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX)"; python3 -m unittest discover -s . -p '*_test.py' -v && ./sampletester $FLAGS convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml && ./sampletester $FLAGS convention/cloud/cloud.py convention/cloud/ex.language.test.yaml testdata/googleapis && echo -e "\n\nChecks: OK" || echo -e "\n\nChecks: ERROR (status: $?) above"
 #
 # To find all TODOs:
 #  grep -r TODO | grep -v '~' | grep -v /lib/
@@ -37,6 +37,7 @@ import testplan
 import summary
 import xunit
 import argparse
+import contextlib
 
 
 usage_message = """\nUsage:
@@ -48,6 +49,10 @@ CONVENTION.py is one of `convention/manifest/id_by_region.py` (default) or
 USERPATH depends on CONVENTION. For `id_by_region`, it should be a path to a
    `MANIFEST.manifest.yaml` file.
 """.format(os.path.basename(__file__))
+
+EXITCODE_SUCCESS = 0
+EXITCODE_FAILURE = 1
+EXITCODE_FLAGS = 2
 
 def main():
   args = parse_cli()
@@ -64,20 +69,27 @@ def main():
   test_suites = testplan.suites_from(test_files)
   manager = testplan.Manager(environment_registry, test_suites)
 
-  run_passed = manager.accept(runner.Visitor())
+  success = manager.accept(runner.Visitor())
 
   if args.summary:
     print(manager.accept(summary.SummaryVisitor(args.verbose)))
     print()
+    if success:
+      print('Tests passed')
+    else:
+      print('Tests failed')
 
   if args.xunit:
-    print(manager.accept(xunit.Visitor()))
-    print()
+    try:
+      with smart_open(args.xunit) as xunit_output:
+        xunit_output.write(manager.accept(xunit.Visitor()))
+      if args.summary:
+        print('xunit output written to "{}"'.format(args.xunit))
+    except Exception as e:
+      print('could not write xunit output to {}: {}'.format(args.xunit, e))
+      exit(EXITCODE_FLAGS)
 
-  if not run_passed:
-    print('Tests failed')
-    exit(-1)
-  print('Tests passed')
+  exit(EXITCODE_SUCCESS if success else EXITCODE_FAILURE)
 
 
 LOG_LEVELS = {
@@ -125,7 +137,20 @@ def get_files(files):
   return convention_files, test_files, user_paths
 
 
-#  eval(spec["test"]["case"])
+# from https://stackoverflow.com/a/17603000
+@contextlib.contextmanager
+def smart_open(filename=None):
+    if filename and filename != '-':
+        fh = open(filename, 'w')
+    else:
+        fh = sys.stdout
+
+    try:
+      yield fh
+    finally:
+      if fh is not sys.stdout:
+        fh.close()
+
 
 if __name__== "__main__":
   main()
