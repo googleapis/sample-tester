@@ -63,7 +63,7 @@ The usage is:
 here `CONVENTION.py` is one of `convention/manifest/id_by_region.py` (default) or
 convention/cloud/cloud.py`
 
-USERPATH` depends on `CONVENTION`. For `id_by_region`, it should be a path to a
+`USERPATH` depends on `CONVENTION`. For `id_by_region`, it should be a path to a
 MANIFEST.manifest.yaml` file.
 
 
@@ -73,22 +73,24 @@ or example, my own invocation to run a test on the fake samples under `testdata/
 ./sampletester -s convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
 ```
    
-Flags of interest:
+Usage notes:
 
-* `-s` and `-s -v` to get a test summary in stdout, without or with textual output from each testcase
-* `--xunit=FILE` to output a test summary in xUnit format to `FILE` (in progress; currently spits out bare-bones output to stdout)
-
+* `sampletester` exits with a non-zero code if there was any error in the flags, test config, or test execution
+* if you're interested in seeing results on stdout, you'll probably want to run with the `-s` flag. If you want to debug a test failure, you'll want `-s -v`
+* `--xunit=FILE` to output a test summary in xUnit format to `FILE` (output still needs to be expanded)
     
 ## NOTES
 
-**tl;dr: things are in flux**
+**tl;dr: things are settling down, but still changing a bit**
 
 * Recent changes of interest:
   * the executable is now `sampletester`, which is a symlink to `test_sample.py`. In a future release, the name of this Python file will change to `sampletester.py`
-  * most of the time you will want to run with the `-s` flag. If you want to debug a test failure, you'll want `-s -v`
+  * exit code (see above)
+  * `-s` and `-v` (see above)
+  * you can specify a location for xUnit output via `--xunit=FLAG`
   
-* Contemplated upcoming changes: *feedback welcome*
-  * full xUnit output support via `--xunit`
+* Contemplated upcoming changes:
+  * expand xUnit output
   
 
-* I am also in the process of implementing the feedback on [go/actools-sample-tester](go/actools-sample-tester). This will reduce the number of available directives, and rename some of them.
+* I am also in the process of implementing the feedback on [go/actools-sample-tester](go/actools-sample-tester).
