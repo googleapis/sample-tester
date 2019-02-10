@@ -1,6 +1,5 @@
 import copy
 import logging
-import testcase
 import yaml
 
 class Visitor:

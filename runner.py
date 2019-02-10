@@ -1,5 +1,5 @@
 import logging
-import testcase
+import caserunner
 import yaml
 import testplan
 
@@ -25,11 +25,11 @@ class Visitor(testplan.Visitor):
     return lambda idx, testcase: self.visit_testcase(idx, testcase, environment.config, suite)
 
   def visit_testcase(self, idx, tcase, environment, suite):
-    case_runner = testcase.TestCase(environment, idx,
-                                    tcase.name(),
-                                    suite.setup(),
-                                    tcase.spec(),
-                                    suite.teardown())
+    case_runner = caserunner.TestCase(environment, idx,
+                                      tcase.name(),
+                                      suite.setup(),
+                                      tcase.spec(),
+                                      suite.teardown())
     tcase.runner = case_runner
     tcase.num_errors += case_runner.run()
     suite.num_errors += tcase.num_errors
