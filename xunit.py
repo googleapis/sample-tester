@@ -1,8 +1,6 @@
 import testplan
 import html
 
-# TODO(vchudnov): Use XML library
-
 class Visitor(testplan.Visitor):
   def __init__(self):
     self.environment = None
@@ -16,8 +14,9 @@ class Visitor(testplan.Visitor):
     return self.visit_suite, self.visit_suite_end
 
   def visit_suite(self, idx, suite):
-    self.lines.append(self.indent + '<testsuite name="{}: {}" failures="{}" errors="{}" timestamp="{}" time="{}">'
-          .format(self.environment.config.adjust_suite_name(suite.name()), self.environment.name(),
+    self.lines.append('{}<testsuite name="{}" failures="{}" errors="{}" timestamp="{}" time="{}">'
+          .format(self.indent,
+                  self.environment.config.adjust_suite_name(suite.name()),
                   suite.num_failures,
                   suite.num_errors,
                   suite.start_time.isoformat(),
@@ -25,20 +24,33 @@ class Visitor(testplan.Visitor):
     return self.visit_testcase
 
   def visit_testcase(self, idx, tcase):
-    self.lines.append(self.indent*2 + '<testcase name="{}" failures="{}" errors="{}" timestamp="{}" time="{}">'
-          .format(self.environment.config.adjust_suite_name(tcase.name()),
+    self.lines.append('{}<testcase name="{}" failures="{}" errors="{}" timestamp="{}" time="{}">'
+          .format(self.indent*2,
+                  self.environment.config.adjust_suite_name(tcase.name()),
                   tcase.num_failures,
                   tcase.num_errors,
                   tcase.start_time.isoformat(),
                   tcase.duration().total_seconds()) )
+
+    for failure in tcase.runner.get_failures():
+      self.lines.append('{}<failure type="{}">'.format(self.indent*3, failure[0].lower()))
+      self.lines.append('{}{}'.format(self.indent*4, failure[1]))
+      self.lines.append('{}</failure>'.format(self.indent*3))
+
+    for error in tcase.runner.get_errors():
+      self.lines.append('{}<error type="{}">'.format(self.indent*3, error[0].lower()))
+      self.lines.append('{}{}'.format(self.indent*4, error[1]))
+      self.lines.append('{}</error>'.format(self.indent*3))
+
     self.lines.append('{}<system-out>{}\n{}</system-out>'
                       .format(self.indent*3,
                               html.escape(tcase.runner.get_output(8)),
                               self.indent*3))
+
     self.lines.append(self.indent*2 + '</testcase>')
 
   def visit_suite_end(self, idx, suite):
-    self.lines.append(self.indent +'</testsuite>')
+    self.lines.append('{}</testsuite>'.format(self.indent))
 
   def visit_environment_end(self, environment):
     self.num_failures += environment.num_failures
@@ -48,7 +60,5 @@ class Visitor(testplan.Visitor):
     lines = self.lines
     self.lines=['<testsuites failures="{}" errors="{}">'.format(self.num_failures, self.num_errors)]
     self.lines.extend(lines)
-    self.lines.append('</testsuites>')
+    self.lines.append('</testsuites>\n')
     return '\n'.join(self.lines)
-
-# TODO: write <failure> elements. Do we need <error> elements?

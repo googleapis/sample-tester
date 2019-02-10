@@ -70,6 +70,12 @@ class TestCase:
     for symbol, info in self.builtins.items():
       self.local_symbols[symbol] = info[0]
 
+  def get_failures(self):
+    return [(status, message.format(args)) for status, message, args in self.failures]
+
+  def get_errors(self):
+    return [(status, message.format(args)) for status, message, args in self.errors]
+
   # Records a single failure in this TestCase.
   def record_failure(self, status, message, *args):
     self.failures.append((status, message, args))
@@ -208,8 +214,8 @@ class TestCase:
         except TestError:
           pass
         except Exception as e:
-          status = "UNHANDLED EXCEPTION (check state: clean-up did not finish) {}".format(e)
-          description = " in stage {} ".format(stage_name)
+          status = "UNHANDLED EXCEPTION in stage {} ".format(stage_name)
+          description = str(e)
           self.record_error(status, description)
           print(status + description)
           traceback.print_tb(e.__traceback__)
@@ -219,12 +225,14 @@ class TestCase:
     if len(self.failures) > 0:
       logging.info(log_entry_prefix + " FAILED --------------------")
       for failure in self.failures:
-        logging.info('    {}: {}'.format(failure[0], self.format_string(failure[1], *failure[2])))
+        logging.info('    {}: {}'.format(failure[0],
+                                         self.format_string(failure[1], *failure[2])))
         print_output = True
     elif len(self.errors) > 0:
       logging.info(log_entry_prefix + " ERRORED --------------------")
       for error in self.errors:
-        logging.info('    {}: {}'.format(error[0], self.format_string(error[1], *error[2])))
+        logging.info('    {}: (check state: clean-up did not finish) {}'
+                     .format(error[0], self.format_string(error[1], *error[2])))
         print_output = True
     else:
       logging.info(log_entry_prefix + " PASSED ------------------------------")
