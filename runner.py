@@ -35,6 +35,8 @@ class Visitor(testplan.Visitor):
     suite.num_errors += tcase.num_errors
     if tcase.num_errors > 0:
       suite.num_failing_cases += 1
+    tcase.update_times(case_runner.start_time, case_runner.end_time)
+    suite.update_times(case_runner.start_time, case_runner.end_time)
 
   def visit_suite_end(self, idx, suite, environment):
     if suite.success():
@@ -43,6 +45,7 @@ class Visitor(testplan.Visitor):
       environment.num_errors += suite.num_errors
       environment.num_failing_cases += suite.num_failing_cases
       environment.num_failing_suites += 1
+      environment.update_times(suite.start_time, suite.end_time)
       logging.info("==== SUITE {}:{}:{} FAILURE ========================================".format(environment.name(), idx, suite.name()))
 
   def visit_environment_end(self, environment):

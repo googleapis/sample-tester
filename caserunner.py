@@ -4,6 +4,7 @@ import traceback
 from testenv import BaseTestEnvironment
 import logging
 import copy
+from datetime import datetime
 
 class TestCase:
   def __init__(self, environment: BaseTestEnvironment, idx:int, label: str, setup, case, teardown):
@@ -19,6 +20,8 @@ class TestCase:
 
     self.last_return_code = 0
     self.last_call_output = ""
+    self.start_time = None
+    self.end_time = None
 
     # The key is the external binding available through `code` and directly through yaml keys.
     #
@@ -188,6 +191,7 @@ class TestCase:
 
 
   def run(self):
+    self.start_time = datetime.now()
     status_message = ""
     log_entry_prefix = "---- Test case {:d}: \"{:s}\"".format(self.idx,self.label)
 
@@ -218,6 +222,7 @@ class TestCase:
       logging.info("    Output:")
       logging.info(self.get_output(4, "| ")+"\n")
 
+    self.end_time = datetime.now()
     return len(self.case_failure)
 
   def get_output(self, indent=0, header=''):

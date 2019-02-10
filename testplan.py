@@ -99,13 +99,29 @@ def suite_objects_from(all_suites):
 def suites_from(test_files):
   return suite_objects_from(suite_configs_from(test_files))
 
-class Environment:
+class Wrapper:
+  def __init__(self):
+    self.start_time = None
+    self.end_time = None
+
+  def update_times(self, starting, ending):
+    if not self.start_time or starting < self.start_time:
+      self.start_time = starting
+    if not self.end_time or ending > self.end_time:
+      self.end_time = ending
+
+  def duration(self):
+    return self.end_time - self.start_time
+
+class Environment(Wrapper):
   def __init__(self, env_config, test_suites):
+    super().__init__()
     self.config = env_config
     self.suites = copy.deepcopy(test_suites)
     self.num_errors = 0
     self.num_failing_cases = 0
     self.num_failing_suites = 0
+
 
   def success(self):
     return self.num_errors == 0
@@ -113,10 +129,9 @@ class Environment:
   def name(self):
     return self.config.name()
 
-
-
-class Suite:
+class Suite(Wrapper):
   def __init__(self, suite_config):
+    super().__init__()
     self.config = copy.deepcopy(suite_config)
     self.cases = [TestCase(test_config) for test_config in suite_config.get(SUITE_CASES, [])]
     self.config[SUITE_CASES] = None
@@ -141,8 +156,9 @@ class Suite:
   def success(self):
     return self.num_errors == 0
 
-class TestCase:
+class TestCase(Wrapper):
   def __init__(self, test_config):
+    super().__init__()
     self.config = copy.deepcopy(test_config)
     self.runner = None
     self.num_errors = 0
