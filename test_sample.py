@@ -40,15 +40,7 @@ import argparse
 import contextlib
 
 
-usage_message = """\nUsage:
-{} TEST.yaml [CONVENTION.py] [TEST.yaml ...] [USERPATH ...]
 
-CONVENTION.py is one of `convention/manifest/id_by_region.py` (default) or
-   `convention/cloud/cloud.py`
-
-USERPATH depends on CONVENTION. For `id_by_region`, it should be a path to a
-   `MANIFEST.manifest.yaml` file.
-""".format(os.path.basename(__file__))
 
 EXITCODE_SUCCESS = 0
 EXITCODE_FAILURE = 1
@@ -99,13 +91,27 @@ LOG_LEVELS = {
 }
 
 def parse_cli():
-  parser = argparse.ArgumentParser(description="A tool to run tests on equivalent samples in different languages")
+  epilog = """CONFIGS consists of any number of the following, in any order:
+
+  TEST.yaml files: these are the test plans to execute against the CONVENTIONs
+
+  CONVENTION.py files: the conventions used to resolve artifacts in
+    the TEST.yaml files.  Pre-defined conventions are
+    `convention/manifest/id_by_region.py` (default) or `convention/cloud/cloud.py`.
+
+  arbitrary files/paths, depending on CONVENTION. For `id_by_region`, these should
+    be paths to `MANIFEST.manifest.yaml` files.
+"""
+
+  parser = argparse.ArgumentParser(description="A tool to run tests on equivalent samples in different languages",
+                                   epilog=epilog,
+                                   formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument("--xunit", metavar='FILE', help="xunit output file")
   parser.add_argument("-s", "--summary", help="show test status summary on stdout", action="store_true")
   parser.add_argument("-v", "--verbose", help="if -s, be verbose", action="store_true")
   parser.add_argument("-l", "--logging", metavar='LEVEL', help="show logs at the specified level", choices=list(LOG_LEVELS.keys()), default="none")
 
-  parser.add_argument('files', nargs=argparse.REMAINDER)
+  parser.add_argument('files', metavar='CONFIGS', nargs=argparse.REMAINDER)
   return  parser.parse_args()
 
 
