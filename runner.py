@@ -31,10 +31,18 @@ class Visitor(testplan.Visitor):
                                       tcase.spec(),
                                       suite.teardown())
     tcase.runner = case_runner
-    tcase.num_errors += case_runner.run()
+    case_runner.run()
+    tcase.num_failures += len(case_runner.failures)
+    suite.num_failures += tcase.num_failures
+    if tcase.num_failures > 0:
+      suite.num_failing_cases += 1
+
+    tcase.num_errors += len(case_runner.errors)
     suite.num_errors += tcase.num_errors
     if tcase.num_errors > 0:
-      suite.num_failing_cases += 1
+      suite.num_erroring_cases += 1
+
+
     tcase.update_times(case_runner.start_time, case_runner.end_time)
     suite.update_times(case_runner.start_time, case_runner.end_time)
 
@@ -42,9 +50,16 @@ class Visitor(testplan.Visitor):
     if suite.success():
       logging.info("==== SUITE {}:{}:{} SUCCESS ========================================".format(environment.name(), idx, suite.name()))
     else:
-      environment.num_errors += suite.num_errors
+      environment.num_failures += suite.num_failures
       environment.num_failing_cases += suite.num_failing_cases
-      environment.num_failing_suites += 1
+      if suite.num_failures > 0:
+        environment.num_failing_suites += 1
+
+      environment.num_errors += suite.num_errors
+      environment.num_erroring_cases += suite.num_erroring_cases
+      if suite.num_errors > 0:
+        environment.num_erroring_suites += 1
+
       environment.update_times(suite.start_time, suite.end_time)
       logging.info("==== SUITE {}:{}:{} FAILURE ========================================".format(environment.name(), idx, suite.name()))
 

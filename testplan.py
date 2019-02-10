@@ -103,6 +103,8 @@ class Wrapper:
   def __init__(self):
     self.start_time = None
     self.end_time = None
+    self.num_errors = 0
+    self.num_failures = 0
 
   def update_times(self, starting, ending):
     if not self.start_time or starting < self.start_time:
@@ -113,18 +115,18 @@ class Wrapper:
   def duration(self):
     return self.end_time - self.start_time
 
+  def success(self):
+    return self.num_errors == 0 and self.num_failures == 0
+
 class Environment(Wrapper):
   def __init__(self, env_config, test_suites):
     super().__init__()
     self.config = env_config
     self.suites = copy.deepcopy(test_suites)
-    self.num_errors = 0
     self.num_failing_cases = 0
     self.num_failing_suites = 0
-
-
-  def success(self):
-    return self.num_errors == 0
+    self.num_erroring_cases = 0
+    self.num_erroring_suites = 0
 
   def name(self):
     return self.config.name()
@@ -135,8 +137,8 @@ class Suite(Wrapper):
     self.config = copy.deepcopy(suite_config)
     self.cases = [TestCase(test_config) for test_config in suite_config.get(SUITE_CASES, [])]
     self.config[SUITE_CASES] = None
-    self.num_errors = 0
     self.num_failing_cases = 0
+    self.num_erroring_cases = 0
 
   def enabled(self):
     return self.config.get(SUITE_ENABLED, True)
@@ -153,18 +155,11 @@ class Suite(Wrapper):
   def source(self):
     return self.config[SUITE_SOURCE]
 
-  def success(self):
-    return self.num_errors == 0
-
 class TestCase(Wrapper):
   def __init__(self, test_config):
     super().__init__()
     self.config = copy.deepcopy(test_config)
     self.runner = None
-    self.num_errors = 0
-
-  def success(self):
-    return self.num_errors == 0
 
   def name(self):
     return self.config.get(CASE_NAME, "(missing name)")

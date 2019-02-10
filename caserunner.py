@@ -8,7 +8,8 @@ from datetime import datetime
 
 class TestCase:
   def __init__(self, environment: BaseTestEnvironment, idx:int, label: str, setup, case, teardown):
-    self.case_failure = []
+    self.failures = []
+    self.errors = []
     self.output = ""
 
     self.environment = environment
@@ -71,7 +72,11 @@ class TestCase:
 
   # Records a single failure in this TestCase.
   def record_failure(self, status, message, *args):
-    self.case_failure.append((status,message, args))
+    self.failures.append((status, message, args))
+
+  # Records a single error in this TestCase.
+  def record_error(self, status, message, *args):
+    self.errors.append((status, message, args))
 
   # Expects condition or records failure.
   def expect(self, condition, message, *args):
@@ -205,16 +210,21 @@ class TestCase:
         except Exception as e:
           status = "UNHANDLED EXCEPTION (check state: clean-up did not finish) {}".format(e)
           description = " in stage {} ".format(stage_name)
-          self.record_failure(status, description)
+          self.record_error(status, description)
           print(status + description)
           traceback.print_tb(e.__traceback__)
           break
 
     print_output = True
-    if len(self.case_failure) > 0:
+    if len(self.failures) > 0:
       logging.info(log_entry_prefix + " FAILED --------------------")
-      for failure in self.case_failure:
+      for failure in self.failures:
         logging.info('    {}: {}'.format(failure[0], self.format_string(failure[1], *failure[2])))
+        print_output = True
+    elif len(self.errors) > 0:
+      logging.info(log_entry_prefix + " ERRORED --------------------")
+      for error in self.errors:
+        logging.info('    {}: {}'.format(error[0], self.format_string(error[1], *error[2])))
         print_output = True
     else:
       logging.info(log_entry_prefix + " PASSED ------------------------------")
@@ -223,7 +233,7 @@ class TestCase:
       logging.info(self.get_output(4, "| ")+"\n")
 
     self.end_time = datetime.now()
-    return len(self.case_failure)
+    return len(self.failures) + len(self.errors)
 
   def get_output(self, indent=0, header=''):
     return reindent(copy.deepcopy(self.output), indent, header)
