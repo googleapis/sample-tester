@@ -106,7 +106,7 @@ def parse_cli():
   parser = argparse.ArgumentParser(description="A tool to run tests on equivalent samples in different languages",
                                    epilog=epilog,
                                    formatter_class=argparse.RawDescriptionHelpFormatter)
-  parser.add_argument("--xunit", metavar='FILE', help="xunit output file")
+  parser.add_argument("--xunit", metavar='FILE', help="xunit output file (use `-` for stdout)")
   parser.add_argument("-s", "--summary", help="show test status summary on stdout", action="store_true")
   parser.add_argument("-v", "--verbose", help="if -s, be verbose", action="store_true")
   parser.add_argument("-l", "--logging", metavar='LEVEL', help="show logs at the specified level", choices=list(LOG_LEVELS.keys()), default="none")

@@ -25,19 +25,19 @@ Set up the test plan as in `./example/example.language.yaml`. That sample test h
 2. Each test suite can have `setup`, `teardown`, and `cases` sections.
 3. The `cases` section is a list of test cases. For _each_ test case, `setup` is executed before running the test case and `teardown`is executed after.
 4. `setup`, `teardown` and each `cases[...].spec` is a list of directives and arguments. The directives can be any of the following YAML directives:
-  - `log`: print the arguments, printf style
-  - `uuid`: return a uuid (if called from yaml, assign it to the variable names as an argument)
-  - `shell`: run in the shell the command specified in the argument
-  - `call`: call the artifact named in the argument, error if the call fails
-  - `call_may_fail`: call the artifact named in the argument, do not error even if the call fails
-  - `assert_contains`: require the given variable to contain a string
-  - `assert_not_contains`: require the given variable to not contain a string
-  - `assert_success`: require that the exit code of the last `call_may_fail` was 0. If the preceding call was a just a `call`, it would have already failed on a non-zero exit code.
-  - `assert_failure`: require that the exit code of the last `call_may_fail` or `call` was NOT 0. Note, though, that if we're executing this after just a `call`, it must have succeeded so this assertion will fail.
-  - `code`: execute the argument as a chunk of Python code. The other directives above are available as Python calls with the names above. In addition, the following functions are available inside Python code only:  
-     - `fail`: mark the test as having failed, but continue executing
-     - `abort`: mark the test as having failed and stop executing
-     - `assert_that`: if the condition in the first argument is false, abort the test
+   - `log`: print the arguments, printf style
+   - `uuid`: return a uuid (if called from yaml, assign it to the variable names as an argument)
+   - `shell`: run in the shell the command specified in the argument
+   - `call`: call the artifact named in the argument, error if the call fails
+   - `call_may_fail`: call the artifact named in the argument, do not error even if the call fails
+   - `assert_contains`: require the given variable to contain a string
+   - `assert_not_contains`: require the given variable to not contain a string
+   - `assert_success`: require that the exit code of the last `call_may_fail` was 0. If the preceding call was a just a `call`, it would have already failed on a non-zero exit code.
+   - `assert_failure`: require that the exit code of the last `call_may_fail` or `call` was NOT 0. Note, though, that if we're executing this after just a `call`, it must have succeeded so this assertion will fail.
+   - `code`: execute the argument as a chunk of Python code. The other directives above are available as Python calls with the names above. In addition, the following functions are available inside Python `code` only: 
+      - `fail`: mark the test as having failed, but continue executing
+      - `abort`: mark the test as having failed and stop executing
+      - `assert_that`: if the condition in the first argument is false, abort the test
 5. In the usual case, you will be using the "manifest" convention. Thus, you will need one or more manifest files (`*.manifest.yaml`) listing the path and identifiers for each sample. See `convention/manifest/sample.manifest.yaml` for an explanation of the structure of the `*.manifest.yaml` files.
 
 ## Manifest File
@@ -53,44 +53,34 @@ Since a lot of the artifacts will share part or all of some labels (for example,
 
 See `convention/manifest/sample.manifest.yaml` for a concrete, commented example.
 
-## Running the test
+## Running tests
 The usage is:
 
-``
-./sampletester TEST.yaml [CONVENTION.py] [TEST.yaml ...] [USERPATH ...]`
-``
+```shell
+./sampletester TEST.yaml [CONVENTION.py] [TEST.yaml ...] [USERPATH ...]
+```
 
-here `CONVENTION.py` is one of `convention/manifest/id_by_region.py` (default) or
-convention/cloud/cloud.py`
+where:
 
-`USERPATH` depends on `CONVENTION`. For `id_by_region`, it should be a path to a
+* there can be any number of `TEST.yaml` test plan files
+* `CONVENTION.py` is one of `convention/manifest/id_by_region.py` (default) or
+`convention/cloud/cloud.py`
+* `USERPATH` depends on `CONVENTION`. For `id_by_region`, it should be a path to a
 MANIFEST.manifest.yaml` file.
 
+For example, my own invocation to run a test on the fake samples under `testdata/` is
 
-or example, my own invocation to run a test on the fake samples under `testdata/` is
-
-```
+```shell
 ./sampletester -s convention/manifest/ex.language.test.yaml convention/manifest/ex.language.manifest.yaml
 ```
    
-Usage notes:
+Note that `sampletester` is silent by default and simply exits with a non-zero code if there was any error in the flags, test config, or test execution. If you're interested in seeing results on stdout, you'll probably want to run with the `-s` flag. If you want to debug a test failure, you'll want `-s -v`
 
-* `sampletester` exits with a non-zero code if there was any error in the flags, test config, or test execution
-* if you're interested in seeing results on stdout, you'll probably want to run with the `-s` flag. If you want to debug a test failure, you'll want `-s -v`
-* `--xunit=FILE` to output a test summary in xUnit format to `FILE` (output still needs to be expanded)
+The flag `--xunit=FILE` outputs a test summary in xUnit format to `FILE` (use `-` for stdout).
+
     
-## NOTES
-
-**tl;dr: things are settling down, but still changing a bit**
-
-* Recent changes of interest:
+## Recent interface changes:
   * the executable is now `sampletester`, which is a symlink to `test_sample.py`. In a future release, the name of this Python file will change to `sampletester.py`
   * exit code (see above)
   * `-s` and `-v` (see above)
   * you can specify a location for xUnit output via `--xunit=FLAG`
-  
-* Contemplated upcoming changes:
-  * expand xUnit output
-  
-
-* I am also in the process of implementing the feedback on [go/actools-sample-tester](go/actools-sample-tester).
