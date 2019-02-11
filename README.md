@@ -3,10 +3,6 @@
 Version 0.7
 
 
-**_Disclaimers_**: Invocation and test format **will change**. The code started off as a prototype, and has not been optimized for performance, elegance, or clarity yet (though it shouldn't be horrible).
-
-Refer to spec at [go/actools-sample-tester](go/actools-sample-tester).
-
 ## Setup
 1. Ensure you have credentials set up
 
@@ -14,9 +10,10 @@ Refer to spec at [go/actools-sample-tester](go/actools-sample-tester).
    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/creds.json
    ```
    
-2. Install the necessary packages in your PIP environment. In particular, you will need to `pip install pyyaml`
-   The virtual environment set up for running artman should be sufficient (thought not all the those packages may be necessary)
-   TODO: trim down the list of packages
+2. Install the necessary packages:
+   ```shell
+   pip install pyyaml
+   ```
 
 ## Setting up the test
 Set up the test plan as in `./example/example.language.yaml`. That sample test has two equivalent representations of the same test, one with absolute artifact paths and the other with canonical artifact paths. (See NOTES below). Some features that may not be obvious from that test file:
