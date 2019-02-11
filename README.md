@@ -1,6 +1,6 @@
 # Sample Tester
 
-Version 0.5
+Version 0.7
 
 
 **_Disclaimers_**: Invocation and test format **will change**. The code started off as a prototype, and has not been optimized for performance, elegance, or clarity yet (though it shouldn't be horrible).
