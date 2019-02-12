@@ -52,17 +52,15 @@ import xunit
 import argparse
 import contextlib
 
-
-
-
 EXITCODE_SUCCESS = 0
 EXITCODE_FAILURE = 1
 EXITCODE_FLAGS = 2
 
+
 def main():
   args = parse_cli()
 
-  log_level=LOG_LEVELS[args.logging]
+  log_level = LOG_LEVELS[args.logging]
   if log_level is not None:
     logging.basicConfig(level=log_level)
   logging.info("argv: {}".format(sys.argv))
@@ -80,9 +78,9 @@ def main():
     print(manager.accept(summary.SummaryVisitor(args.verbose)))
     print()
     if success:
-      print('Tests passed')
+      print("Tests passed")
     else:
-      print('Tests failed')
+      print("Tests failed")
 
   if args.xunit:
     try:
@@ -91,17 +89,14 @@ def main():
       if args.summary:
         print('xUnit output written to "{}"'.format(args.xunit))
     except Exception as e:
-      print('could not write xunit output to {}: {}'.format(args.xunit, e))
+      print("could not write xunit output to {}: {}".format(args.xunit, e))
       exit(EXITCODE_FLAGS)
 
   exit(EXITCODE_SUCCESS if success else EXITCODE_FAILURE)
 
 
-LOG_LEVELS = {
-    "none": None,
-    "info": logging.INFO,
-    "debug": logging.DEBUG
-}
+LOG_LEVELS = {"none": None, "info": logging.INFO, "debug": logging.DEBUG}
+
 
 def parse_cli():
   epilog = """CONFIGS consists of any number of the following, in any order:
@@ -116,16 +111,29 @@ def parse_cli():
     be paths to `MANIFEST.manifest.yaml` files.
 """
 
-  parser = argparse.ArgumentParser(description="A tool to run tests on equivalent samples in different languages",
-                                   epilog=epilog,
-                                   formatter_class=argparse.RawDescriptionHelpFormatter)
-  parser.add_argument("--xunit", metavar='FILE', help="xunit output file (use `-` for stdout)")
-  parser.add_argument("-s", "--summary", help="show test status summary on stdout", action="store_true")
-  parser.add_argument("-v", "--verbose", help="if -s, be verbose", action="store_true")
-  parser.add_argument("-l", "--logging", metavar='LEVEL', help="show logs at the specified level", choices=list(LOG_LEVELS.keys()), default="none")
+  parser = argparse.ArgumentParser(
+      description="A tool to run tests on equivalent samples in different languages",
+      epilog=epilog,
+      formatter_class=argparse.RawDescriptionHelpFormatter)
+  parser.add_argument(
+      "--xunit", metavar="FILE", help="xunit output file (use `-` for stdout)")
+  parser.add_argument(
+      "-s",
+      "--summary",
+      help="show test status summary on stdout",
+      action="store_true")
+  parser.add_argument(
+      "-v", "--verbose", help="if -s, be verbose", action="store_true")
+  parser.add_argument(
+      "-l",
+      "--logging",
+      metavar="LEVEL",
+      help="show logs at the specified level",
+      choices=list(LOG_LEVELS.keys()),
+      default="none")
 
-  parser.add_argument('files', metavar='CONFIGS', nargs=argparse.REMAINDER)
-  return  parser.parse_args()
+  parser.add_argument("files", metavar="CONFIGS", nargs=argparse.REMAINDER)
+  return parser.parse_args()
 
 
 # cf https://docs.python.org/3/library/argparse.html
@@ -159,17 +167,17 @@ def get_files(files):
 # from https://stackoverflow.com/a/17603000
 @contextlib.contextmanager
 def smart_open(filename=None):
-    if filename and filename != '-':
-        fh = open(filename, 'w')
-    else:
-        fh = sys.stdout
+  if filename and filename != "-":
+    fh = open(filename, "w")
+  else:
+    fh = sys.stdout
 
-    try:
-      yield fh
-    finally:
-      if fh is not sys.stdout:
-        fh.close()
+  try:
+    yield fh
+  finally:
+    if fh is not sys.stdout:
+      fh.close()
 
 
-if __name__== "__main__":
+if __name__ == "__main__":
   main()

@@ -17,6 +17,7 @@ import caserunner
 import yaml
 import testplan
 
+
 class Visitor(testplan.Visitor):
 
   def __init__(self):
@@ -34,15 +35,16 @@ class Visitor(testplan.Visitor):
   def visit_suite(self, idx, suite, environment):
     if not suite.enabled():
       return None
-    logging.info("\n==== SUITE {}:{}:{} START  ==========================================".format(environment.name(), idx, suite.name()))
+    logging.info(
+        "\n==== SUITE {}:{}:{} START  =========================================="
+        .format(environment.name(), idx, suite.name()))
     logging.info("     {}".format(suite.source()))
-    return lambda idx, testcase: self.visit_testcase(idx, testcase, environment.config, suite)
+    return lambda idx, testcase: self.visit_testcase(idx, testcase, environment.
+                                                     config, suite)
 
   def visit_testcase(self, idx, tcase, environment, suite):
-    case_runner = caserunner.TestCase(environment, idx,
-                                      tcase.name(),
-                                      suite.setup(),
-                                      tcase.spec(),
+    case_runner = caserunner.TestCase(environment, idx, tcase.name(),
+                                      suite.setup(), tcase.spec(),
                                       suite.teardown())
     tcase.runner = case_runner
     case_runner.run()
@@ -56,13 +58,14 @@ class Visitor(testplan.Visitor):
     if tcase.num_errors > 0:
       suite.num_erroring_cases += 1
 
-
     tcase.update_times(case_runner.start_time, case_runner.end_time)
     suite.update_times(case_runner.start_time, case_runner.end_time)
 
   def visit_suite_end(self, idx, suite, environment):
     if suite.success():
-      logging.info("==== SUITE {}:{}:{} SUCCESS ========================================".format(environment.name(), idx, suite.name()))
+      logging.info(
+          "==== SUITE {}:{}:{} SUCCESS ========================================"
+          .format(environment.name(), idx, suite.name()))
     else:
       environment.num_failures += suite.num_failures
       environment.num_failing_cases += suite.num_failing_cases
@@ -75,7 +78,9 @@ class Visitor(testplan.Visitor):
         environment.num_erroring_suites += 1
 
       environment.update_times(suite.start_time, suite.end_time)
-      logging.info("==== SUITE {}:{}:{} FAILURE ========================================".format(environment.name(), idx, suite.name()))
+      logging.info(
+          "==== SUITE {}:{}:{} FAILURE ========================================"
+          .format(environment.name(), idx, suite.name()))
 
   def visit_environment_end(self, environment):
     if not environment.success():

@@ -16,7 +16,9 @@ import logging
 from typing import Iterable
 import inspect
 
-def from_files(convention_files: Iterable[str], user_paths : Iterable[str] = None):
+
+def from_files(convention_files: Iterable[str],
+               user_paths: Iterable[str] = None):
   """Returns a new registry instantiated from the convention_files.
 
   Each convention gets passed the user_paths.
@@ -27,11 +29,12 @@ def from_files(convention_files: Iterable[str], user_paths : Iterable[str] = Non
   for filename in convention_files:
     logging.info('Reading config file "{}"'.format(filename))
     with open(filename) as config:
-      registry.configure(config.read(),user_paths)
+      registry.configure(config.read(), user_paths)
   return registry
 
 
 class BaseTestEnvironment:
+
   def __init__(self, name='#BaseTestEnvironment', description=''):
     self._name = name
     self._description = description
@@ -46,7 +49,9 @@ class BaseTestEnvironment:
     logging.info('{}: teardown'.format(self._name))
 
   def get_call(self, *args, **kwargs):
-    logging.fatal('get_call() invoked on BaseTestEnvironment (should be overridden)')
+    logging.fatal(
+        'get_call() invoked on BaseTestEnvironment (should be overridden)')
+
 
 class Registry:
   """Stores the registered test execution environments."""
@@ -61,7 +66,7 @@ class Registry:
     """
     self.envs[environment.name()] = environment
 
-  def configure(self, code, user_paths : Iterable[str]):
+  def configure(self, code, user_paths: Iterable[str]):
     symbols = {
         'register_test_environment': self.add_environment,
         'user_paths': user_paths.copy(),
@@ -98,6 +103,7 @@ def process_args(*args, **kwargs):
   cmd_args.extend([quote(a) for a in args[1:]])
   cli_arguments = ' '.join(cmd_args)
   return args[0], cli_arguments
+
 
 def quote(s: str):
   return '"{}"'.format(s)

@@ -19,7 +19,8 @@ from sample_manifest import Manifest
 
 LANGUAGE_KEY = 'language'
 BINARY_KEY = 'bin'
-REGION_KEY='region_tag'
+REGION_KEY = 'region_tag'
+
 
 class ManifestEnvironment(testenv.BaseTestEnvironment):
   """Sets up a manifest-derived BaseTestEnvironment for a single language.
@@ -29,7 +30,8 @@ class ManifestEnvironment(testenv.BaseTestEnvironment):
   if it is not executable.
   """
 
-  def __init__(self, name: str, description:str, manifest: Manifest, indices: Iterable[str]):
+  def __init__(self, name: str, description: str, manifest: Manifest,
+               indices: Iterable[str]):
     super().__init__(name, description)
     self.manifest = manifest
     self.const_indices = indices
@@ -43,14 +45,15 @@ class ManifestEnvironment(testenv.BaseTestEnvironment):
       indices = self.const_indices.copy()
       indices.extend(full_call.split(' '))
       try:
-        artifact = self.manifest.get_one(*indices) # wrap exception?
+        artifact = self.manifest.get_one(*indices)  # wrap exception?
       except Exception as e:
         raise Exception('object "{}" not defined: {}'.format(indices, e))
       try:
         bin = artifact.get(BINARY_KEY, '')
-        artifact = ' '.join([bin,artifact['path']])
+        artifact = ' '.join([bin, artifact['path']])
       except Exception as e:
-        raise Exception('object "{}" does not contain "path": {}'.format(indices, e))
+        raise Exception('object "{}" does not contain "path": {}'.format(
+            indices, e))
     return '{} {}'.format(artifact, cli_args)
 
   def adjust_suite_name(self, name):
@@ -63,23 +66,26 @@ class ManifestEnvironment(testenv.BaseTestEnvironment):
     return '{}:{}'.format(name, ':'.join(self.const_indices))
 
 
-
 class LanguageRegionManifestEnvironmentProvider:
+
   def __init__(self, manifest_paths):
     all_manifests = []
     for path in manifest_paths:
-      all_manifests.extend(glob.glob(path))  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
-    self.manifest = Manifest(LANGUAGE_KEY,REGION_KEY)
+      all_manifests.extend(
+          glob.glob(path)
+      )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
+    self.manifest = Manifest(LANGUAGE_KEY, REGION_KEY)
     self.manifest.read_files(*all_manifests)
     self.manifest.index()
     self.languages = self.manifest.get_keys()
     if len(self.languages) == 0:
-      self.languages = ["(nolang)"]
-    self.resolver={}
+      self.languages = ['(nolang)']
+    self.resolver = {}
     for language in self.languages:
       description = 'Language, region_tags:{}'.format(language)
-      name=language
-      resolver = ManifestEnvironment(name, description, self.manifest, [language])
+      name = language
+      resolver = ManifestEnvironment(name, description, self.manifest,
+                                     [language])
       self.resolver[language] = resolver
       register_test_environment(resolver)
 

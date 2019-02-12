@@ -18,6 +18,7 @@ from typing import Iterable
 import os.path
 import yaml
 
+
 class Manifest:
   """Maintains a manifest of auto-generated sample artifacts.
 
@@ -44,10 +45,9 @@ class Manifest:
   A typical look-up involves specifying the keys and filters.
   """
 
-  VERSION_KEY = "version"
-  SETS_KEY = "sets"
-  ELEMENTS_KEY = "__items__"
-
+  VERSION_KEY = 'version'
+  SETS_KEY = 'sets'
+  ELEMENTS_KEY = '__items__'
 
   def __init__(self, *indices: str):
     """Initializes manifest.
@@ -56,7 +56,7 @@ class Manifest:
       indices: An optional list of labels by which to index the manifest read in
         from various sources
     """
-    self.interpreter = {"1": self.index_source_v1}
+    self.interpreter = {'1': self.index_source_v1}
 
     # tags[key1][key2]...[keyn] == [metadata, metadata, ...]
     # eg with self.indices == ["language", "region_tag"]:
@@ -65,7 +65,7 @@ class Manifest:
 
     # sources is a list of (name, parsed-yaml, interpreter) tuples, set by
     # read_sources() and used by index()
-    self.sources=[]
+    self.sources = []
 
     self.set_indices(*indices)
 
@@ -111,11 +111,11 @@ class Manifest:
 
     error = []
     if len(err_no_version) > 0:
-      error.append('no version specified in manifest sources: "{}"'
-                   .format('", "'.join(err_no_version,)))
+      error.append('no version specified in manifest sources: "{}"'.format(
+          '", "'.join(err_no_version,)))
     if len(err_no_interpreter) > 0:
-      error.append('invalid version specified in manifest sources: "{}"'
-                   .format('", "'.join(err_no_interpreter)))
+      error.append('invalid version specified in manifest sources: "{}"'.format(
+          '", "'.join(err_no_interpreter)))
     if len(error) > 0:
       error_msg = 'error reading manifest data:\n {}'.format('\n'.join(error))
       logging.error(error_msg)
@@ -123,7 +123,7 @@ class Manifest:
     return sources_read
 
   def index(self):
-    """ Indexes all the items in self.sources using the appropriate interpreter"""
+    """Indexes all the items in self.sources using the appropriate interpreter"""
     self.tags = {}
     for name, manifest, interpreter in self.sources:
       try:
@@ -131,7 +131,6 @@ class Manifest:
       except Exception as e:
         logging.error('error parsing manifest source "{}": {}'.format(name, e))
         raise
-
 
   def index_source_v1(self, input):
     max_idx = len(self.indices) - 1
@@ -146,28 +145,29 @@ class Manifest:
       for element in all_elements:
         # add the needed defaults/prefixes to this element
         for key, value in set_values.items():
-          element[key] = value + element.get(key, "")
+          element[key] = value + element.get(key, '')
 
         # store
         tags = self.tags
         for idx_num, idx_key in enumerate(self.indices):
-          idx_value = element.get(idx_key, "")
-          tags = get_or_create(tags,idx_value, [] if idx_num == max_idx else {})
+          idx_value = element.get(idx_key, '')
+          tags = get_or_create(tags, idx_value,
+                               [] if idx_num == max_idx else {})
         tags.append(element)
 
         logging.info('read "{}"'.format(element))
 
   #TODO: add test
   def get_keys(self, *specified_keys):
-    """ Returns the keys at the next level after specified_keys have been resolved"""
+    """Returns the keys at the next level after specified_keys have been resolved"""
 
-    if self.indices == [None]: # no indices
+    if self.indices == [None]:  # no indices
       return None
     if len(specified_keys) >= len(self.indices) - 1:
       return None
     tags = self.tags
-    for idx in range (0, len(specified_keys)):
-        tags = tags[keys[idx]]
+    for idx in range(0, len(specified_keys)):
+      tags = tags[keys[idx]]
     return list(tags.keys())
 
   def get(self, *keys, **filters):
@@ -177,7 +177,10 @@ class Manifest:
       tags = self.tags
       for idx in range(0, len(self.indices)):
         tags = tags[keys[idx]]
-      return[element for element in tags if all(tag_filter in element.items() for tag_filter in filters.items())]
+      return [
+          element for element in tags if all(tag_filter in element.items()
+                                             for tag_filter in filters.items())
+      ]
     except Exception as e:
       return None
 
@@ -203,6 +206,7 @@ def files_to_yaml(*files: str):
     with open(name, 'r') as stream:
       manifest = yaml.load(stream)
     yield (name, manifest)
+
 
 def strings_to_yaml(*sources: str):
   """ Reads sample manifests from strings."""

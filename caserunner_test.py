@@ -20,15 +20,16 @@ import convention
 import testenv
 import testplan
 
+
 class Visitor(testplan.Visitor):
+
   def __init__(self):
     self.environments = {}
     self.suites = {}
     self.cases = {}
-    self.current_env =''
-    self.current_suite=''
+    self.current_env = ''
+    self.current_suite = ''
     self.error = None
-
 
   def visit_environment(self, env):
     self.current_env = env.config.name()
@@ -36,15 +37,16 @@ class Visitor(testplan.Visitor):
     return self.visit_suite, None
 
   def visit_suite(self, idx, suite):
-    self.current_suite = '{}:{}'.format(self.current_env,suite.name())
+    self.current_suite = '{}:{}'.format(self.current_env, suite.name())
     self.suites[self.current_suite] = suite
     return self.visit_testcase
 
   def visit_testcase(self, idx, tcase):
     if tcase.name() not in ['code', 'yaml']:
-      self.error = 'found neither "code" nor "yaml" in case name "{}"'.format(tcase.name())
+      self.error = 'found neither "code" nor "yaml" in case name "{}"'.format(
+          tcase.name())
       return
-    name = '{}:{}'.format(self.current_suite,tcase.name())
+    name = '{}:{}'.format(self.current_suite, tcase.name())
     self.cases[name] = tcase
 
   def end_visit(self):
@@ -52,11 +54,14 @@ class Visitor(testplan.Visitor):
 
 
 class TestCaseRunner(unittest.TestCase):
+
   def setUp(self):
     __abs_file__ = os.path.abspath(__file__)
     self.__abs_file_path__ = os.path.split(__abs_file__)[0]
     self.environment_registry = testenv.from_files([convention.default], [])
-    self.manager = testplan.Manager(self.environment_registry, self.suites_from(['testdata/caserunner_test.yaml']))
+    self.manager = testplan.Manager(
+        self.environment_registry,
+        self.suites_from(['testdata/caserunner_test.yaml']))
     self.results = Visitor()
     self.manager.accept(runner.Visitor())
     if self.manager.accept(self.results) is not None:
@@ -70,19 +75,25 @@ class TestCaseRunner(unittest.TestCase):
 
   def test_all(self):
     for suite_name in list(self.results.suites.keys()):
-      if "Passing" in suite_name:
-        self.check(suite_name, self.assertTrue, "expected valid test suite to pass")
-      elif "Failing" in suite_name:
-        self.check(suite_name, self.assertFalse, "expected failing test suite to fail")
+      if 'Passing' in suite_name:
+        self.check(suite_name, self.assertTrue,
+                   'expected valid test suite to pass')
+      elif 'Failing' in suite_name:
+        self.check(suite_name, self.assertFalse,
+                   'expected failing test suite to fail')
       else:
-        self.fail('found neither  "Passing" or "Failing" in suite name "{}"'.format(suite_name))
-
-
+        self.fail(
+            'found neither  "Passing" or "Failing" in suite name "{}"'.format(
+                suite_name))
 
   def check(self, suite_name, assertion, message):
-    assertion(self.results.suites[suite_name].success(), '{}: {}'.format(message, suite_name))
-    assertion(self.results.cases[suite_name+':code'].success(), '{}: {}:code'.format(message, suite_name))
-    assertion(self.results.cases[suite_name+':yaml'].success(), '{}: {}:yaml'.format(message, suite_name))
+    assertion(self.results.suites[suite_name].success(), '{}: {}'.format(
+        message, suite_name))
+    assertion(self.results.cases[suite_name + ':code'].success(),
+              '{}: {}:code'.format(message, suite_name))
+    assertion(self.results.cases[suite_name + ':yaml'].success(),
+              '{}: {}:yaml'.format(message, suite_name))
+
 
 if __name__ == '__main__':
   unittest.main()

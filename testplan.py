@@ -16,6 +16,7 @@ import copy
 import logging
 import yaml
 
+
 class Visitor:
   # Each visit function returns a visitor or two to the next level of the hierarchy, or
   # None if the next level of the hierarchy is not to be traversed (for example,
@@ -47,22 +48,26 @@ class Visitor:
   def end_visit(self):
     return True
 
-SUITE_ENABLED="enabled"
-SUITE_SETUP="setup"
-SUITE_TEARDOWN="teardown"
-SUITE_NAME="name"
-SUITE_SOURCE="source"
-SUITE_CASES="cases"
-CASE_NAME="name"
-CASE_SPEC="spec"
+
+SUITE_ENABLED = "enabled"
+SUITE_SETUP = "setup"
+SUITE_TEARDOWN = "teardown"
+SUITE_NAME = "name"
+SUITE_SOURCE = "source"
+SUITE_CASES = "cases"
+CASE_NAME = "name"
+CASE_SPEC = "spec"
+
 
 class Manager:
+
   def __init__(self, environment_registry, test_suites):
     self.test_suites = test_suites
 
     logging.debug("envs: {}".format(environment_registry.get_names()))
-    self.environments = [Environment(env, test_suites) for env in environment_registry.list()]
-
+    self.environments = [
+        Environment(env, test_suites) for env in environment_registry.list()
+    ]
 
   def accept(self, visitor: Visitor):
     visit_environment, visit_environment_end = visitor.start_visit()
@@ -74,7 +79,6 @@ class Manager:
       visit_suite, visit_suite_end = visit_environment(env)
       if not visit_suite:
         continue
-
 
       for suite_num, suite in enumerate(env.suites):
         visit_testcase = visit_suite(suite_num, suite)
@@ -92,6 +96,7 @@ class Manager:
 
     return visitor.end_visit()
 
+
 def suite_configs_from(test_files):
 
   # TODO(vchudnov): Append line number info to aid in error messages
@@ -99,7 +104,7 @@ def suite_configs_from(test_files):
   all_suites = []
   for filename in test_files:
     logging.info('Reading test file "{}"'.format(filename))
-    with open(filename, 'r') as stream:
+    with open(filename, "r") as stream:
       spec = yaml.load(stream)
       these_suites = spec["test"]["suites"]
       for suite in these_suites:
@@ -107,13 +112,17 @@ def suite_configs_from(test_files):
       all_suites.extend(these_suites)
   return all_suites
 
+
 def suite_objects_from(all_suites):
   return [Suite(spec) for spec in all_suites]
+
 
 def suites_from(test_files):
   return suite_objects_from(suite_configs_from(test_files))
 
+
 class Wrapper:
+
   def __init__(self):
     self.start_time = None
     self.end_time = None
@@ -132,7 +141,9 @@ class Wrapper:
   def success(self):
     return self.num_errors == 0 and self.num_failures == 0
 
+
 class Environment(Wrapper):
+
   def __init__(self, env_config, test_suites):
     super().__init__()
     self.config = env_config
@@ -145,11 +156,16 @@ class Environment(Wrapper):
   def name(self):
     return self.config.name()
 
+
 class Suite(Wrapper):
+
   def __init__(self, suite_config):
     super().__init__()
     self.config = copy.deepcopy(suite_config)
-    self.cases = [TestCase(test_config) for test_config in suite_config.get(SUITE_CASES, [])]
+    self.cases = [
+        TestCase(test_config)
+        for test_config in suite_config.get(SUITE_CASES, [])
+    ]
     self.config[SUITE_CASES] = None
     self.num_failing_cases = 0
     self.num_erroring_cases = 0
@@ -164,12 +180,14 @@ class Suite(Wrapper):
     return self.config.get(SUITE_TEARDOWN, "")
 
   def name(self):
-    return self.config.get(SUITE_NAME,"")
+    return self.config.get(SUITE_NAME, "")
 
   def source(self):
     return self.config[SUITE_SOURCE]
 
+
 class TestCase(Wrapper):
+
   def __init__(self, test_config):
     super().__init__()
     self.config = copy.deepcopy(test_config)
@@ -179,4 +197,4 @@ class TestCase(Wrapper):
     return self.config.get(CASE_NAME, "(missing name)")
 
   def spec(self):
-    return self.config.get(CASE_SPEC,"")
+    return self.config.get(CASE_SPEC, "")
