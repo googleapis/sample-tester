@@ -294,10 +294,7 @@ class TestCase:
     if len(spec_segment) > 1:
       raise ConfigError
 
-    for dir, seg in spec_segment.items():
-      directive = dir
-      segment = seg
-
+    for directive, segment in spec_segment.items():
       if directive not in self.builtins:
         raise ConfigError("unknown YAML directive: " + str(directive))
 
