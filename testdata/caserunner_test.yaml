@@ -22,33 +22,57 @@ test:
     cases:
     - name: "code"
       spec:
-        - code: |
-            out = call('/bin/echo', '"It was the best of times"')
-            assert_success("echo should have succeeded")
-            assert_contains("best")
-            assert_not_contains("worst")
-            assert_that('ime' in out, 'expected "ime" in the preceding output')
-            expect('ime' in out, 'expected "ime" in the preceding output')
-            call_may_fail('/nonexistent/dir/foobar')
-            assert_failure("foobar call should have failed")
+      - code: |
+          out = call('/bin/echo', '"It was the best of times"')
+          assert_success("echo should have succeeded")
+          assert_contains("best")
+          assert_not_contains("worst")
+          assert_that('ime' in out, 'expected "ime" in the preceding output')
+          expect('ime' in out, 'expected "ime" in the preceding output')
+          call_may_fail('/nonexistent/dir/foobar')
+          assert_failure("foobar call should have failed")
+          homedir = env('HOME')
+          log('homedir: {}'.format(homedir))
+          my_uuid = uuid()
+          log('uuid: {}'.format(my_uuid))
     - name: "yaml"
       spec:
-        - call:
-            target: "/bin/echo"
-            args:
+      - call:
+          target: "/bin/echo"
+          args:
             - literal: "It was the best of times"
-        - assert_success:
-          - "echo should have succeeded"
-        - assert_contains:
-          - message: "Expected 'best'"
-          - literal: "best"
-        - assert_not_contains:
-          - message: "Expected no 'worst'"            
-          - literal: "worst"
-        - call_may_fail:
-            target: '/nonexistent/dir/foobar'
-        - assert_failure:
-          - message: "foobar call should have failed"
+      - assert_success:
+        - "echo should have succeeded"
+      - assert_contains:
+        - message: "Expected 'best'"
+        - literal: "best"
+      - assert_not_contains:
+        - message: "Expected no 'worst'"            
+        - literal: "worst"
+      - call_may_fail:
+          target: '/nonexistent/dir/foobar'
+      - assert_failure:
+        - message: "foobar call should have failed"
+      - env:
+          what: HOME
+          var: homedir
+      - log:
+        - "homedir: {}"
+        - homedir
+      - uuid: my_uuid
+      - log:
+        - "uuid: {}"
+        - my_uuid
+  - name: Failing env
+    cases:
+    - name: code
+      spec:
+      - code: homedir = env('FOOLALA')      
+    - name: yaml
+      spec:
+      - env:
+          what: FOOLALA
+          var: homedir    
   - name: Failing call
     cases:
     - name: code

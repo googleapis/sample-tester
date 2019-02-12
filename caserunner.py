@@ -19,6 +19,7 @@ from testenv import BaseTestEnvironment
 import logging
 import copy
 from datetime import datetime
+import os
 
 
 class TestCase:
@@ -45,7 +46,7 @@ class TestCase:
     #
     # The value is a pair. The first element is the test variable or
     # function. The second element, if not None, is the "yaml_prep" function
-    # that prepares the arguments in the YAML for passing to the function; if
+    # that returns a pair of ([arguments], {kwargs}) for passing to the function; if
     # the yaml_prep returns None, the test function is not called (this is
     # useful to provide an alternate representation in the YAML)
     self.builtins = {
@@ -60,6 +61,7 @@ class TestCase:
 
         # Other functions available to the test suite
         "uuid": (self.get_uuid, self.yaml_get_uuid),
+        "env": (self.get_env, self.yaml_get_env),
         "log": (self.print_out, self.yaml_args_string),
 
         # Code
@@ -144,6 +146,16 @@ class TestCase:
   # Gets a UUID via YAML.
   def yaml_get_uuid(self, var_name):
     self.local_symbols[var_name] = self.get_uuid()
+    return None, None
+
+  # Gets an environment variable via code.
+  def get_env(self, env_var):
+    return os.environ[env_var]
+
+  # Gets an environment variable via YAML.
+  def yaml_get_env(self, parts):
+    var_name, env_var = self.params_for_set(parts)
+    self.local_symbols[var_name] = self.get_env(env_var)
     return None, None
 
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
@@ -246,10 +258,11 @@ class TestCase:
           pass
         except Exception as e:
           status = "UNHANDLED EXCEPTION in stage {} ".format(stage_name)
-          description = str(e)
+          short_description = repr(e)
+          description = short_description + "\n" + "".join( traceback.format_tb(e.__traceback__))
           self.record_error(status, description)
-          print(status + description)
-          traceback.print_tb(e.__traceback__)
+          self.print_out("# EXCEPTION!! " + short_description)
+
           break
 
     print_output = True
@@ -285,21 +298,21 @@ class TestCase:
       directive = dir
       segment = seg
 
-    if directive not in self.builtins:
-      raise ConfigError("unknown YAML directive: " + str(directive))
+      if directive not in self.builtins:
+        raise ConfigError("unknown YAML directive: " + str(directive))
 
-    howto = self.builtins[directive]
-    if howto[1] == None:
-      raise ConfigError("directive only available inside a code directive: " +
-                        directive)
+      howto = self.builtins[directive]
+      if howto[1] == None:
+        raise ConfigError("directive only available inside a code directive: " +
+                          directive)
 
-    args, kwargs = howto[1](segment)
-    if args is None and kwargs is None:
-      return
-    args = args or []
-    kwargs = kwargs or {}
+      args, kwargs = howto[1](segment)
+      if args is None and kwargs is None:
+        return
+      args = args or []
+      kwargs = kwargs or {}
 
-    howto[0](*args, **kwargs)
+      howto[0](*args, **kwargs)
 
   #### Helper methods
 
@@ -336,6 +349,16 @@ class TestCase:
     if parts is None or len(parts) == 0:
       return [], {}
     return [parts[0]] + self.lookup_values(parts[1:]), {}
+
+  def params_for_set(self, parts):
+    key_what = 'what'
+    key_variable = 'var'
+    if len(parts) < 2:
+      log_raise(
+          logging.critical, ValueError,
+          'need both "{}" and "{}"'
+          .format(key_what, key_variable))
+    return parts[key_variable], parts[key_what]
 
   def params_for_call(self, parts):
     key_cmd = "target"

@@ -1,6 +1,6 @@
 # Sample Tester
 
-Version 0.7
+Version 0.7.1
 
 
 ## Setup
@@ -31,6 +31,7 @@ Set up the test plan as in `./example/example.language.yaml`. That sample test h
    - `assert_not_contains`: require the given variable to not contain a string
    - `assert_success`: require that the exit code of the last `call_may_fail` was 0. If the preceding call was a just a `call`, it would have already failed on a non-zero exit code.
    - `assert_failure`: require that the exit code of the last `call_may_fail` or `call` was NOT 0. Note, though, that if we're executing this after just a `call`, it must have succeeded so this assertion will fail.
+   = `env`: assign the value of an environment variable to a testcase variable
    - `code`: execute the argument as a chunk of Python code. The other directives above are available as Python calls with the names above. In addition, the following functions are available inside Python `code` only: 
       - `fail`: mark the test as having failed, but continue executing
       - `abort`: mark the test as having failed and stop executing
