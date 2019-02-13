@@ -14,6 +14,7 @@
 
 from typing import Iterable
 import logging
+import convention
 
 def from_files(convention_files: Iterable[str],
                user_paths: Iterable[str] = None):
@@ -28,6 +29,8 @@ def from_files(convention_files: Iterable[str],
     logging.info('Reading config file "{}"'.format(filename))
     with open(filename) as config:
       registry.configure(config.read(), user_paths)
+
+  convention.generate_environments(['lang_region', 'cloud', 'foobar'], user_paths)
   return registry
 
 class Registry:

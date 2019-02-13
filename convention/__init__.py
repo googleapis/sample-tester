@@ -13,7 +13,38 @@
 # limitations under the License.
 
 import os
+import importlib
 
 __abs_file__ = os.path.abspath(__file__)
 __abs_file_path__ = os.path.split(__abs_file__)[0]
+
 default = os.path.join(__abs_file_path__, 'manifest/id_by_region.py')
+
+
+print('*** file path: {}'.format(__abs_file_path__))
+
+all_files = [entry for entry in os.listdir(__abs_file_path__)
+             if entry !='__init__.py' and entry != '__pycache__' and not entry.endswith('~')]
+all_conventions = [os.path.splitext(os.path.basename(entry))[0] for entry in all_files]
+print('*** Read conventions: {}'.format(all_conventions))
+environment_creators = {}
+for convention in all_conventions:
+  module = importlib.import_module('.'+convention, package='convention')
+  print('*** {} dir: {}'.format(convention, dir(module)))
+  if 'test_environments' in dir(module):
+    print('***   appending "{}" creator'.format(convention))
+    environment_creators[convention] = module.test_environments
+  else:
+    print('***   no creator for "{}"'.format(convention))
+
+def generate_environments(requested_conventions, files):
+  all_environments = []
+  for convention in requested_conventions:
+    create_fn = environment_creators.get(convention, None)
+    if create_fn is None:
+      raise ValueError('convention "{}" not implemented'.format(convention))
+    try:
+      all_environments.extend(create_fn(files))
+    except Exception as ex:
+      raise ValueError('could not create test environments for convention "{}": {}'.format(convention, repr(ex)))
+  return all_environments

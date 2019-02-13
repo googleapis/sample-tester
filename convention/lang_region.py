@@ -70,12 +70,12 @@ class ManifestEnvironment(testenv.Base):
 all_manifests = []
 languages = []
 environments = []
-def test_environments(self, manifest_paths):
+def test_environments(manifest_paths):
     for path in manifest_paths:
       all_manifests.extend(
           glob.glob(path)
       )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
-    manifest = Manifest(LANGUAGE_KEY, REGION_KEY) # ensure copy
+    manifest = Manifest(LANGUAGE_KEY, REGION_KEY) # read only, so don't need a copy
     manifest.read_files(*all_manifests)
     manifest.index()
     languages = manifest.get_keys()
@@ -84,7 +84,7 @@ def test_environments(self, manifest_paths):
     for language in languages:
       description = 'Language, region_tags:{}'.format(language)
       name = language
-      env  = ManifestEnvironment(name, description, self.manifest,
+      env  = ManifestEnvironment(name, description, manifest,
                                      [language])
       environments.append(env)
     print('*** Generated: {}'.format([env.name() for env in environments]))
@@ -121,6 +121,3 @@ class LanguageRegionManifestEnvironmentProvider:
 
   def environments(self):
     return self.test_envs
-
-
-foo_resolver = LanguageRegionManifestEnvironmentProvider(user_paths)

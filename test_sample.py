@@ -68,7 +68,9 @@ def main():
   convention_files, test_files, user_paths = get_files(args.files)
   convention_files = convention_files or [convention.default]
 
+  # TODO(vchudnov): Catch exceptions and print
   registry = environment_registry.from_files(convention_files, user_paths)
+
   test_suites = testplan.suites_from(test_files)
   manager = testplan.Manager(registry, test_suites)
 
