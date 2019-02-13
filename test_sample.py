@@ -43,7 +43,7 @@ import logging
 import os
 import string
 import sys
-import testenv
+import environment_registry
 import runner
 import convention
 import testplan
@@ -68,9 +68,9 @@ def main():
   convention_files, test_files, user_paths = get_files(args.files)
   convention_files = convention_files or [convention.default]
 
-  environment_registry = testenv.from_files(convention_files, user_paths)
+  registry = environment_registry.from_files(convention_files, user_paths)
   test_suites = testplan.suites_from(test_files)
-  manager = testplan.Manager(environment_registry, test_suites)
+  manager = testplan.Manager(registry, test_suites)
 
   success = manager.accept(runner.Visitor())
 

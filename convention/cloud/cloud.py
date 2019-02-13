@@ -17,7 +17,7 @@ import os
 import re
 
 
-class PythonSamplesEnvironment(testenv.BaseTestEnvironment):
+class PythonSamplesEnvironment(testenv.Base):
 
   def __init__(self, path: str):
     super().__init__('PythonSamplesEnvironment')

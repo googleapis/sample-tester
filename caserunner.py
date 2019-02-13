@@ -15,7 +15,7 @@
 import uuid
 import subprocess
 import traceback
-from testenv import BaseTestEnvironment
+import testenv
 import logging
 import copy
 from datetime import datetime
@@ -24,7 +24,8 @@ import os
 
 class TestCase:
 
-  def __init__(self, environment: BaseTestEnvironment, idx: int, label: str,
+  def __init__(self, environment: testenv.Base,
+               idx: int, label: str,
                setup, case, teardown):
     self.failures = []
     self.errors = []

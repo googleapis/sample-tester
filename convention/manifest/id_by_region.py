@@ -22,8 +22,8 @@ BINARY_KEY = 'bin'
 REGION_KEY = 'region_tag'
 
 
-class ManifestEnvironment(testenv.BaseTestEnvironment):
-  """Sets up a manifest-derived BaseTestEnvironment for a single language.
+class ManifestEnvironment(testenv.Base):
+  """Sets up a manifest-derived Base for a single language.
 
   All artifacts with the same LANGUAGE_KEY are grouped in an instance of this
   class. Artifacts may also have a BINARY_KEY to denote how to run the artifact,

@@ -13,29 +13,10 @@
 # limitations under the License.
 
 import logging
-from typing import Iterable
-import inspect
 
+class Base:
 
-def from_files(convention_files: Iterable[str],
-               user_paths: Iterable[str] = None):
-  """Returns a new registry instantiated from the convention_files.
-
-  Each convention gets passed the user_paths.
-  """
-  if not user_paths:
-    user_paths = []
-  registry = Registry()
-  for filename in convention_files:
-    logging.info('Reading config file "{}"'.format(filename))
-    with open(filename) as config:
-      registry.configure(config.read(), user_paths)
-  return registry
-
-
-class BaseTestEnvironment:
-
-  def __init__(self, name='#BaseTestEnvironment', description=''):
+  def __init__(self, name='#Base', description=''):
     self._name = name
     self._description = description
 
@@ -50,36 +31,7 @@ class BaseTestEnvironment:
 
   def get_call(self, *args, **kwargs):
     logging.fatal(
-        'get_call() invoked on BaseTestEnvironment (should be overridden)')
-
-
-class Registry:
-  """Stores the registered test execution environments."""
-
-  def __init__(self):
-    self.envs = {}
-
-  def add_environment(self, environment):
-    """Instantiates and stores a new BaseTestEnvironment with the given parameters.
-
-    This function is primarily meant to be called by user-provided init code.
-    """
-    self.envs[environment.name()] = environment
-
-  def configure(self, code, user_paths: Iterable[str]):
-    symbols = {
-        'register_test_environment': self.add_environment,
-        'user_paths': user_paths.copy(),
-    }
-    exec(code, symbols)
-
-  def get_names(self):
-    """Returns the names of all the registered environments."""
-    return list(self.envs.keys())
-
-  def list(self):
-    """Return all the registered environments."""
-    return self.envs.values()
+        'get_call() invoked on Base (should be overridden)')
 
 
 def process_args(*args, **kwargs):
