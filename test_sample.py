@@ -15,24 +15,16 @@
 
 # See README.md for set-up instructions.
 
-# https://docs.python.org/3/library/functions.html#exec
-# https://pyyaml.org/wiki/PyYAMLDocumentation
-
-# run with "manifest" convention (still need to change sample.manifest to a real manifest of the test samples; this fails at the moment because of that):
-#  ./sampletester examples/lang_region/language.test.yaml examples/lang_region/language.manifest.yaml
-#
-# run with "cloud" convention:
-#   # a passing test:
-#   ./sampletester --convention=cloud examples/cloud/language.test.yaml examples/testdata/googleapis
-#   # a failing test:
-#   ./sampletester --convention=cloud examples/cloud/product_search_test.yaml examples/testdata/googleapis
-#
-#
-# Run all tests:
+# Run all tests with:
 #  python3 -m unittest discover -s . -p '*_test.py' -v
 #
-# Quick verification everything works:
-#  FLAGS="-s -v --xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX)"; python3 -m unittest discover -s . -p '*_test.py' -v && ./sampletester $FLAGS examples/lang_region/language.test.yaml examples/lang_region/language.manifest.yaml && ./sampletester $FLAGS --convention=cloud examples/cloud/language.test.yaml examples/testdata/googleapis && echo -e "===\n\nChecks: OK" || echo -e "===\n\nChecks: ERROR (status: $?) above"
+# Run examples by executing the `examples/**/run.sh` files (you can set the
+# FLAGS flag to make this less verbose)
+#
+# You can run a quick verification that everything works (tests and all passing
+# examples) by invoking the following (you can set the FLAGS flag to make this
+# less verbose):
+#  eval $(find examples/ -name 'run.sh' -printf 'echo +++++ Running: %p && %p && ') echo -e "===\n\nChecks: OK" || echo -e "===\n\nChecks: ERROR (status: $?) above"
 #
 # To find all TODOs:
 #  grep -r TODO | grep -v '~' | grep -v /lib/
