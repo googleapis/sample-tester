@@ -58,7 +58,7 @@ class TestCaseRunner(unittest.TestCase):
   def setUp(self):
     __abs_file__ = os.path.abspath(__file__)
     self.__abs_file_path__ = os.path.split(__abs_file__)[0]
-    self.environment_registry = environment_registry.from_files([convention.default], [])
+    self.environment_registry = environment_registry.new(convention.default, [])
     self.manager = testplan.Manager(
         self.environment_registry,
         self.suites_from(['testdata/caserunner_test.yaml']))

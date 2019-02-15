@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import testenv
+
 import os
 import re
 
@@ -105,12 +106,13 @@ class NoLangSamples:
 
 class CloudRepos:
 
-  def __init__(self):
+  def __init__(self, api_dirs):
     self.lang_processor = {
         'python': PythonSamplesEnvironment,
     }
     self.repos = {}
-    self.get_langs_and_repos(user_paths or [os.getcwd()])
+    self.environments = []
+    self.get_langs_and_repos(api_dirs or [os.getcwd()])
 
   def get_langs_and_repos(self, api_dirs):
     """For each element of api_dirs, registers each recognized sample repository that it finds under the language in which it is implemented."""
@@ -119,7 +121,7 @@ class CloudRepos:
     if len(self.repos) == 0:
       self.repos['nolang'] = NoLangSamples()
     for id, handler in self.repos.items():
-      register_test_environment(handler)
+      self.environments.append(handler)
 
   def get_artman_sample_dirs(self, api_path):
     if not 'artman-genfiles' in os.listdir(api_path):
@@ -134,6 +136,9 @@ class CloudRepos:
         continue
       processor = self.lang_processor[lang](lang_path)
       self.repos[processor.id()] = processor
+
+  def test_environments(self):
+    return self.environments
 
 
 def process_call(all_args, kwargs):
@@ -174,6 +179,3 @@ def process_call(all_args, kwargs):
 
   full_call, cli_args = testenv.process_args(*all_args, **kwargs)
   return service, version, rpc, sample, full_call, cli_args
-
-
-cloud_repos = CloudRepos()

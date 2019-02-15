@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import testenv
-import glob
-from typing import Iterable
 from sample_manifest import Manifest
+import testenv
+
+import glob
+import logging
+from typing import Iterable
 
 LANGUAGE_KEY = 'language'
 BINARY_KEY = 'bin'
@@ -66,28 +68,25 @@ class ManifestEnvironment(testenv.Base):
     return '{}:{}'.format(name, ':'.join(self.const_indices))
 
 
-class LanguageRegionManifestEnvironmentProvider:
-
-  def __init__(self, manifest_paths):
-    all_manifests = []
+all_manifests = []
+languages = []
+environments = []
+def test_environments(manifest_paths):
     for path in manifest_paths:
       all_manifests.extend(
           glob.glob(path)
       )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
-    self.manifest = Manifest(LANGUAGE_KEY, REGION_KEY)
-    self.manifest.read_files(*all_manifests)
-    self.manifest.index()
-    self.languages = self.manifest.get_keys()
-    if len(self.languages) == 0:
-      self.languages = ['(nolang)']
-    self.resolver = {}
-    for language in self.languages:
+    manifest = Manifest(LANGUAGE_KEY, REGION_KEY) # read only, so don't need a copy
+    manifest.read_files(*all_manifests)
+    manifest.index()
+    languages = manifest.get_keys()
+    if len(languages) == 0:
+      languages = ['(nolang)']
+    for language in languages:
       description = 'Language, region_tags:{}'.format(language)
       name = language
-      resolver = ManifestEnvironment(name, description, self.manifest,
+      env  = ManifestEnvironment(name, description, manifest,
                                      [language])
-      self.resolver[language] = resolver
-      register_test_environment(resolver)
-
-
-resolver = LanguageRegionManifestEnvironmentProvider(user_paths)
+      environments.append(env)
+    logging.info('convention "lang_region" generated environments: {}'.format([env.name() for env in environments]))
+    return environments

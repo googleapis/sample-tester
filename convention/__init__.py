@@ -12,8 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib
+import logging
 import os
 
 __abs_file__ = os.path.abspath(__file__)
 __abs_file_path__ = os.path.split(__abs_file__)[0]
-default = os.path.join(__abs_file_path__, 'manifest/id_by_region.py')
+
+default="lang_region"
+
+all_files = [entry for entry in os.listdir(__abs_file_path__)
+             if entry !='__init__.py' and entry != '__pycache__' and not entry.endswith('~')]
+all_conventions = [os.path.splitext(os.path.basename(entry))[0] for entry in all_files]
+environment_creators = {}
+for convention in all_conventions:
+  module = importlib.import_module('.'+convention, package='convention')
+  if 'test_environments' in dir(module):
+    logging.info('registering convention "{}"'.format(convention))
+    environment_creators[convention] = module.test_environments
+
+def generate_environments(requested_conventions, files):
+  all_environments = []
+  for convention in requested_conventions:
+    create_fn = environment_creators.get(convention, None)
+    if create_fn is None:
+      raise ValueError('convention "{}" not implemented'.format(convention))
+    try:
+      all_environments.extend(create_fn(files))
+    except Exception as ex:
+      raise ValueError('could not create test environments for convention "{}": {}'.format(convention, repr(ex)))
+  return all_environments

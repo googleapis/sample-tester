@@ -92,12 +92,12 @@ class TestCase:
       self.local_symbols[symbol] = info[0]
 
   def get_failures(self):
-    return [(status, message.format(args))
+    return [(status, message.format(*args))
             for status, message, args in self.failures]
 
   def get_errors(self):
     return [
-        (status, message.format(args)) for status, message, args in self.errors
+        (status, message.format(*args)) for status, message, args in self.errors
     ]
 
   # Records a single failure in this TestCase.
