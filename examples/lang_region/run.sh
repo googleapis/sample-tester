@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-./sampletester ${FLAGS:---xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX) -s -v} examples/lang_region/language.test.yaml examples/lang_region/language.manifest.yaml 
+./sampletester ${FLAGS:---xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX) -v detailed} examples/lang_region/language.test.yaml examples/lang_region/language.manifest.yaml 

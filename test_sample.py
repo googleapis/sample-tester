@@ -81,8 +81,11 @@ def main():
 
   success = manager.accept(runner.Visitor())
 
-  if args.summary:
-    print(manager.accept(summary.SummaryVisitor(args.verbose)))
+  verbosity = VERBOSITY_LEVELS[args.verbosity]
+  quiet = verbosity == summary.Detail.NONE
+  print(manager.accept(summary.SummaryVisitor(verbosity,
+                                              not args.suppress_failures)))
+  if not quiet or (not success and not args.suppress_failures):
     print()
     if success:
       print("Tests passed")
@@ -93,7 +96,7 @@ def main():
     try:
       with smart_open(args.xunit) as xunit_output:
         xunit_output.write(manager.accept(xunit.Visitor()))
-      if args.summary:
+      if not quiet:
         print('xUnit output written to "{}"'.format(args.xunit))
     except Exception as e:
       print("could not write xunit output to {}: {}".format(args.xunit, e))
@@ -105,7 +108,10 @@ def main():
 
 
 LOG_LEVELS = {"none": None, "info": logging.INFO, "debug": logging.DEBUG}
+DEFAULT_LOG_LEVEL = "none"
 
+VERBOSITY_LEVELS = {"quiet": summary.Detail.NONE, "summary": summary.Detail.BRIEF, "detailed": summary.Detail.FULL}
+DEFAULT_VERBOSITY_LEVEL = "summary"
 
 def parse_cli():
   epilog = """CONFIGS consists of any number of the following, in any order:
@@ -132,19 +138,21 @@ def parse_cli():
       "--xunit", metavar="FILE", help="xunit output file (use `-` for stdout)")
 
   parser.add_argument(
-      "-s",
-      "--summary",
-      help="show test status summary on stdout",
-      action="store_true")
+      "-v", "--verbosity",
+      help="how much output to show for passing tests (default: {})".format(DEFAULT_VERBOSITY_LEVEL),
+      choices=list(VERBOSITY_LEVELS.keys()),
+      default="summary"
+      )
 
   parser.add_argument(
-      "-v", "--verbose", help="if -s, be verbose", action="store_true")
+      "-f", "--suppress_failures",
+      help="suppress showing output for failing cases",
+      action='store_true')
 
   parser.add_argument(
       "-l",
       "--logging",
-      metavar="LEVEL",
-      help="show logs at the specified level",
+      help="show logs at the specified level (default: {})".format(DEFAULT_LOG_LEVEL),
       choices=list(LOG_LEVELS.keys()),
       default="none")
 

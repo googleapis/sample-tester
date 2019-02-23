@@ -25,11 +25,15 @@ class Visitor(testplan.Visitor):
     self.num_failures = 0
     self.num_errors = 0
 
-  def visit_environment(self, environment):
+  def visit_environment(self, environment: testplan.Environment, doit: bool):
+    if not doit:
+      return None
     self.environment = environment
     return self.visit_suite, self.visit_suite_end
 
-  def visit_suite(self, idx, suite):
+  def visit_suite(self, idx, suite: testplan.Suite, doit: bool):
+    if not doit:
+      return None
     self.lines.append(
         '{}<testsuite name="{}" failures="{}" errors="{}" timestamp="{}" time="{}">'
         .format(
@@ -40,7 +44,9 @@ class Visitor(testplan.Visitor):
             suite.duration().total_seconds()))
     return self.visit_testcase
 
-  def visit_testcase(self, idx, tcase):
+  def visit_testcase(self, idx, tcase: testplan.TestCase, doit: bool):
+    if not doit:
+      return
     self.lines.append(
         '{}<testcase name="{}" failures="{}" errors="{}" timestamp="{}" time="{}">'
         .format(
@@ -68,10 +74,14 @@ class Visitor(testplan.Visitor):
 
     self.lines.append(self.indent * 2 + '</testcase>')
 
-  def visit_suite_end(self, idx, suite):
+  def visit_suite_end(self, idx, suite: testplan.Suite, doit: bool):
+    if not doit:
+      return
     self.lines.append('{}</testsuite>'.format(self.indent))
 
-  def visit_environment_end(self, environment):
+  def visit_environment_end(self, environment: testplan.Environment, doit: bool):
+    if not doit:
+      return
     self.num_failures += environment.num_failures
     self.num_errors += environment.num_errors
 

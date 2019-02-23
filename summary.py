@@ -13,16 +13,25 @@
 # limitations under the License.
 
 import testplan
+from enum import Enum
 
+class Detail(Enum):
+  NONE=1
+  BRIEF=2
+  FULL=3
 
 class SummaryVisitor(testplan.Visitor):
 
-  def __init__(self, verbose):
-    self.verbose = verbose
+  def __init__(self, verbosity, show_errors):
+    self.verbosity = verbosity
+    self.show_errors = show_errors
     self.lines = []
     self.indent = '  '
 
   def visit_environment(self, environment: testplan.Environment, doit: bool):
+    if self.verbosity == Detail.NONE and (environment.success() or not self.show_errors):
+      return None, None
+
     name = environment.name()
     self.lines.append('{}: Test environment: "{}"'.format(
         status_str(environment, doit), name))
@@ -39,7 +48,7 @@ class SummaryVisitor(testplan.Visitor):
     runner = tcase.runner
     self.lines.append(self.indent * 2 +
                       '{}: Test case: "{}"'.format(status_str(tcase, doit), name))
-    if self.verbose and runner:
+    if runner and (self.verbosity == Detail.FULL or (self.show_errors and not tcase.success())):
       self.lines.append(runner.get_output(6, '| '))
 
   def end_visit(self):

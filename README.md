@@ -55,7 +55,8 @@ See `./sample.manifest.yaml` for a concrete, commented example.
 The common usage is:
 
 ```shell
-./sampletester TEST.yaml [TEST.yaml ...] [MANIFEST.manifest.yaml ...] [--envs=REGEX] [--suites=REGEX ][--cases=REGEX]
+./sampletester TEST.yaml [TEST.yaml ...] [MANIFEST.manifest.yaml ...]
+               [--envs=REGEX] [--suites=REGEX] [--cases=REGEX]
 ```
 
 where:
@@ -64,15 +65,22 @@ where:
 * there can be any number of `MANIFEST.manifest.yaml` manifest files
 * `--envs`, `--suites`, and `--cases` are Python-style regular expressions (beware shell-escapes!) to select which environments, suites, and cases to run, based on their names. All the environemnts, suites, or cases will be selected to run by default if the corresponding flag is not set. Note that if an environment is not selected, its suites are not selected regardless of `--suites`; if a suite is not selected, its testcases are not selected regardless of `--cases`.
 
-This will use the default "convention", which tries to resolve the sample references in the test plan files by looking at the manifest for entries matching the language being run and the refernce name as a "region tag".
+This will use the default "convention", which tries to resolve the sample references in the test plan files by looking at the manifest for entries matching the language being run and the reference name as a "region tag".
 
 For example, my own invocation to run a test on the fake samples under `testdata/` is
 
 ```shell
 ./sampletester -s examples/lang_region/language.test.yaml examples/lang_region/language.manifest.yaml 
 ```
-   
-Note that `sampletester` is silent by default and simply exits with a non-zero code if there was any error in the flags, test config, or test execution. If you're interested in seeing results on stdout, you'll probably want to run with the `-s` flag. If you want to debug a test failure, you'll want `-s -v`
+
+### Output
+
+In all cases, `sampletester` exits with a non-zero code if there were any errors in the flags, test config, or test execution. 
+
+In addition, by default `sampletester` prints the status of test cases to stdout. This output is controlled by the following flags:
+
+* `--verbosity` (`-v`): controls how much output to show for passing tests. The default is a "summary" view, but "quiet" (no output) and "detailed" (full case output) options are available.
+* `--suppress_failures` (`-f`): Overrides the default behavior of showing output for failing test cases, regardless of the `--verbosity ` setting
 
 The flag `--xunit=FILE` outputs a test summary in xUnit format to `FILE` (use `-` for stdout).
 
