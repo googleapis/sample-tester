@@ -55,13 +55,14 @@ See `./sample.manifest.yaml` for a concrete, commented example.
 The common usage is:
 
 ```shell
-./sampletester TEST.yaml [TEST.yaml ...] [MANIFEST.manifest.yaml ...]
+./sampletester TEST.yaml [TEST.yaml ...] [MANIFEST.manifest.yaml ...] [--envs=REGEX] [--suites=REGEX ][--cases=REGEX]
 ```
 
 where:
 
 * there can be any number of `TEST.yaml` test plan files
 * there can be any number of `MANIFEST.manifest.yaml` manifest files
+* `--envs`, `--suites`, and `--cases` are Python-style regular expressions (beware shell-escapes!) to select which environments, suites, and cases to run, based on their names. All the environemnts, suites, or cases will be selected to run by default if the corresponding flag is not set. Note that if an environment is not selected, its suites are not selected regardless of `--suites`; if a suite is not selected, its testcases are not selected regardless of `--cases`.
 
 This will use the default "convention", which tries to resolve the sample references in the test plan files by looking at the manifest for entries matching the language being run and the refernce name as a "region tag".
 

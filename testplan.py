@@ -14,7 +14,105 @@
 
 import copy
 import logging
+import re
 import yaml
+
+
+
+class Wrapper:
+
+  def __init__(self):
+    self.start_time = None
+    self.end_time = None
+    self.num_errors = 0
+    self.num_failures = 0
+    self.selected_to_run = True
+
+  def update_times(self, starting, ending):
+    if not self.start_time or starting < self.start_time:
+      self.start_time = starting
+    if not self.end_time or ending > self.end_time:
+      self.end_time = ending
+
+  def duration(self):
+    return self.end_time - self.start_time
+
+  def success(self):
+    return self.num_errors == 0 and self.num_failures == 0
+
+  def selected(self):
+    return self.selected_to_run
+
+
+class Environment(Wrapper):
+
+  def __init__(self, env_config, test_suites, env_filter):
+    super().__init__()
+    self.config = env_config
+    self.suites = copy.deepcopy(test_suites)
+    self.num_failing_cases = 0
+    self.num_failing_suites = 0
+    self.num_erroring_cases = 0
+    self.num_erroring_suites = 0
+    self.selected_to_run = passes_filter(env_filter, self.name())
+
+  def name(self):
+    return self.config.name()
+
+
+
+class Suite(Wrapper):
+
+  def __init__(self, suite_config, suite_filter, case_filter):
+    super().__init__()
+    self.config = copy.deepcopy(suite_config)
+    self.cases = [
+        TestCase(test_config, case_filter)
+        for test_config in suite_config.get(SUITE_CASES, [])
+    ]
+    self.config[SUITE_CASES] = None
+    self.num_failing_cases = 0
+    self.num_erroring_cases = 0
+    self.selected_to_run = passes_filter(suite_filter, self.name())
+
+  def selected(self):
+    return self.enabled and super().selected()
+
+  def enabled(self):
+    return self.config.get(SUITE_ENABLED, True)
+
+  def setup(self):
+    return self.config.get(SUITE_SETUP, "")
+
+  def teardown(self):
+    return self.config.get(SUITE_TEARDOWN, "")
+
+  def name(self):
+    return self.config.get(SUITE_NAME, "")
+
+  def source(self):
+    return self.config[SUITE_SOURCE]
+
+
+class TestCase(Wrapper):
+
+  def __init__(self, test_config, case_filter):
+    super().__init__()
+    self.config = copy.deepcopy(test_config)
+    self.runner = None
+    self.selected_to_run = passes_filter(case_filter, self.name())
+
+  def name(self):
+    return self.config.get(CASE_NAME, "(missing name)")
+
+  def spec(self):
+    return self.config.get(CASE_SPEC, "")
+
+def passes_filter(filter: str, name: str):
+  if not filter:
+    return True
+  found = re.search(filter, name)
+  return found is not None
 
 
 class Visitor:
@@ -30,19 +128,19 @@ class Visitor:
   def start_visit(self):
     return self.visit_environment, self.visit_environment_end
 
-  def visit_environment(self, environment):
+  def visit_environment(self, environment: Environment, doit: bool):
     return self.visit_suite, self.visit_suite_end
 
-  def visit_suite(self, idx, suite):
+  def visit_suite(self, idx: int, suite: Suite, doit: bool):
     return self.visit_test_case
 
-  def visit_testcase(self, idx, testcase):
+  def visit_testcase(self, idx: int, testcase: TestCase, doit: bool):
     pass
 
-  def visit_suite_end(self, idx, suite):
+  def visit_suite_end(self, idx: int, suite: Suite, doit: bool):
     pass
 
-  def visit_environment_end(self, environment):
+  def visit_environment_end(self, environment: Environment, doit: bool):
     pass
 
   def end_visit(self):
@@ -58,15 +156,14 @@ SUITE_CASES = "cases"
 CASE_NAME = "name"
 CASE_SPEC = "spec"
 
-
 class Manager:
 
-  def __init__(self, environment_registry, test_suites):
+  def __init__(self, environment_registry, test_suites, env_filter:str):
     self.test_suites = test_suites
 
     logging.debug("envs: {}".format(environment_registry.get_names()))
     self.environments = [
-        Environment(env, test_suites) for env in environment_registry.list()
+        Environment(env, test_suites, env_filter) for env in environment_registry.list()
     ]
 
   def accept(self, visitor: Visitor):
@@ -76,23 +173,26 @@ class Manager:
 
     run_passed = True
     for env in self.environments:
-      visit_suite, visit_suite_end = visit_environment(env)
+      do_env = env.selected()
+      visit_suite, visit_suite_end = visit_environment(env, do_env)
       if not visit_suite:
         continue
 
       for suite_num, suite in enumerate(env.suites):
-        visit_testcase = visit_suite(suite_num, suite)
+        do_suite = do_env and suite.selected()
+        visit_testcase = visit_suite(suite_num, suite, do_suite)
         if not visit_testcase:
           continue
 
         for idx, case in enumerate(suite.cases):
-          visit_testcase(idx, case)
+          do_case = do_suite and case.selected()
+          visit_testcase(idx, case, do_case)
 
         if visit_suite_end is not None:
-          visit_suite_end(suite_num, suite)
+          visit_suite_end(suite_num, suite, do_suite)
 
       if visit_environment_end:
-        visit_environment_end(env)
+        visit_environment_end(env, do_env)
 
     return visitor.end_visit()
 
@@ -113,88 +213,9 @@ def suite_configs_from(test_files):
   return all_suites
 
 
-def suite_objects_from(all_suites):
-  return [Suite(spec) for spec in all_suites]
+def suite_objects_from(all_suites, suite_filter = None, case_filter = None):
+  return [Suite(spec, suite_filter, case_filter) for spec in all_suites]
 
 
-def suites_from(test_files):
-  return suite_objects_from(suite_configs_from(test_files))
-
-
-class Wrapper:
-
-  def __init__(self):
-    self.start_time = None
-    self.end_time = None
-    self.num_errors = 0
-    self.num_failures = 0
-
-  def update_times(self, starting, ending):
-    if not self.start_time or starting < self.start_time:
-      self.start_time = starting
-    if not self.end_time or ending > self.end_time:
-      self.end_time = ending
-
-  def duration(self):
-    return self.end_time - self.start_time
-
-  def success(self):
-    return self.num_errors == 0 and self.num_failures == 0
-
-
-class Environment(Wrapper):
-
-  def __init__(self, env_config, test_suites):
-    super().__init__()
-    self.config = env_config
-    self.suites = copy.deepcopy(test_suites)
-    self.num_failing_cases = 0
-    self.num_failing_suites = 0
-    self.num_erroring_cases = 0
-    self.num_erroring_suites = 0
-
-  def name(self):
-    return self.config.name()
-
-
-class Suite(Wrapper):
-
-  def __init__(self, suite_config):
-    super().__init__()
-    self.config = copy.deepcopy(suite_config)
-    self.cases = [
-        TestCase(test_config)
-        for test_config in suite_config.get(SUITE_CASES, [])
-    ]
-    self.config[SUITE_CASES] = None
-    self.num_failing_cases = 0
-    self.num_erroring_cases = 0
-
-  def enabled(self):
-    return self.config.get(SUITE_ENABLED, True)
-
-  def setup(self):
-    return self.config.get(SUITE_SETUP, "")
-
-  def teardown(self):
-    return self.config.get(SUITE_TEARDOWN, "")
-
-  def name(self):
-    return self.config.get(SUITE_NAME, "")
-
-  def source(self):
-    return self.config[SUITE_SOURCE]
-
-
-class TestCase(Wrapper):
-
-  def __init__(self, test_config):
-    super().__init__()
-    self.config = copy.deepcopy(test_config)
-    self.runner = None
-
-  def name(self):
-    return self.config.get(CASE_NAME, "(missing name)")
-
-  def spec(self):
-    return self.config.get(CASE_SPEC, "")
+def suites_from(test_files, suite_filter = None, case_filter = None):
+  return suite_objects_from(suite_configs_from(test_files), suite_filter, case_filter)

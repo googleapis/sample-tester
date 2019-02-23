@@ -22,23 +22,23 @@ class SummaryVisitor(testplan.Visitor):
     self.lines = []
     self.indent = '  '
 
-  def visit_environment(self, environment):
+  def visit_environment(self, environment: testplan.Environment, doit: bool):
     name = environment.name()
     self.lines.append('{}: Test environment: "{}"'.format(
-        status_str(environment), name))
+        status_str(environment, doit), name))
     return self.visit_suite, None
 
-  def visit_suite(self, idx, suite):
+  def visit_suite(self, idx, suite: testplan.Suite, doit:bool):
     name = suite.name()
     self.lines.append(self.indent +
-                      '{}: Test suite: "{}"'.format(status_str(suite), name))
+                      '{}: Test suite: "{}"'.format(status_str(suite, doit), name))
     return self.visit_testcase
 
-  def visit_testcase(self, idx, tcase):
+  def visit_testcase(self, idx, tcase: testplan.TestCase, doit: bool):
     name = tcase.name()
     runner = tcase.runner
     self.lines.append(self.indent * 2 +
-                      '{}: Test case: "{}"'.format(status_str(tcase), name))
+                      '{}: Test case: "{}"'.format(status_str(tcase, doit), name))
     if self.verbose and runner:
       self.lines.append(runner.get_output(6, '| '))
 
@@ -46,5 +46,7 @@ class SummaryVisitor(testplan.Visitor):
     return '\n'.join(self.lines)
 
 
-def status_str(obj):
+def status_str(obj, doit):
+  if not doit:
+    return 'SKIPPED'
   return 'PASSED' if obj.success() else 'FAILED'

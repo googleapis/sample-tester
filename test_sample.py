@@ -68,8 +68,8 @@ def main():
     # TODO(vchudnov): Catch exceptions and print
     registry = environment_registry.new(args.convention, user_paths)
 
-    test_suites = testplan.suites_from(test_files)
-    manager = testplan.Manager(registry, test_suites)
+    test_suites = testplan.suites_from(test_files, args.suites, args.cases)
+    manager = testplan.Manager(registry, test_suites, args.envs)
   except Exception as e:
     logging.error("fatal error: {}".format(repr(e)))
     print("\nERROR: could not run tests because {}\n".format(e))
@@ -147,6 +147,24 @@ def parse_cli():
       help="show logs at the specified level",
       choices=list(LOG_LEVELS.keys()),
       default="none")
+
+  parser.add_argument(
+      "--envs",
+      metavar="TESTENV_FILTER",
+      help="regex filtering test environments to execute"
+  )
+
+  parser.add_argument(
+      "--suites",
+      metavar="SUITE_FILTER",
+      help="regex filtering test suites to execute"
+  )
+
+  parser.add_argument(
+      "--cases",
+      metavar="CASE_FILTER",
+      help="regex filtering test cases to execute"
+  )
 
 
   parser.add_argument("files", metavar="CONFIGS", nargs=argparse.REMAINDER)

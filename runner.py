@@ -27,23 +27,32 @@ class Visitor(testplan.Visitor):
     logging.info("========== Running test!")
     return self.visit_environment, self.visit_environment_end
 
-  def visit_environment(self, environment):
+  def visit_environment(self, environment: testplan.Environment, do_environment: bool):
+    if not do_environment:
+      logging.info('skipping environment "{}"'.format(environment.name()))
+      return None, None
     environment.config.setup()
-    return (lambda idx, suite: self.visit_suite(idx, suite, environment),
-            lambda idx, suite: self.visit_suite_end(idx, suite, environment))
+    return (lambda idx, suite, do_suite: self.visit_suite(idx, suite, do_suite, environment),
+            lambda idx, suite, do_suite: self.visit_suite_end(idx, suite, do_suite, environment))
 
-  def visit_suite(self, idx, suite, environment):
-    if not suite.enabled():
+  def visit_suite(self, idx: int, suite: testplan.Suite, do_suite: bool,
+                  environment: testplan.Environment):
+    if not do_suite:
+      logging.info('skipping suite "{}"'.format(suite.name()))
       return None
     logging.info(
         "\n==== SUITE {}:{}:{} START  =========================================="
         .format(environment.name(), idx, suite.name()))
     logging.info("     {}".format(suite.source()))
-    return lambda idx, testcase: self.visit_testcase(idx, testcase, environment.
-                                                     config, suite)
+    return lambda idx, testcase, do_case: self.visit_testcase(idx, testcase,
+                                                              do_case, environment, suite)
 
-  def visit_testcase(self, idx, tcase, environment, suite):
-    case_runner = caserunner.TestCase(environment, idx, tcase.name(),
+  def visit_testcase(self, idx: int, tcase: testplan.TestCase, do_case: bool,
+                     environment: testplan.Environment, suite: testplan.Suite):
+    if not do_case:
+      logging.info('skipping case "{}"'.format(tcase.name()))
+      return
+    case_runner = caserunner.TestCase(environment.config, idx, tcase.name(),
                                       suite.setup(), tcase.spec(),
                                       suite.teardown())
     tcase.runner = case_runner
@@ -61,7 +70,8 @@ class Visitor(testplan.Visitor):
     tcase.update_times(case_runner.start_time, case_runner.end_time)
     suite.update_times(case_runner.start_time, case_runner.end_time)
 
-  def visit_suite_end(self, idx, suite, environment):
+  def visit_suite_end(self, idx, suite: testplan.Suite,
+                      do_suite: bool, environment: testplan.Environment):
     if suite.success():
       logging.info(
           "==== SUITE {}:{}:{} SUCCESS ========================================"
@@ -82,7 +92,7 @@ class Visitor(testplan.Visitor):
           "==== SUITE {}:{}:{} FAILURE ========================================"
           .format(environment.name(), idx, suite.name()))
 
-  def visit_environment_end(self, environment):
+  def visit_environment_end(self, environment: testplan.Environment, do_environment: bool):
     if not environment.success():
       self.run_passed = False
     environment.config.teardown()
