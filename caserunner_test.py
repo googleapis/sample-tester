@@ -31,17 +31,17 @@ class Visitor(testplan.Visitor):
     self.current_suite = ''
     self.error = None
 
-  def visit_environment(self, env):
+  def visit_environment(self, env, doit=True):
     self.current_env = env.config.name()
     self.environments[self.current_env] = env
     return self.visit_suite, None
 
-  def visit_suite(self, idx, suite):
+  def visit_suite(self, idx, suite, doit=True):
     self.current_suite = '{}:{}'.format(self.current_env, suite.name())
     self.suites[self.current_suite] = suite
     return self.visit_testcase
 
-  def visit_testcase(self, idx, tcase):
+  def visit_testcase(self, idx, tcase, doit=True):
     if tcase.name() not in ['code', 'yaml']:
       self.error = 'found neither "code" nor "yaml" in case name "{}"'.format(
           tcase.name())
@@ -58,7 +58,7 @@ class TestCaseRunner(unittest.TestCase):
   def setUp(self):
     __abs_file__ = os.path.abspath(__file__)
     self.__abs_file_path__ = os.path.split(__abs_file__)[0]
-    self.environment_registry = environment_registry.new(convention.default, [])
+    self.environment_registry = environment_registry.new(convention.DEFAULT, [])
     self.manager = testplan.Manager(
         self.environment_registry,
         self.suites_from(['testdata/caserunner_test.yaml']))

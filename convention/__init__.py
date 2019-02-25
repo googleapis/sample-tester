@@ -16,10 +16,10 @@ import importlib
 import logging
 import os
 
+DEFAULT="tag:region_tag"
+
 __abs_file__ = os.path.abspath(__file__)
 __abs_file_path__ = os.path.split(__abs_file__)[0]
-
-default="lang_region"
 
 all_files = [entry for entry in os.listdir(__abs_file_path__)
              if entry !='__init__.py' and entry != '__pycache__' and not entry.endswith('~')]
@@ -31,14 +31,14 @@ for convention in all_conventions:
     logging.info('registering convention "{}"'.format(convention))
     environment_creators[convention] = module.test_environments
 
-def generate_environments(requested_conventions, files):
+def generate_environments(requested_conventions, convention_args, files):
   all_environments = []
   for convention in requested_conventions:
     create_fn = environment_creators.get(convention, None)
     if create_fn is None:
       raise ValueError('convention "{}" not implemented'.format(convention))
     try:
-      all_environments.extend(create_fn(files))
+      all_environments.extend(create_fn(files, convention_args))
     except Exception as ex:
       raise ValueError('could not create test environments for convention "{}": {}'.format(convention, repr(ex)))
   return all_environments

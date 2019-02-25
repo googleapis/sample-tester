@@ -14,5 +14,9 @@
 
 from .cloud import CloudRepos
 
-def test_environments(files):
-    return CloudRepos(files).test_environments()
+def test_environments(files, convention_parameters):
+  num_params = 0 if convention_parameters is None else len(convention_parameters)
+  if num_params != 0:
+    raise Exception('expected no parameters to convention "cloud", got %d: %s'
+                    .format(num_params, convention_parameters))
+  return CloudRepos(files).test_environments()

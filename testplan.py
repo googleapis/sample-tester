@@ -158,7 +158,7 @@ CASE_SPEC = "spec"
 
 class Manager:
 
-  def __init__(self, environment_registry, test_suites, env_filter:str):
+  def __init__(self, environment_registry, test_suites, env_filter:str = None):
     self.test_suites = test_suites
 
     logging.debug("envs: {}".format(environment_registry.get_names()))

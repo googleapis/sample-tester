@@ -21,7 +21,6 @@ from typing import Iterable
 
 LANGUAGE_KEY = 'language'
 BINARY_KEY = 'bin'
-REGION_KEY = 'region_tag'
 
 
 class ManifestEnvironment(testenv.Base):
@@ -71,22 +70,27 @@ class ManifestEnvironment(testenv.Base):
 all_manifests = []
 languages = []
 environments = []
-def test_environments(manifest_paths):
-    for path in manifest_paths:
-      all_manifests.extend(
-          glob.glob(path)
-      )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
-    manifest = Manifest(LANGUAGE_KEY, REGION_KEY) # read only, so don't need a copy
-    manifest.read_files(*all_manifests)
-    manifest.index()
-    languages = manifest.get_keys()
-    if len(languages) == 0:
-      languages = ['(nolang)']
-    for language in languages:
-      description = 'Language, region_tags:{}'.format(language)
-      name = language
-      env  = ManifestEnvironment(name, description, manifest,
-                                     [language])
-      environments.append(env)
-    logging.info('convention "lang_region" generated environments: {}'.format([env.name() for env in environments]))
-    return environments
+def test_environments(manifest_paths, convention_parameters):
+  num_params = 0 if convention_parameters is None else len(convention_parameters)
+  if num_params < 1:
+    raise Exception('expected at least 1 parameter to convention "tag", got %d: %s'
+                    .format(num_params, convention_parameters))
+
+  for path in manifest_paths:
+    all_manifests.extend(
+        glob.glob(path)
+    )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
+  manifest = Manifest(LANGUAGE_KEY, *convention_parameters) # read only, so don't need a copy
+  manifest.read_files(*all_manifests)
+  manifest.index()
+  languages = manifest.get_keys()
+  if len(languages) == 0:
+    languages = ['(nolang)']
+  for language in languages:
+    description = 'Tags by language:{} {}'.format(language, convention_parameters)
+    name = language
+    env  = ManifestEnvironment(name, description, manifest,
+                               [language])
+    environments.append(env)
+  logging.info('convention "tag" generated environments: {}'.format([env.name() for env in environments]))
+  return environments

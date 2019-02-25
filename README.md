@@ -1,6 +1,6 @@
 # Sample Tester
 
-Version 0.7.3
+Version 0.7.4
 
 
 ## Setup
@@ -57,6 +57,7 @@ The common usage is:
 ```shell
 ./sampletester TEST.yaml [TEST.yaml ...] [MANIFEST.manifest.yaml ...]
                [--envs=REGEX] [--suites=REGEX] [--cases=REGEX]
+               [--convention CONVENTION:ARG,ARGS]
 ```
 
 where:
@@ -64,13 +65,12 @@ where:
 * there can be any number of `TEST.yaml` test plan files
 * there can be any number of `MANIFEST.manifest.yaml` manifest files
 * `--envs`, `--suites`, and `--cases` are Python-style regular expressions (beware shell-escapes!) to select which environments, suites, and cases to run, based on their names. All the environemnts, suites, or cases will be selected to run by default if the corresponding flag is not set. Note that if an environment is not selected, its suites are not selected regardless of `--suites`; if a suite is not selected, its testcases are not selected regardless of `--cases`.
-
-This will use the default "convention", which tries to resolve the sample references in the test plan files by looking at the manifest for entries matching the language being run and the reference name as a "region tag".
+* `--convention` (or `-c`) can be used to specify both a particular convention to resolve the sample IDs to disk artifacts, and a list of comma-separated arguments to that convention. The default convention is `tag:region_tag`, which uses the `region_tag` key in the manifest files. To use, say, the `target` key in the manifest, simply pass `-c tag:target`.
 
 For example, my own invocation to run a test on the fake samples under `testdata/` is
 
 ```shell
-./sampletester -s examples/lang_region/language.test.yaml examples/lang_region/language.manifest.yaml 
+./sampletester examples/tag/language.test.yaml examples/tag/language.manifest.yaml 
 ```
 
 ### Output
