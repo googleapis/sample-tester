@@ -55,6 +55,8 @@ DEBUGME=False
 
 def main():
   args, usage = parse_cli()
+  if not args:
+    exit(EXITCODE_SETUP_ERROR)
 
   log_level = LOG_LEVELS[args.logging] or DEFAULT_LOG_LEVEL
   logging.basicConfig(level=log_level)
@@ -177,7 +179,9 @@ def parse_cli():
       help="regex filtering test cases to execute"
   )
 
-
+  if len(sys.argv) == 1:
+    parser.print_help()
+    return None, None
   parser.add_argument("files", metavar="CONFIGS", nargs=argparse.REMAINDER)
   return parser.parse_args(), parser.format_usage()
 
