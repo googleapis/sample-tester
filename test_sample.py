@@ -44,6 +44,7 @@ import argparse
 import contextlib
 import traceback
 
+VERSION = "0.7.5"
 EXITCODE_SUCCESS = 0
 EXITCODE_TEST_FAILURE = 1
 EXITCODE_FLAG_ERROR = 2
@@ -58,6 +59,9 @@ def main():
   if not args:
     exit(EXITCODE_SETUP_ERROR)
 
+  if args.version:
+    print("sampletester version {}".format(VERSION))
+
   log_level = LOG_LEVELS[args.logging] or DEFAULT_LOG_LEVEL
   logging.basicConfig(level=log_level)
   logging.info("argv: {}".format(sys.argv))
@@ -69,6 +73,8 @@ def main():
     registry = environment_registry.new(args.convention, user_paths)
 
     test_suites = testplan.suites_from(test_files, args.suites, args.cases)
+    if len(test_suites) == 0:
+      exit(EXITCODE_SUCCESS)
     manager = testplan.Manager(registry, test_suites, args.envs)
   except Exception as e:
     logging.error("fatal error: {}".format(repr(e)))
@@ -178,6 +184,11 @@ def parse_cli():
       metavar="CASE_FILTER",
       help="regex filtering test cases to execute"
   )
+
+  parser.add_argument(
+      "--version",
+      help="print version number",
+      action="store_true")
 
   if len(sys.argv) == 1:
     parser.print_help()
