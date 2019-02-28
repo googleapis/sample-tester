@@ -44,7 +44,7 @@ import argparse
 import contextlib
 import traceback
 
-VERSION = "0.7.5"
+VERSION = '0.7.5'
 EXITCODE_SUCCESS = 0
 EXITCODE_TEST_FAILURE = 1
 EXITCODE_FLAG_ERROR = 2
