@@ -52,6 +52,7 @@ EXITCODE_SETUP_ERROR = 3
 
 DEFAULT_LOG_LEVEL = 100
 
+# Set this to True to get a backtrace for debugging
 DEBUGME=False
 
 def main():
@@ -61,6 +62,9 @@ def main():
 
   if args.version:
     print("sampletester version {}".format(VERSION))
+
+  if args.fail_fast:
+    print("--fail-fast")
 
   log_level = LOG_LEVELS[args.logging] or DEFAULT_LOG_LEVEL
   logging.basicConfig(level=log_level)
@@ -85,7 +89,7 @@ def main():
       print(usage)
     exit(EXITCODE_SETUP_ERROR)
 
-  success = manager.accept(runner.Visitor())
+  success = manager.accept(runner.Visitor(args.fail_fast))
 
   verbosity = VERBOSITY_LEVELS[args.verbosity]
   quiet = verbosity == summary.Detail.NONE
@@ -188,6 +192,12 @@ def parse_cli():
   parser.add_argument(
       "--version",
       help="print version number",
+      action="store_true")
+
+  parser.add_argument(
+      "--fail-fast",
+      help=("stop execution as soon as any test case fails, preempting " +
+            "additional test cases/suites/environments from running"),
       action="store_true")
 
   if len(sys.argv) == 1:

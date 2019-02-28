@@ -26,13 +26,13 @@ class Visitor(testplan.Visitor):
     self.num_errors = 0
 
   def visit_environment(self, environment: testplan.Environment, doit: bool):
-    if not doit:
-      return None
+    if not doit or not environment.attempted:
+      return None, None
     self.environment = environment
     return self.visit_suite, self.visit_suite_end
 
   def visit_suite(self, idx, suite: testplan.Suite, doit: bool):
-    if not doit:
+    if not doit or not suite.attempted:
       return None
     self.lines.append(
         '{}<testsuite name="{}" failures="{}" errors="{}" timestamp="{}" time="{}">'
@@ -45,7 +45,7 @@ class Visitor(testplan.Visitor):
     return self.visit_testcase
 
   def visit_testcase(self, idx, tcase: testplan.TestCase, doit: bool):
-    if not doit:
+    if not doit or not tcase.attempted:
       return
     self.lines.append(
         '{}<testcase name="{}" failures="{}" errors="{}" timestamp="{}" time="{}">'
@@ -75,12 +75,12 @@ class Visitor(testplan.Visitor):
     self.lines.append(self.indent * 2 + '</testcase>')
 
   def visit_suite_end(self, idx, suite: testplan.Suite, doit: bool):
-    if not doit:
+    if not doit or not suite.attempted:
       return
     self.lines.append('{}</testsuite>'.format(self.indent))
 
   def visit_environment_end(self, environment: testplan.Environment, doit: bool):
-    if not doit:
+    if not doit or not environment.attempted:
       return
     self.num_failures += environment.num_failures
     self.num_errors += environment.num_errors

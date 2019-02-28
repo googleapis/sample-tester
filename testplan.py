@@ -27,6 +27,7 @@ class Wrapper:
     self.num_errors = 0
     self.num_failures = 0
     self.selected_to_run = True
+    self.attempted = False
 
   def update_times(self, starting, ending):
     if not self.start_time or starting < self.start_time:

@@ -33,29 +33,44 @@ class SummaryVisitor(testplan.Visitor):
       return None, None
 
     name = environment.name()
-    self.lines.append('{}: Test environment: "{}"'.format(
-        status_str(environment, doit), name))
+    status = self.status_str(environment, doit)
+    if not status:
+      return None, None
+
+    self.lines.append('{}: Test environment: "{}"'.format(status, name))
     return self.visit_suite, None
 
   def visit_suite(self, idx, suite: testplan.Suite, doit:bool):
     name = suite.name()
-    self.lines.append(self.indent +
-                      '{}: Test suite: "{}"'.format(status_str(suite, doit), name))
+    status = self.status_str(suite, doit)
+    if not status:
+      return None
+
+    self.lines.append(self.indent + '{}: Test suite: "{}"'.format(status, name))
     return self.visit_testcase
 
   def visit_testcase(self, idx, tcase: testplan.TestCase, doit: bool):
     name = tcase.name()
     runner = tcase.runner
-    self.lines.append(self.indent * 2 +
-                      '{}: Test case: "{}"'.format(status_str(tcase, doit), name))
+    status = self.status_str(tcase, doit)
+    if not status:
+      return
+
+    self.lines.append(self.indent * 2 + '{}: Test case: "{}"'
+                      .format(status, name))
     if runner and (self.verbosity == Detail.FULL or (self.show_errors and not tcase.success())):
       self.lines.append(runner.get_output(6, '| '))
 
   def end_visit(self):
     return '\n'.join(self.lines)
 
-
-def status_str(obj, doit):
-  if not doit:
-    return 'SKIPPED'
-  return 'PASSED' if obj.success() else 'FAILED'
+  # Returns the status to print for a given object, or None if no status is to
+  # be displayed given the verbosity settings.
+  def status_str(self, obj, doit):
+    if not doit:
+      return 'SKIPPED'
+    if not obj.attempted:
+      if self.verbosity == Detail.FULL:
+        return 'PREEMPTED'
+      return None
+    return 'PASSED' if obj.success() else 'FAILED'

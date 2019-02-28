@@ -20,8 +20,10 @@ import testplan
 
 class Visitor(testplan.Visitor):
 
-  def __init__(self):
+  def __init__(self, fail_fast=False):
     self.run_passed = True
+    self.fail_fast = fail_fast
+    self.encountered_failure = False
 
   def start_visit(self):
     logging.info("========== Running test!")
@@ -31,6 +33,12 @@ class Visitor(testplan.Visitor):
     if not do_environment:
       logging.info('skipping environment "{}"'.format(environment.name()))
       return None, None
+
+    if self.fail_fast and self.encountered_failure:
+      logging.info('fail fast: not running environment "{}"'.format(environment.name))
+      return None, None
+
+    environment.attempted = True
     environment.config.setup()
     return (lambda idx, suite, do_suite: self.visit_suite(idx, suite, do_suite, environment),
             lambda idx, suite, do_suite: self.visit_suite_end(idx, suite, do_suite, environment))
@@ -40,6 +48,12 @@ class Visitor(testplan.Visitor):
     if not do_suite:
       logging.info('skipping suite "{}"'.format(suite.name()))
       return None
+
+    if self.fail_fast and self.encountered_failure:
+      logging.info('fail fast: not running suite "{}"'.format(suite.name))
+      return None
+
+    suite.attempted = True
     logging.info(
         "\n==== SUITE {}:{}:{} START  =========================================="
         .format(environment.name(), idx, suite.name()))
@@ -52,23 +66,32 @@ class Visitor(testplan.Visitor):
     if not do_case:
       logging.info('skipping case "{}"'.format(tcase.name()))
       return
+
+    if self.fail_fast and self.encountered_failure:
+      logging.info('fail fast: not running case "{}"'.format(tcase.name))
+      return
+
+    tcase.attempted = True
     case_runner = caserunner.TestCase(environment.config, idx, tcase.name(),
                                       suite.setup(), tcase.spec(),
                                       suite.teardown())
     tcase.runner = case_runner
     case_runner.run()
-    tcase.num_failures += len(case_runner.failures)
+    num_failures = len(case_runner.failures)
+    tcase.num_failures += num_failures
     suite.num_failures += tcase.num_failures
     if tcase.num_failures > 0:
       suite.num_failing_cases += 1
 
-    tcase.num_errors += len(case_runner.errors)
+    num_errors = len(case_runner.errors)
+    tcase.num_errors += num_errors
     suite.num_errors += tcase.num_errors
     if tcase.num_errors > 0:
       suite.num_erroring_cases += 1
 
     tcase.update_times(case_runner.start_time, case_runner.end_time)
     suite.update_times(case_runner.start_time, case_runner.end_time)
+    self.encountered_failure = self.encountered_failure or num_errors > 0 or num_failures > 0
 
   def visit_suite_end(self, idx, suite: testplan.Suite,
                       do_suite: bool, environment: testplan.Environment):
