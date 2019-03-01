@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import testplan
+
 from enum import Enum
+import os
+import sys
 
 class Detail(Enum):
   NONE=1
@@ -21,12 +24,21 @@ class Detail(Enum):
   FULL=3
 
 class SummaryVisitor(testplan.Visitor):
+  """Print a (running) summary of test case execution.
 
-  def __init__(self, verbosity, show_errors):
+  The summary is printed with indentation for environments, suites, and
+  test cases. By default, the summary is printed as lines are recorded, unless
+  `progress_out == None` is specified in `__init__(...)`. The full output
+  accumulated is available via `output()`.
+  """
+
+  def __init__(self, verbosity, show_errors,
+               progress_out=sys.stderr):
     self.verbosity = verbosity
     self.show_errors = show_errors
     self.lines = []
     self.indent = '  '
+    self.progress_out = progress_out if progress_out else os.devnull
 
   def visit_environment(self, environment: testplan.Environment, doit: bool):
     if self.verbosity == Detail.NONE and (environment.success() or not self.show_errors):
@@ -37,7 +49,7 @@ class SummaryVisitor(testplan.Visitor):
     if not status:
       return None, None
 
-    self.lines.append('{}: Test environment: "{}"'.format(status, name))
+    self.append_lines('{}: Test environment: "{}"'.format(status, name))
     return self.visit_suite, None
 
   def visit_suite(self, idx, suite: testplan.Suite, doit:bool):
@@ -46,7 +58,7 @@ class SummaryVisitor(testplan.Visitor):
     if not status:
       return None
 
-    self.lines.append(self.indent + '{}: Test suite: "{}"'.format(status, name))
+    self.append_lines(self.indent + '{}: Test suite: "{}"'.format(status, name))
     return self.visit_testcase
 
   def visit_testcase(self, idx, tcase: testplan.TestCase, doit: bool):
@@ -56,17 +68,22 @@ class SummaryVisitor(testplan.Visitor):
     if not status:
       return
 
-    self.lines.append(self.indent * 2 + '{}: Test case: "{}"'
+    self.append_lines(self.indent * 2 + '{}: Test case: "{}"'
                       .format(status, name))
     if runner and (self.verbosity == Detail.FULL or (self.show_errors and not tcase.success())):
-      self.lines.append(runner.get_output(6, '| '))
+      self.append_lines(runner.get_output(6, '| '))
 
-  def end_visit(self):
+  def output(self):
     return '\n'.join(self.lines)
 
-  # Returns the status to print for a given object, or None if no status is to
-  # be displayed given the verbosity settings.
+  def append_lines(self, str):
+    print(str, file=self.progress_out)
+    self.lines.append(str)
+
   def status_str(self, obj, doit):
+    """Returns the status to print for a given object, or None if no status is to
+    be displayed given the verbosity settings.
+    """
     if not doit:
       return 'SKIPPED'
     if not obj.attempted:

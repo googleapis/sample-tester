@@ -18,7 +18,6 @@ import re
 import yaml
 
 
-
 class Wrapper:
 
   def __init__(self):
@@ -117,9 +116,20 @@ def passes_filter(filter: str, name: str):
 
 
 class Visitor:
-  # Each visit function returns a visitor or two to the next level of the hierarchy, or
-  # None if the next level of the hierarchy is not to be traversed (for example,
-  # we don't want to traverse test cases in a disabled test suite).
+  """Visit a `Wrapper` hierarchy.
+
+  `Manager` uses the interface provided by this class to visit a `Wrapper`
+  hierarchy.
+
+  Each visit function returns a visitor or two to the next level of the
+  hierarchy, or `None` if the next level of the hierarchy is not to be traversed
+  (for example, we don't want to traverse test cases in a disabled test suite).
+
+  The signatures in this class are what `Manager` expects to call, and what
+  should be returned from the parents' visit function. However, as long as these
+  return values match the signatures, the specific methods in subclasses can
+  vary.
+  """
 
   # To parallelize any of these traversals, we could modify the parent visitor
   # to return a flag determining whether parallelization is allowed. For
@@ -147,6 +157,55 @@ class Visitor:
   def end_visit(self):
     return True
 
+class MultiVisitor(Visitor):
+  """Applies multiple visitors in order at each level of a visit.
+  """
+
+  def __init__(self, *visitors: Visitor):
+    self.visitors = visitors
+
+  def start_visit(self):
+    start_end = [visitor.start_visit() for visitor in self.visitors]
+    start = [fns[0] for fns in start_end]
+    end = [fns[1] for fns in start_end]
+    return (lambda env, do_env: self.visit_environment(env, do_env, start),
+            lambda env, do_env: self.visit_environment_end(env, do_env, end))
+
+  def visit_environment(self, environment: Environment, doit: bool, visit_fns):
+    start_end = [visit(environment, doit) for visit in visit_fns]
+    start = [fns[0] for fns in start_end]
+    end = [fns[1] for fns in start_end]
+    return (lambda idx, suite, do_suite: self.visit_suite(idx, suite,
+                                                          do_suite, start),
+            lambda idx, suite, do_suite: self.visit_suite_end(idx, suite,
+                                                              do_suite, end))
+
+  def visit_suite(self, idx: int, suite: Suite, doit: bool, visit_fns):
+    start = [visit(idx, suite, doit) for visit in visit_fns]
+    return lambda idx, testcase, do_case: self.visit_testcase(idx, testcase,
+                                                              do_case, start)
+
+  def visit_testcase(self, idx: int, testcase: TestCase, doit: bool,
+                     visit_fns):
+    for visit in visit_fns:
+      if visit:
+        visit(idx, testcase, doit)
+
+  def visit_suite_end(self, idx: int, suite: Suite, doit: bool, visit_fns):
+    for visit in visit_fns:
+      if visit:
+        visit(idx, suite, doit)
+
+  def visit_environment_end(self, environment: Environment, doit: bool,
+                            visit_fns):
+    for visit in visit_fns:
+      if visit:
+        visit(environment, doit)
+
+  def end_visit(self):
+    results = [visitor.end_visit() for visitor in self.visitors]
+    return all(results)
+
 
 SUITE_ENABLED = "enabled"
 SUITE_SETUP = "setup"
@@ -163,9 +222,8 @@ class Manager:
     self.test_suites = test_suites
 
     logging.debug("envs: {}".format(environment_registry.get_names()))
-    self.environments = [
-        Environment(env, test_suites, env_filter) for env in environment_registry.list()
-    ]
+    self.environments = [Environment(env, test_suites, env_filter)
+                         for env in environment_registry.list()]
 
   def accept(self, visitor: Visitor):
     visit_environment, visit_environment_end = visitor.start_visit()

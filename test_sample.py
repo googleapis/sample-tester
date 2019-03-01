@@ -63,9 +63,6 @@ def main():
   if args.version:
     print("sampletester version {}".format(VERSION))
 
-  if args.fail_fast:
-    print("--fail-fast")
-
   log_level = LOG_LEVELS[args.logging] or DEFAULT_LOG_LEVEL
   logging.basicConfig(level=log_level)
   logging.info("argv: {}".format(sys.argv))
@@ -89,12 +86,14 @@ def main():
       print(usage)
     exit(EXITCODE_SETUP_ERROR)
 
-  success = manager.accept(runner.Visitor(args.fail_fast))
-
   verbosity = VERBOSITY_LEVELS[args.verbosity]
   quiet = verbosity == summary.Detail.NONE
-  print(manager.accept(summary.SummaryVisitor(verbosity,
-                                              not args.suppress_failures)))
+  visitor = testplan.MultiVisitor(runner.Visitor(args.fail_fast),
+                                  summary.SummaryVisitor(verbosity,
+                                                         not args.suppress_failures))
+
+  success = manager.accept(visitor)
+
   if not quiet or (not success and not args.suppress_failures):
     print()
     if success:
