@@ -2,6 +2,8 @@
 
 Version: 0.7.6
 
+**PRE-RELEASE**: This surface is not guaranteed to be stable. Breaking changes may still be applied.
+
 
 ## Setup
 1. Ensure you have credentials set up
