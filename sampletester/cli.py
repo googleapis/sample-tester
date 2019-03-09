@@ -30,7 +30,6 @@
 #  grep -r TODO | grep -v '~' | grep -v /lib/
 
 
-print("*** __file__: {}". format(__file__))
 import argparse
 import contextlib
 import logging

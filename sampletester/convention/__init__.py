@@ -25,7 +25,7 @@ all_files = [entry for entry in os.listdir(__abs_file_path__)
              if entry !='__init__.py' and entry != '__pycache__' and not entry.endswith('~')]
 all_conventions = [os.path.splitext(os.path.basename(entry))[0] for entry in all_files]
 environment_creators = {}
-print("All conventions: {}".format(all_conventions))
+
 for convention in all_conventions:
   module = importlib.import_module('.'+convention, package='sampletester.convention')
   if 'test_environments' in dir(module):

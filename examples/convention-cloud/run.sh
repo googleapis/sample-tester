@@ -12,5 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "*** " $(pwd)
 python3 -m sampletester.cli ${FLAGS:---xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX) -v detailed} --convention=cloud examples/convention-cloud/language.test.yaml examples/mock-samples/googleapis 
