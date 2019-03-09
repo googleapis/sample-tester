@@ -90,4 +90,6 @@ class SummaryVisitor(testplan.Visitor):
       if self.verbosity == Detail.FULL:
         return 'PREEMPTED'
       return None
+    if not obj.completed:
+      return 'RUNNING'
     return 'PASSED' if obj.success() else 'FAILED'

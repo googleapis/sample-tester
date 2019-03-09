@@ -93,6 +93,7 @@ class Visitor(testplan.Visitor):
     tcase.update_times(case_runner.start_time, case_runner.end_time)
     suite.update_times(case_runner.start_time, case_runner.end_time)
     self.encountered_failure = self.encountered_failure or num_errors > 0 or num_failures > 0
+    tcase.completed = True
 
   def visit_suite_end(self, idx, suite: testplan.Suite,
                       do_suite: bool, environment: testplan.Environment):
@@ -115,10 +116,12 @@ class Visitor(testplan.Visitor):
       logging.info(
           "==== SUITE {}:{}:{} FAILURE ========================================"
           .format(environment.name(), idx, suite.name()))
+      suite.completed = True
 
   def visit_environment_end(self, environment: testplan.Environment, do_environment: bool):
     if not environment.success():
       self.run_passed = False
+    environment.completed = True
     environment.config.teardown()
 
   def end_visit(self):
