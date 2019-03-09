@@ -23,26 +23,27 @@
 #
 # You can run a quick verification that everything works (tests and all passing
 # examples) by invoking the following (you can pass flags by setting FLAGS):
-#  python3 -m unittest discover -s . -p '*_test.py' -v && eval $(find examples/ -name 'run.sh' -printf 'echo +++++ Running: %p && %p && ') echo -e "+++++\n\nChecks: OK" || echo -e "+++++\n\nChecks: ERROR (status: $?) above"
+#   ./devcheck
+#
 #
 # To find all TODOs:
 #  grep -r TODO | grep -v '~' | grep -v /lib/
 
-# TODO(vchudnov): Change the name of this file to sampletester.py
 
+import argparse
+import contextlib
 import logging
 import os
 import string
 import sys
-import environment_registry
-import runner
-import convention
-import testplan
-import summary
-import xunit
-import argparse
-import contextlib
 import traceback
+
+from sampletester import convention
+from sampletester import environment_registry
+from sampletester import runner
+from sampletester import summary
+from sampletester import testplan
+from sampletester import xunit
 
 VERSION = '0.7.6'
 EXITCODE_SUCCESS = 0

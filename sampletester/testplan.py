@@ -26,7 +26,14 @@ class Wrapper:
     self.num_errors = 0
     self.num_failures = 0
     self.selected_to_run = True
+
+    # whether we attempted to execute this Wrapper
     self.attempted = False
+
+    # whether we finished executing this Wrapper (even if with errors). This is
+    # important so that we don't print premature status messages as we go,
+    # before the Wrapper has finished executing.
+    self.completed = False
 
   def update_times(self, starting, ending):
     if not self.start_time or starting < self.start_time:

@@ -59,7 +59,7 @@ The common usage is:
 ```shell
 ./sampletester TEST.yaml [TEST.yaml ...] [MANIFEST.manifest.yaml ...]
                [--envs=REGEX] [--suites=REGEX] [--cases=REGEX]
-               [-- fail-fast]
+               [--fail-fast]
                [--convention CONVENTION:ARG,ARGS]
 ```
 
@@ -74,7 +74,7 @@ where:
 For example, my own invocation to run a test on the fake samples under `testdata/` is
 
 ```shell
-./sampletester examples/tag/language.test.yaml examples/tag/language.manifest.yaml 
+./sampletester.sh examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml 
 ```
 
 ### Output
@@ -96,3 +96,9 @@ If  you want to change the convention in use, you can pass the `--convention=NAM
 ./sampletester TEST.yaml [--convention=CONVENTION] [TEST.yaml ...] [USERPATH ...]
 ```
 If you want to define your own convention, just add a package or module (whose name will become the convention name) under `convention/`. Have that package or module export a function `test_environments` which returns an array of instance of child classes of `testenv.Base`.
+
+## Development
+
+During development, run the `devcheck` script to run all tests and examples and verify they work as expected.
+
+

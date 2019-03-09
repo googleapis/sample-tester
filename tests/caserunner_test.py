@@ -14,11 +14,12 @@
 # limitations under the License.
 
 import unittest
-import runner
 import os
-import convention
-import environment_registry
-import testplan
+
+from sampletester import convention
+from sampletester import environment_registry
+from sampletester import runner
+from sampletester import testplan
 
 
 class Visitor(testplan.Visitor):

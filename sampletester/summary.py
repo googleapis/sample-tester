@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import testplan
-
 from enum import Enum
 import os
 import sys
+
+from sampletester import testplan
 
 class Detail(Enum):
   NONE=1
@@ -90,4 +90,6 @@ class SummaryVisitor(testplan.Visitor):
       if self.verbosity == Detail.FULL:
         return 'PREEMPTED'
       return None
+    if not obj.completed:
+      return 'RUNNING'
     return 'PASSED' if obj.success() else 'FAILED'

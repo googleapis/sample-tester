@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import uuid
-import subprocess
-import traceback
-import testenv
-import logging
 import copy
 from datetime import datetime
+import logging
 import os
+import subprocess
+import traceback
+import uuid
+
+from sampletester import testenv
 
 
 class TestCase:

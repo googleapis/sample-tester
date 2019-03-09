@@ -14,7 +14,8 @@
 # limitations under the License.
 
 import unittest
-import sample_manifest
+
+from sampletester import sample_manifest
 
 
 class TestManifest(unittest.TestCase):
