@@ -15,9 +15,10 @@
 
 import unittest
 import os
-from sampletester import runner
+
 from sampletester import convention
 from sampletester import environment_registry
+from sampletester import runner
 from sampletester import testplan
 
 
