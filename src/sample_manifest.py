@@ -14,8 +14,8 @@
 
 import io
 import logging
-from typing import Iterable
 import os.path
+from typing import Iterable
 import yaml
 
 

@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import testplan
-
 from enum import Enum
 import os
 import sys
+
+from src import testplan
 
 class Detail(Enum):
   NONE=1

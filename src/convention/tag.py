@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sample_manifest import Manifest
-import testenv
-
 import glob
 import logging
 from typing import Iterable
+
+from src import sample_manifest
+from src import testenv
 
 LANGUAGE_KEY = 'language'
 BINARY_KEY = 'bin'
@@ -31,7 +31,7 @@ class ManifestEnvironment(testenv.Base):
   if it is not executable.
   """
 
-  def __init__(self, name: str, description: str, manifest: Manifest,
+  def __init__(self, name: str, description: str, manifest: sample_manifest.Manifest,
                indices: Iterable[str]):
     super().__init__(name, description)
     self.manifest = manifest
@@ -80,7 +80,7 @@ def test_environments(manifest_paths, convention_parameters):
     all_manifests.extend(
         glob.glob(path)
     )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
-  manifest = Manifest(LANGUAGE_KEY, *convention_parameters) # read only, so don't need a copy
+  manifest = sample_manifest.Manifest(LANGUAGE_KEY, *convention_parameters) # read only, so don't need a copy
   manifest.read_files(*all_manifests)
   manifest.index()
   languages = manifest.get_keys()

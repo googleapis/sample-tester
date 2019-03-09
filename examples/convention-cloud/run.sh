@@ -12,4 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-./sampletester ${FLAGS:---xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX) -v detailed} --convention=cloud examples/cloud/language.test.yaml examples/testdata/googleapis 
+echo "*** " $(pwd)
+python3 -m src.sampletester ${FLAGS:---xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX) -v detailed} --convention=cloud examples/convention-cloud/language.test.yaml examples/mock_samples/googleapis 

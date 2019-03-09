@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable
+print("*** dir: name:{}  path: -- package:{}  spec:{}".format(__name__, __package__, __spec__))
+
 import logging
-import convention
+from typing import Iterable
+
+from src import convention
 
 def new(convention_spec: str,
                user_paths: Iterable[str] = None):
@@ -32,6 +35,8 @@ def new(convention_spec: str,
 
   user_paths = user_paths or []
   registry = Registry()
+  print("*** dir: {}".format(dir(convention)))
+  print("*** dir: name:{}  path: {} package:{}  spec:{}".format(convention.__name__, convention.__path__, convention.__package__, convention.__spec__))
   registry.add(*convention.generate_environments([convention_name], convention_args, user_paths))
   return registry
 

@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,4 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-./sampletester ${FLAGS:---xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX) -v detailed} examples/tag/language.test.yaml examples/tag/language.manifest.yaml 
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] && EXIT=return || EXIT=exit
+
+python3 -m unittest discover -s . -p '*_test.py' -v || { RESULT=$? ; echo -e "\n\n Test failed with code $RESULT\n\n" ; $EXIT $RESULT ; }
+
+ eval $(find examples/ -name 'run.sh' -printf 'echo -e "\\n\\n+++++++++++ Running: %p" && %p && ') echo -e '+++++\\n\\nChecks: OK' || { RESULT=$? ; echo -e "+++++\n\nChecks: ERROR (status: $RESULT) above" ; $EXIT $RESULT ; }
+

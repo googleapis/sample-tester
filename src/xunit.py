@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import testplan
 import html
 
+from src import testplan
 
 class Visitor(testplan.Visitor):
 

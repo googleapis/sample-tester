@@ -13,9 +13,10 @@
 # limitations under the License.
 
 import logging
-import caserunner
 import yaml
-import testplan
+
+from src import caserunner
+from src import testplan
 
 
 class Visitor(testplan.Visitor):
