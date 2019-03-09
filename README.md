@@ -74,7 +74,7 @@ where:
 For example, my own invocation to run a test on the fake samples under `testdata/` is
 
 ```shell
-./sampletester examples/tag/language.test.yaml examples/tag/language.manifest.yaml 
+./sampletester.sh examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml 
 ```
 
 ### Output

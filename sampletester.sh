@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script runs all tests and examples and verifies they work as expected.
+# This is a convenience script for calling the sampletester.
 
-[[ "${BASH_SOURCE[0]}" != "${0}" ]] && EXIT=return || EXIT=exit
-
-python3 -m unittest discover -s . -p '*_test.py' -v || { RESULT=$? ; echo -e "\n\n Test failed with code $RESULT\n\n" ; $EXIT $RESULT ; }
-
- eval $(find examples/ -name 'run.sh' -printf 'echo -e "\\n\\n+++++++++++ Running: %p" && %p && ') echo -e '+++++\\n\\nChecks: OK' || { RESULT=$? ; echo -e "+++++\n\nChecks: ERROR (status: $RESULT) above" ; $EXIT $RESULT ; }
-
+exec python3 -m sampletester.cli "$@"
