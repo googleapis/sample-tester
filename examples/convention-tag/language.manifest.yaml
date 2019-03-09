@@ -16,13 +16,13 @@ version: 1
 sets:
 - language: python
   bin: "python3"
-  path: "examples/mock_samples/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/"
+  path: "examples/mock-samples/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/"
   __items__:
   - path: "analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py"
     region_tag: "language_analyze_sentiment_text"
 - language: go
   # notice: no "bin:" because artifacts are already executable
-  path: "examples/mock_samples/googleapis/artman-genfiles/go/language-v1/samples/google/cloud/language_v1/gapic/"
+  path: "examples/mock-samples/googleapis/artman-genfiles/go/language-v1/samples/google/cloud/language_v1/gapic/"
   __items__:
   - path: "analyze_sentiment/analyze_sentiment.go"
     region_tag: "language_analyze_sentiment_text"
