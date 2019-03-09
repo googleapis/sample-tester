@@ -16,8 +16,8 @@ import glob
 import logging
 from typing import Iterable
 
-from src import sample_manifest
-from src import testenv
+from sampletester import sample_manifest
+from sampletester import testenv
 
 LANGUAGE_KEY = 'language'
 BINARY_KEY = 'bin'

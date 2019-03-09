@@ -27,7 +27,7 @@ all_conventions = [os.path.splitext(os.path.basename(entry))[0] for entry in all
 environment_creators = {}
 print("All conventions: {}".format(all_conventions))
 for convention in all_conventions:
-  module = importlib.import_module('.'+convention, package='src.convention')
+  module = importlib.import_module('.'+convention, package='sampletester.convention')
   if 'test_environments' in dir(module):
     logging.info('registering convention "{}"'.format(convention))
     environment_creators[convention] = module.test_environments

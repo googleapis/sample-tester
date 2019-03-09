@@ -39,12 +39,12 @@ import string
 import sys
 import traceback
 
-from src import convention
-from src import environment_registry
-from src import runner
-from src import summary
-from src import testplan
-from src import xunit
+from sampletester import convention
+from sampletester import environment_registry
+from sampletester import runner
+from sampletester import summary
+from sampletester import testplan
+from sampletester import xunit
 
 VERSION = '0.7.6'
 EXITCODE_SUCCESS = 0

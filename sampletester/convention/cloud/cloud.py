@@ -15,7 +15,7 @@
 import re
 import os
 
-from src import testenv
+from sampletester import testenv
 
 class PythonSamplesEnvironment(testenv.Base):
 

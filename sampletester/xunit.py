@@ -14,7 +14,7 @@
 
 import html
 
-from src import testplan
+from sampletester import testplan
 
 class Visitor(testplan.Visitor):
 

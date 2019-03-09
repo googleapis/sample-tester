@@ -16,7 +16,7 @@ from enum import Enum
 import os
 import sys
 
-from src import testplan
+from sampletester import testplan
 
 class Detail(Enum):
   NONE=1

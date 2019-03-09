@@ -17,7 +17,7 @@ print("*** dir: name:{}  path: -- package:{}  spec:{}".format(__name__, __packag
 import logging
 from typing import Iterable
 
-from src import convention
+from sampletester import convention
 
 def new(convention_spec: str,
                user_paths: Iterable[str] = None):

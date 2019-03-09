@@ -20,7 +20,7 @@ import subprocess
 import traceback
 import uuid
 
-from src import testenv
+from sampletester import testenv
 
 
 class TestCase:

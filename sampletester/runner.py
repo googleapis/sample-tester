@@ -15,8 +15,8 @@
 import logging
 import yaml
 
-from src import caserunner
-from src import testplan
+from sampletester import caserunner
+from sampletester import testplan
 
 
 class Visitor(testplan.Visitor):

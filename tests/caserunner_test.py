@@ -15,10 +15,10 @@
 
 import unittest
 import os
-from src import runner
-from src import convention
-from src import environment_registry
-from src import testplan
+from sampletester import runner
+from sampletester import convention
+from sampletester import environment_registry
+from sampletester import testplan
 
 
 class Visitor(testplan.Visitor):

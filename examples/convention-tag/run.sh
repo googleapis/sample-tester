@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-python3 -m src.sampletester ${FLAGS:---xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX) -v detailed} examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml 
+python3 -m sampletester.cli ${FLAGS:---xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX) -v detailed} examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml 
