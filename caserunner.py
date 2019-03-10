@@ -256,7 +256,7 @@ class TestCase:
         try:
           self.run_segment(spec_segment)  # this is a list of maps!
         except TestError:
-          pass
+          break
         except Exception as e:
           status = "UNHANDLED EXCEPTION in stage {} ".format(stage_name)
           short_description = repr(e)
