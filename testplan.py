@@ -239,6 +239,8 @@ class Manager:
 
       for suite_num, suite in enumerate(env.suites):
         do_suite = do_env and suite.selected()
+        if not do_suite:
+          continue
         visit_testcase = visit_suite(suite_num, suite, do_suite)
         if not visit_testcase:
           continue
