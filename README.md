@@ -74,12 +74,12 @@ where:
 For example, my own invocation to run a test on the fake samples under `testdata/` is
 
 ```shell
-./sampletester.sh examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml 
+./sample-tester examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml 
 ```
 
 ### Output
 
-In all cases, `sampletester` exits with a non-zero code if there were any errors in the flags, test config, or test execution. 
+In all cases, `sample-tester` exits with a non-zero code if there were any errors in the flags, test config, or test execution. 
 
 In addition, by default `sampletester` prints the status of test cases to stdout. This output is controlled by the following flags:
 
