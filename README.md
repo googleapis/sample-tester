@@ -21,21 +21,20 @@ Version: 0.7.7
    
 2. Install this sample-tester package in ONE of the following two ways:
 
-  2.1 Install from PyPI (recommended):
+   1. Install from PyPI (recommended). This will put the command `sample-tester` in your path.
   
-      ```shell
-      pip install sample-tester
-      ```
+   ```shell
+   pip install sample-tester
+   ```
    
-   This will put the command `sample-tester` in your path.
    
-  2.2 Clone this GitHub repo (if you're going to be modifying it):
+   
+   2. Clone this GitHub repo (if you're going to be modifying it). The top-level directory includes a `sample-tester` command.
   
-      ```shell
-      git clone https://github.com/googleapis/sample-tester.git
-      ```
+   ```shell
+   git clone https://github.com/googleapis/sample-tester.git
+   ```
       
-  At the top level, there is a `sample-tester` command.
 
 3. To run against Google APIs, ensure you have credentials set up:
 
