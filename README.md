@@ -1,28 +1,54 @@
 # Sample Tester
 
-Version: 0.7.6
+Version: 0.7.7
 
 **PRE-RELEASE**: This surface is not guaranteed to be stable. Breaking changes may still be applied.
 
 
 ## Setup
-1. Ensure you have credentials set up
+
+0. Activate your preferred virtual environment.
+
+   ```shell
+   . PATH/TO/YOUR/VENV/bin/activate
+   ```
+   
+1. Install the necessary requirements. This needs to be done first even if you pip-install the sample-tester.
+
+   ```shell
+   pip install pyyaml
+   ```
+   
+2. Install this sample-tester package in ONE of the following two ways:
+
+   1. Install from PyPI (recommended). This will put the command `sample-tester` in your path.
+  
+   ```shell
+   pip install sample-tester
+   ```
+   
+   
+   
+   2. Clone this GitHub repo (if you're going to be modifying it). The top-level directory includes a `sample-tester` command.
+  
+   ```shell
+   git clone https://github.com/googleapis/sample-tester.git
+   ```
+      
+
+3. To run against Google APIs, ensure you have credentials set up:
 
    ```shell
    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/creds.json
    ```
    
-2. Install the necessary packages:
-   ```shell
-   pip install pyyaml
-   ```
 
 ## Setting up the test
 Set up the test plan as in `./examples/lang_region/language.test.yaml`. That sample test has three equivalent representations of the same test, one with absolute artifact paths in the imperative style, the second with canonical artifact paths in the imperative style, and the third with canonical artifact paths in the declarative style. (See NOTES below). Some features that may not be obvious from that test file:
 
 1. You can have any number of test suites.
 2. Each test suite can have `setup`, `teardown`, and `cases` sections.
-3. The `cases` section is a list of test cases. For _each_ test case, `setup` is executed before running the test case and `teardown`is executed after.
+3. The `cases` section is a list of test cases. For _each_ test case, `setup` is executed before running the test case and `teardown` is executed after.
 4. `setup`, `teardown` and each `cases[...].spec` is a list of directives and arguments. The directives can be any of the following YAML directives:
    - `log`: print the arguments, printf style
    - `uuid`: return a uuid (if called from yaml, assign it to the variable names as an argument)
@@ -74,12 +100,12 @@ where:
 For example, my own invocation to run a test on the fake samples under `testdata/` is
 
 ```shell
-./sampletester.sh examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml 
+./sample-tester examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml 
 ```
 
 ### Output
 
-In all cases, `sampletester` exits with a non-zero code if there were any errors in the flags, test config, or test execution. 
+In all cases, `sample-tester` exits with a non-zero code if there were any errors in the flags, test config, or test execution. 
 
 In addition, by default `sampletester` prints the status of test cases to stdout. This output is controlled by the following flags:
 
@@ -100,5 +126,9 @@ If you want to define your own convention, just add a package or module (whose n
 ## Development
 
 During development, run the `devcheck` script to run all tests and examples and verify they work as expected.
+
+## Disclaimer
+
+This is not an official Google product.
 
 
