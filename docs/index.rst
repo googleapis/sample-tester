@@ -3,12 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Sample Tester's documentation!
-=========================================
+Sample Tester
+=============
+
+The sample tester allows defining test suites once and running them on semantically identical executables (typically runnable code samples) instantiated in multiple languages and environments.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+             
 
 
 

@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Sample Tester'
-copyright = '2019, Victor Chudnovsky'
+copyright = '2019, Google LLC'
 author = 'Victor Chudnovsky'
 
 # The short X.Y version
-version = ''
+version = '0.7.7'
 # The full version, including alpha/beta/rc tags
-release = ''
+release = '0.7.7'
 
 
 # -- General configuration ---------------------------------------------------
