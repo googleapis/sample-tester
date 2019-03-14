@@ -1,3 +1,5 @@
+#! /bin/bash
+
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,4 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-python3 -m sampletester.cli ${FLAGS:---xunit $(mktemp --suffix=.xml --tmpdir sampletester.xunit.XXXXX) -v detailed} --convention=cloud examples/convention-cloud/language.test.yaml examples/mock-samples/googleapis 
+sample-tester -v detailed --convention=cloud examples/convention-cloud/language.test.yaml examples/mock-samples/googleapis
