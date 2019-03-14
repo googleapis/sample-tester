@@ -1,6 +1,6 @@
 # Sample Tester
 
-Version: 0.7.7
+Version: 0.7.8
 
 **PRE-RELEASE**: This surface is not guaranteed to be stable. Breaking changes may still be applied.
 
