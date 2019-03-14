@@ -26,3 +26,11 @@ information on using pull requests.
 
 This project follows [Google's Open Source Community
 Guidelines](https://opensource.google.com/conduct/).
+
+## Build tools
+
+The top-level directory of this repo includes 
+
+* `sample-tester`: a simple shell script to execute the Python code
+* `devcheck`: a simple script that will run all the Python tests as well as the example cases, reporting any unexpected errors
+

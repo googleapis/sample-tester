@@ -11,13 +11,9 @@ The sample tester allows defining test suites once and running them on semantica
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-             
+
+   installation
+   defining-tests
 
 
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
