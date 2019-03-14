@@ -1,0 +1,16 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/sample-tester
+    docker:
+      - image: circleci/python:3.7.2
+    steps:
+      - checkout
+      - run: echo "A first hello"
+      - run:
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip setuptools
+            pipenv install .
+            python3 -m unittest discover -s . -p '*_test.py' -v
