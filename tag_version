@@ -36,7 +36,9 @@ echo "Applying tag ${VER} ${MESSAGE}"
 sed -i -E "s/VERSION = '([.0-9]+)'/VERSION = '${VER}'/" sampletester/cli.py
 sed -i -E "s/Version: ([.0-9]+)/Version: ${VER}/" README.md
 sed -i -E "s/version='([.0-9]+)'/version='${VER}'/" setup.py
-git commit -m "Tagging ${VER}" -m "${MESSAGE}" sampletester/cli.py README.md setup.py
+sed -i -E "s/version = '([.0-9]+)'/version = '${VER}'/" docs/conf.py
+sed -i -E "s/release = '([.0-9]+)'/release = '${VER}'/" docs/conf.py
+git commit -m "Tagging ${VER}" -m "${MESSAGE}" sampletester/cli.py README.md setup.py docs/conf.py
 git tag -a "v${VER}" -m "${MESSAGE}"
 
 echo "Finished applying tag ${VER}"
