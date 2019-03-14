@@ -4,3 +4,4 @@ venv/
 build/
 dist/
 sample_tester.egg-info/
+docs/_build/
