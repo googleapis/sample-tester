@@ -13,4 +13,4 @@ jobs:
             . venv/bin/activate
             pip install --upgrade pip setuptools
             pipenv install .
-            python3 -m unittest discover -s . -p '*_test.py' -v
+            . devcheck
