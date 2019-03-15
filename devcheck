@@ -16,15 +16,9 @@
 
 # This script runs all tests and examples and verifies they work as expected.
 
-info_message() {
-  echo -e "\033[0;33m$@\033[0m"
-}
-error_message() {
-  echo -e "\033[0;31m$@\033[0m"
-}
-success_message() {
-  echo -e "\033[0;32m$@\033[0m"
-}
+info_message()    { echo -e "\033[0;33m$@\033[0m"; }
+error_message()   { echo -e "\033[0;31m$@\033[0m"; }
+success_message() { echo -e "\033[0;32m$@\033[0m"; }
 
 tests_passed=0
 tests_failed=0
