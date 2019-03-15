@@ -32,8 +32,8 @@ for test_script in `find . -type f -name "test-*.sh"`; do
     tests_passed=$(( tests_passed + 1 ))
   else
     error_message "Checks: ERROR (status: $?)"
-    echo -e "$test_script_output"
     tests_failed=$(( tests_passed + 1 ))
+    echo -e "$test_script_output"
   fi
 done
 
