@@ -16,29 +16,36 @@
 
 # This script runs all tests and examples and verifies they work as expected.
 
-python3 -m unittest discover --start-directory . --pattern '*_test.py' --verbose
+info_message() {
+  echo -e "\033[0;33m$@\033[0m"
+}
+error_message() {
+  echo -e "\033[0;31m$@\033[0m"
+}
+success_message() {
+  echo -e "\033[0;32m$@\033[0m"
+}
 
-if [ $? -ne 0 ]; then
-  echo "Test failed with code $?"
-  exit
-fi
+tests_passed=0
+tests_failed=0
 
-tests_passed=true
-
-for test_script in `find examples/ -type f -name run.sh`; do
-  test_directory="$( dirname "$test_script" )"
-  example_name="$( basename "$test_directory" )"
-  echo "Running $example_name"
-  if $test_script; then
-    echo "Checks: OK"
+for test_script in `find . -type f -name "test-*.sh"`; do
+  example_name="$( basename "$test_script" | sed 's/.sh$//' )"
+  info_message "Running $example_name"
+  test_script_output="$( $test_script 2>&1 )"
+  if [ $? -eq 0 ]; then
+    success_message "Checks: OK"
+    tests_passed=$(( tests_passed + 1 ))
   else
-    echo "Checks: ERROR (status: $?)"
-    tests_passed=false
+    error_message "Checks: ERROR (status: $?)"
+    echo -e "$test_script_output"
+    tests_failed=$(( tests_passed + 1 ))
   fi
 done
 
-if [ "$tests_passed" = "true" ]; then
-  echo "Tests passed"
-else
-  echo "Tests failed"
+echo
+success_message "$tests_passed Tests passed"
+if [ "$tests_failed" -gt 0 ]; then
+  error_message "$tests_failed Tests failed"
+  exit 1
 fi
