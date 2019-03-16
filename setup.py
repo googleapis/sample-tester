@@ -19,7 +19,7 @@ from setuptools import find_packages, setup
 
 PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-with io.open(os.path.join(PACKAGE_ROOT, 'README.md')) as file_obj:
+with io.open(os.path.join(PACKAGE_ROOT, 'README.rst')) as file_obj:
     README = file_obj.read()
 
 setup(
@@ -34,7 +34,6 @@ setup(
     description=('Tool for testing semantically equivalent samples in multiple '
                  'languages and environments'),
     long_description=README,
-    long_description_content_type='text/markdown',
     entry_points="""[console_scripts]
         sample-tester=sampletester.cli:main
     """,

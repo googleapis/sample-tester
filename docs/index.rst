@@ -6,14 +6,16 @@
 Sample Tester
 =============
 
-The sample tester allows defining test suites once and running them on semantically identical executables (typically runnable code samples) instantiated in multiple languages and environments.
+The sample tester allows defining tests once and applying them to
+semantically identical executables (typically runnable code samples)
+instantiated in multiple languages and environments.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    installation
-   defining-tests
-
+   defining-tests/index
+   invoking-tester/index
 
 
