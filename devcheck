@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +16,30 @@
 
 # This script runs all tests and examples and verifies they work as expected.
 
-[[ "${BASH_SOURCE[0]}" != "${0}" ]] && EXIT=return || EXIT=exit
+info_message()    { echo -e "\033[0;33m$@\033[0m"; }
+error_message()   { echo -e "\033[0;31m$@\033[0m"; }
+success_message() { echo -e "\033[0;32m$@\033[0m"; }
 
-python3 -m unittest discover -s . -p '*_test.py' -v || { RESULT=$? ; echo -e "\n\n Test failed with code $RESULT\n\n" ; $EXIT $RESULT ; }
+tests_passed=0
+tests_failed=0
 
- eval $(find examples/ -name 'run.sh' -printf 'echo -e "\\n\\n+++++++++++ Running: %p" && %p && ') echo -e '+++++\\n\\nChecks: OK' || { RESULT=$? ; echo -e "+++++\n\nChecks: ERROR (status: $RESULT) above" ; $EXIT $RESULT ; }
+for test_script in `find . -type f -name "test-*.sh"`; do
+  example_name="$( basename "$test_script" | sed 's/.sh$//' )"
+  info_message "Running $example_name"
+  test_script_output="$( $test_script 2>&1 )"
+  if [ $? -eq 0 ]; then
+    success_message "Checks: OK"
+    tests_passed=$(( tests_passed + 1 ))
+  else
+    error_message "Checks: ERROR (status: $?)"
+    tests_failed=$(( tests_passed + 1 ))
+    echo -e "$test_script_output"
+  fi
+done
 
+echo
+success_message "$tests_passed Tests passed"
+if [ "$tests_failed" -gt 0 ]; then
+  error_message "$tests_failed Tests failed"
+  exit 1
+fi
