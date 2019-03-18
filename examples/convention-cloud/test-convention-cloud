@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # Copyright 2019 Google LLC
 #
@@ -14,4 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sample-tester -v detailed examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml
+sample-tester -v detailed --convention=cloud ${FLAGS:---xunit=/tmp/xunit.cloud.xml} examples/convention-cloud/language.test.yaml examples/mock-samples/googleapis
