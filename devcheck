@@ -16,30 +16,49 @@
 
 # This script runs all tests and examples and verifies they work as expected.
 
-info_message()    { echo -e "\033[0;33m$@\033[0m"; }
-error_message()   { echo -e "\033[0;31m$@\033[0m"; }
-success_message() { echo -e "\033[0;32m$@\033[0m"; }
+# Exit correctly depending on whether this file is being sourced or executed.
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] && EXIT=return || EXIT=exit
+
+COLOR_YELLOW="\033[0;33m"
+COLOR_BLUE="\033[0;34m"
+COLOR_CYAN="\033[0;36m"
+COLOR_END="\033[0m"
+COLOR_RED="\033[0;31m"
+COLOR_GREEN="\033[0;32m"
+HEADER="+++ "
+info_message()    { echo -e -n "${COLOR_CYAN}${HEADER}$@${COLOR_END}"; }
+error_message()   { echo -e "${COLOR_RED}$@${COLOR_END}"; }
+success_message() { echo -e "${COLOR_GREEN}$@${COLOR_END}"; }
+
+# Update the local installation
+info_message "Installing local package\n"
+pip install --upgrade . || \
+  pip install  . || \
+  { error_message "Could not install the local package!" ; $EXIT 10 ; }
+
 
 tests_passed=0
 tests_failed=0
 
-for test_script in `find . -type f -name "test-*.sh"`; do
-  example_name="$( basename "$test_script" | sed 's/.sh$//' )"
-  info_message "Running $example_name"
-  test_script_output="$( $test_script 2>&1 )"
+for test_script in `find . -type f -name "test-*"`; do
+  example_name="$( echo "$test_script" | sed 's^./^^' )"
+  info_message "Running ${example_name}: "
+  test_script_output="$( ${test_script} 2>&1 )"
   if [ $? -eq 0 ]; then
-    success_message "Checks: OK"
+    success_message "OK"
     tests_passed=$(( tests_passed + 1 ))
   else
-    error_message "Checks: ERROR (status: $?)"
-    tests_failed=$(( tests_passed + 1 ))
-    echo -e "$test_script_output"
+    error_message "ERROR (status: $?)"
+    tests_failed=$(( tests_failed + 1 ))
+    if [[ -n "${test_script_output}" ]]; then
+      echo -e "${test_script_output}"
+    fi
   fi
 done
 
 echo
-success_message "$tests_passed Tests passed"
-if [ "$tests_failed" -gt 0 ]; then
-  error_message "$tests_failed Tests failed"
-  exit 1
+success_message "PASSING tests: ${tests_passed}"
+if [ "${tests_failed}" -gt 0 ]; then
+  error_message "FAILING tests: ${tests_failed}"
+  $EXIT 1
 fi

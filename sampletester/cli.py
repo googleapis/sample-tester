@@ -18,8 +18,8 @@
 # Run all tests with:
 #  python3 -m unittest discover -s . -p '*_test.py' -v
 #
-# Run examples by executing the `examples/**/run.sh` files; you can pass flags by setting
-# FLAGS.
+# Run examples by executing the `examples/**/run.sh` files; you can pass flags
+# by setting FLAGS.
 #
 # You can run a quick verification that everything works (tests and all passing
 # examples) by invoking the following (you can pass flags by setting FLAGS):
