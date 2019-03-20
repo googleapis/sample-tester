@@ -21,6 +21,9 @@ from sampletester import environment_registry
 from sampletester import runner
 from sampletester import testplan
 
+_ABS_FILE = os.path.abspath(__file__)
+_ABS_DIR = os.path.split(_ABS_FILE)[0]
+
 
 class Visitor(testplan.Visitor):
 
@@ -57,22 +60,14 @@ class Visitor(testplan.Visitor):
 class TestCaseRunner(unittest.TestCase):
 
   def setUp(self):
-    __abs_file__ = os.path.abspath(__file__)
-    self.__abs_file_path__ = os.path.split(__abs_file__)[0]
     self.environment_registry = environment_registry.new(convention.DEFAULT, [])
     self.manager = testplan.Manager(
         self.environment_registry,
-        self.suites_from(['testdata/caserunner_test.yaml']))
+        testplan.suites_from([full_path('testdata/caserunner_test.yaml')]))
     self.results = Visitor()
     self.manager.accept(runner.Visitor())
     if self.manager.accept(self.results) is not None:
       self.fail('error running test plan: {}'.format(self.results.error))
-
-  def path_to(self, dir):
-    return os.path.join(self.__abs_file_path__, dir)
-
-  def suites_from(self, directories):
-    return testplan.suites_from([self.path_to(dir) for dir in directories])
 
   def test_all(self):
     for suite_name in list(self.results.suites.keys()):
@@ -107,6 +102,30 @@ class TestCaseRunner(unittest.TestCase):
                      '{}: {}:yaml'.format(message, suite_name))
     assertion(self.results.suites[suite_name].num_errors == 0,
                     '{}: {}'.format(message, suite_name))
+
+
+class TestCaseRunnerCatchExceptions(unittest.TestCase):
+  def setUp(self):
+    self.environment_registry = environment_registry.new(convention.DEFAULT, [])
+    self.manager = testplan.Manager(
+        self.environment_registry,
+        testplan.suites_from([full_path('testdata/caserunner_test_exception.yaml')]))
+    self.results = Visitor()
+
+  def test_keyboard_interrupt(self):
+    with self.assertRaises(KeyboardInterrupt):
+      self.manager.accept(runner.Visitor())
+
+    if self.manager.accept(self.results) is not None:
+      self.fail('unexpected error running test plan: {}'.format(self.results.error))
+    for _, suite in self.results.suites.items():
+      self.assertFalse(suite.completed, 'keyboard interrupt should cause incomplete test suite')
+    for _, tcase in self.results.cases.items():
+      self.assertFalse(tcase.completed, 'keyboard interrupt should cause incomplete test case')
+
+
+def full_path(leaf_path):
+  return os.path.join(_ABS_DIR, leaf_path)
 
 
 if __name__ == '__main__':
