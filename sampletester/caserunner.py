@@ -256,8 +256,16 @@ class TestCase:
       for spec_segment in stage_spec:
         try:
           self.run_segment(spec_segment)  # this is a list of maps!
+
         except TestFailure:
           break
+
+        except KeyboardInterrupt:
+          status = "KEYBOARD INTERRUPT in stage {} ".format(stage_name)
+          self.record_error(status, "keyboard interrupt detected")
+          self.print_out(status)
+          raise
+
         except Exception as e:
           status = "UNHANDLED EXCEPTION in stage {} ".format(stage_name)
           short_description = repr(e)

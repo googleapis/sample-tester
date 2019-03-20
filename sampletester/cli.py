@@ -50,6 +50,7 @@ EXITCODE_SUCCESS = 0
 EXITCODE_TEST_FAILURE = 1
 EXITCODE_FLAG_ERROR = 2
 EXITCODE_SETUP_ERROR = 3
+EXITCODE_USER_ABORT = 4
 
 DEFAULT_LOG_LEVEL = 100
 
@@ -92,8 +93,11 @@ def main():
   visitor = testplan.MultiVisitor(runner.Visitor(args.fail_fast),
                                   summary.SummaryVisitor(verbosity,
                                                          not args.suppress_failures))
-
-  success = manager.accept(visitor)
+  try:
+    success = manager.accept(visitor)
+  except KeyboardInterrupt:
+    print('\nkeyboard interrupt; aborting')
+    exit(EXITCODE_USER_ABORT)
 
   if not quiet or (not success and not args.suppress_failures):
     print()
