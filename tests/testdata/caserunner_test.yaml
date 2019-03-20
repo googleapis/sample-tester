@@ -63,7 +63,7 @@ test:
       - log:
         - "uuid: {}"
         - my_uuid
-  - name: Failing env
+  - name: Failing, erroring env
     cases:
     - name: code
       spec:
@@ -132,6 +132,54 @@ test:
       - assert_not_contains:
         - message: "claim this is not in there"
         - literal: "best"
+  - name: Failing test when failing assertion stops test case from running next segment (should not error)
+    setup:
+    - code: |
+        executed_after_failure = False
+    teardown:
+    - code: |
+        if executed_after_failure:
+          pass
+          raise Exception('a test case segment was executed after a previous segment failed')
+    cases:
+    - name: code
+      spec:
+      - code: |
+          abort()
+      - code: |
+          executed_after_failure = True # in a later segment than the abort()
+    - name: yaml
+      spec:
+      - code: out = call('/bin/echo', 'It was the best of times')
+      - assert_not_contains:
+        - message: "claim this is not in there"
+        - literal: "best"
+      - code: |
+          executed_after_failure = True
+  - name: Failing test when failure stops test case segment from continuing (should not error)
+    # This error-handling mode is specific to "code" specs.
+    setup:
+    - code: |
+        executed_after_failure = False
+    teardown:
+    - code: |
+        if executed_after_failure:
+          pass
+          raise Exception('a test case segment was executed after a previous failure')
+    cases:
+    - name: code
+      spec:
+      - code: |
+          abort()
+          executed_after_failure = True # in the same segment as the abort()
+    - name: yaml # same as in the previous test suite
+      spec:
+      - code: out = call('/bin/echo', 'It was the best of times')
+      - assert_not_contains:
+        - message: "claim this is not in there"
+        - literal: "best"
+      - code: |
+          executed_after_failure = True
 
           
 

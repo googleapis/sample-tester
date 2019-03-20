@@ -76,24 +76,37 @@ class TestCaseRunner(unittest.TestCase):
 
   def test_all(self):
     for suite_name in list(self.results.suites.keys()):
-      if 'Passing' in suite_name:
-        self.check(suite_name, self.assertTrue,
+      if 'passing' in suite_name.lower():
+        self.check_success(suite_name, self.assertTrue,
                    'expected valid test suite to pass')
-      elif 'Failing' in suite_name:
-        self.check(suite_name, self.assertFalse,
+      elif 'failing' in suite_name.lower():
+        self.check_success(suite_name, self.assertFalse,
                    'expected failing test suite to fail')
       else:
         self.fail(
-            'found neither  "Passing" or "Failing" in suite name "{}"'.format(
-                suite_name))
+            'found neither "passing" nor "failing" in suite name "{}"'
+            .format(suite_name))
 
-  def check(self, suite_name, assertion, message):
-    assertion(self.results.suites[suite_name].success(), '{}: {}'.format(
-        message, suite_name))
+      if 'erroring' in suite_name.lower():
+        self.check_error(suite_name, self.assertFalse, 'expected test suite to error')
+      else:
+        self.check_error(suite_name, self.assertTrue, 'expected test suite to not error')
+
+  def check_success(self, suite_name, assertion, message):
     assertion(self.results.cases[suite_name + ':code'].success(),
               '{}: {}:code'.format(message, suite_name))
     assertion(self.results.cases[suite_name + ':yaml'].success(),
               '{}: {}:yaml'.format(message, suite_name))
+    assertion(self.results.suites[suite_name].success(),
+              '{}: {}'.format(message, suite_name))
+
+  def check_error(self, suite_name, assertion, message):
+    assertion(self.results.cases[suite_name + ':code'].num_errors == 0,
+                     '{}: {}:code'.format(message, suite_name))
+    assertion(self.results.cases[suite_name + ':yaml'].num_errors == 0,
+                     '{}: {}:yaml'.format(message, suite_name))
+    assertion(self.results.suites[suite_name].num_errors == 0,
+                    '{}: {}'.format(message, suite_name))
 
 
 if __name__ == '__main__':
