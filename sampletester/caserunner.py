@@ -124,7 +124,7 @@ class TestCase:
     if not condition:
       self.record_failure("FAILED ASSERTION", message, *args)
       self.print_out("# FAILED ASSERTION: " + message, *args)
-      raise TestError
+      raise TestFailure
 
   # Explicitly fails and soft-aborts the test.
   def abort(self):
@@ -256,15 +256,14 @@ class TestCase:
       for spec_segment in stage_spec:
         try:
           self.run_segment(spec_segment)  # this is a list of maps!
-        except TestError:
-          pass
+        except TestFailure:
+          break
         except Exception as e:
           status = "UNHANDLED EXCEPTION in stage {} ".format(stage_name)
           short_description = repr(e)
           description = short_description + "\n" + "".join( traceback.format_tb(e.__traceback__))
           self.record_error(status, description)
           self.print_out("# EXCEPTION!! " + short_description)
-
           break
 
     print_output = True
@@ -440,12 +439,12 @@ class TestCase:
     return [self.local_symbols.get(p, '"{}"'.format(str(p))) for p in variables]
 
 
-class TestError(Exception):
+class TestFailure(Exception):
+  """Exception raised when a test fails (typically via an assertion)."""
   pass
 
 
 class ConfigError(Exception):
-
   def __init__(self, msg):
     self.msg = msg
 

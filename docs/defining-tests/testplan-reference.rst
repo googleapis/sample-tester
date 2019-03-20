@@ -22,23 +22,24 @@ how to run the samples and what checks to perform.
    - ``uuid``: return a uuid (if called from yaml, assign it to the
      variable names as an argument)
    - ``shell``: run in the shell the command specified in the argument
-   - ``call``: call the artifact named in the argument, error if the
+   - ``call``: call the artifact named in the argument; error if the
      call fails
-   - ``call_may_fail``: call the artifact named in the argument, do
+   - ``call_may_fail``: call the artifact named in the argument; do
      not error even if the call fails
    - ``assert_contains``: require the given variable to contain a
-     string
+     string; abort the test case otherwise
    - ``assert_not_contains``: require the given variable to not
-     contain a string
+     contain a string; abort the test case otherwise
    - ``assert_success``: require that the exit code of the last
-     ``call_may_fail`` was 0. If the preceding call was a just a
-     ``call``, it would have already failed on a non-zero exit code.
+     ``call_may_fail`` was 0; abort the test case otherwise. If the
+     preceding call was a just a ``call``, it would have already
+     failed on a non-zero exit code.
    - ``assert_failure``: require that the exit code of the last
-     ``call_may_fail`` or ``call`` was NOT 0. Note, though, that if
-     we're executing this after just a ``call``, it must have
-     succeeded so this assertion will fail.
+     ``call_may_fail`` or ``call`` was NOT 0; abort the test case
+     otherwise. Note, though, that if we're executing this after just
+     a ``call``, it must have succeeded so this assertion will fail.
    - ``env``: assign the value of an environment variable to a
-     testcase variable
+     test case variable
    - ``code``: execute the argument as a chunk of Python code. The
      other directives above are available as Python calls with the
      names above. In addition, the following functions are available
@@ -46,7 +47,8 @@ how to run the samples and what checks to perform.
      
       - ``fail``: mark the test as having failed, but continue executing
       - ``abort``: mark the test as having failed and stop executing
-      - ``assert_that``: if the condition in the first argument is false, abort the test
+      - ``assert_that``: if the condition in the first argument is
+        false, abort the test case
 
 Here is an informative instance of a sample testfile:
 
