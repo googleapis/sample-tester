@@ -271,7 +271,7 @@ def suite_configs_from(test_files):
   for filename in test_files:
     logging.info('Reading test file "{}"'.format(filename))
     with open(filename, "r") as stream:
-      spec = yaml.load(stream)
+      spec = yaml.load(stream, Loader=yaml.SafeLoader)
       these_suites = spec["test"]["suites"]
       for suite in these_suites:
         suite["source"] = filename

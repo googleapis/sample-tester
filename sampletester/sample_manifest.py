@@ -204,7 +204,7 @@ def files_to_yaml(*files: str):
   """ Reads sample manifests from files."""
   for name in files:
     with open(name, 'r') as stream:
-      manifest = yaml.load(stream)
+      manifest = yaml.load(stream, Loader=yaml.SafeLoader)
     yield (name, manifest)
 
 
