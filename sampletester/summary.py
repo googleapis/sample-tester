@@ -88,7 +88,7 @@ class SummaryVisitor(testplan.Visitor):
       return 'SKIPPED'
     if not obj.attempted:
       if self.verbosity == Detail.FULL:
-        return 'PREEMPTED'
+        return 'PREEMPTED' # by an error
       return None
     if not obj.completed:
       return 'RUNNING'

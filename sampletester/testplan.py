@@ -172,23 +172,23 @@ class MultiVisitor(Visitor):
     self.visitors = visitors
 
   def start_visit(self):
-    start_end = [visitor.start_visit() for visitor in self.visitors]
-    start = [fns[0] for fns in start_end]
-    end = [fns[1] for fns in start_end]
+    start_end = [visitor.start_visit() for visitor in self.visitors if visitor]
+    start = [fn[0] for fn in start_end]
+    end = [fn[1] for fn in start_end]
     return (lambda env, do_env: self.visit_environment(env, do_env, start),
             lambda env, do_env: self.visit_environment_end(env, do_env, end))
 
   def visit_environment(self, environment: Environment, doit: bool, visit_fns):
-    start_end = [visit(environment, doit) for visit in visit_fns]
-    start = [fns[0] for fns in start_end]
-    end = [fns[1] for fns in start_end]
+    start_end = [visit(environment, doit) for visit in visit_fns if visit]
+    start = [fn[0] for fn in start_end]
+    end = [fn[1] for fn in start_end]
     return (lambda idx, suite, do_suite: self.visit_suite(idx, suite,
                                                           do_suite, start),
             lambda idx, suite, do_suite: self.visit_suite_end(idx, suite,
                                                               do_suite, end))
 
   def visit_suite(self, idx: int, suite: Suite, doit: bool, visit_fns):
-    start = [visit(idx, suite, doit) for visit in visit_fns]
+    start = [visit(idx, suite, doit) for visit in visit_fns if visit]
     return lambda idx, testcase, do_case: self.visit_testcase(idx, testcase,
                                                               do_case, start)
 
