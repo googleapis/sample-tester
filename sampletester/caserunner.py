@@ -165,7 +165,7 @@ class TestCase:
     return self._call_external(self.environment.get_call(*args, **kwargs))
 
   def shell(self, cmd, *args):
-    return self._call_external(self.format_string(cmd, *args))
+    return self._call_external(self.format_string(cmd + " {}"*len(args), *args))
 
   def _call_external(self, cmd):
     self.last_return_code = 0
