@@ -23,7 +23,7 @@ test:
     - name: "code"
       spec:
       - code: |
-          out = call('/bin/echo', '"It was the best of times"')
+          _, out = shell('/bin/echo', '"It was the best of times"')
           assert_success("echo should have succeeded")
           assert_contains("best")
           assert_not_contains("worst")
@@ -31,6 +31,8 @@ test:
           expect('ime' in out, 'expected "ime" in the preceding output')
           call_may_fail('/nonexistent/dir/foobar')
           assert_failure("foobar call should have failed")
+          shell('/nonexistent/dir/wibble')
+          assert_failure("wibble call should have failed")
           homedir = env('HOME')
           log('homedir: {}'.format(homedir))
           my_uuid = uuid()
