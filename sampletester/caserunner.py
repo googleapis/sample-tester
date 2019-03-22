@@ -19,6 +19,7 @@ import os
 import subprocess
 import traceback
 import uuid
+import re
 
 from sampletester import testenv
 
@@ -86,6 +87,8 @@ class TestCase:
         # the test to continue even if an expectation is not met).
         # "expect_contains": (self.expect_contains, self.params_for_contains),
         # "expect_not_contains": (self.expect_not_contains, self.params_for_contains),
+
+        "extract_match": (self.extract_match, self.yaml_extract_match),
     }
 
     self.local_symbols = {}
@@ -158,6 +161,42 @@ class TestCase:
   def yaml_get_env(self, parts):
     var_name, env_var = self.params_for_set(parts)
     self.local_symbols[var_name] = self.get_env(env_var)
+    return None, None
+
+  # Extracts first regular expression capture via code. `None` as results OK.
+  # Like the assert_* calls, this only operates on self.last_call_output.
+  def extract_match(self, pattern, variable=None, group_variables=None):
+    if not pattern:
+      raise ConfigError("extract_match requires pattern to match")
+    if not variable and not group_variables:
+      raise ConfigError("extract_match requires variable or group_variables")
+
+    # Add all variable names to local_symbols (None is OK value if no match)
+    self.local_symbols[variable] = None
+    if group_variables:
+      for variable_name in group_variables:
+       self.local_symbols[variable_name] = None
+
+    text = self.last_call_output
+    match = re.search(pattern, text)
+    if match and match.groups():
+      captures = match.groups()
+      if variable:
+        self.local_symbols[variable] = captures[0]
+
+    if group_variables:
+      for idx, variable_name in enumerate(group_variables):
+        if len(captures) > idx:
+          self.local_symbols[variable_name] = captures[idx]
+    return None, None
+
+  # Gets an environment variable via YAML.
+  def yaml_extract_match(self, parts):
+    key_pattern = 'pattern'
+    key_variable = 'variable'
+    key_groups = 'groups'
+    self.extract_match(parts.get(key_pattern), parts.get(key_variable),
+      parts.get(key_groups))
     return None, None
 
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.

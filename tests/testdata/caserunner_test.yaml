@@ -182,6 +182,59 @@ test:
         - literal: "best"
       - code: |
           executed_after_failure = True
-
-          
-
+  - name: Passing extract_match (single captured variable)
+    cases:
+    - name: "code"
+      spec:
+      - code: |
+          shell('/bin/echo', '"It was the best of times"')
+          extract_match('It was the best of (.*)', 'the_best_of')
+          shell('/bin/echo', 'Captured: {}'.format(the_best_of))
+          assert_contains('Captured: times')
+    - name: "yaml"
+      spec:
+      - shell:
+        - /bin/echo "It was the best of times"
+      - extract_match:
+          pattern: "It was the best of (.*)"
+          variable: the_best_of
+      - shell:
+        - /bin/echo
+        - "Captured:"
+        - the_best_of
+      - assert_contains:
+        - literal: "Captured: times"
+  - name: Passing extract_match (multiple captured group variables)
+    cases:
+    - name: "code"
+      spec:
+      - code: |
+          shell('/bin/echo', '"It was the best of times"')
+          extract_match('^([^\\s]+) was (.*) of', 'default_match_variable',
+            ['first_capture', 'second_capture', 'third_capture'])
+          shell('/bin/echo', 'Default:', default_match_variable, 'First: ',
+            first_capture, 'Second:', second_capture, 'Third:', third_capture)
+          assert_contains('Default: It First: It Second: the best Third: None')
+    - name: "yaml"
+      spec:
+      - shell:
+        - /bin/echo "It was the best of times"
+      - extract_match:
+          pattern: ^([^\s]+) was (.*) of
+          variable: default_match_variable
+          groups:
+          - first_capture
+          - second_capture
+          - third_capture # not matched
+      - shell:
+        - /bin/echo
+        - "Default:"
+        - default_match_variable
+        - "First:"
+        - first_capture
+        - "Second:"
+        - second_capture
+        - "Third:"
+        - third_capture
+      - assert_contains:
+        - literal: 'Default: It First: It Second: the best Third: None'
