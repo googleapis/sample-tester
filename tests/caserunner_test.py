@@ -73,10 +73,10 @@ class TestCaseRunner(unittest.TestCase):
     for suite_name in list(self.results.suites.keys()):
       if 'passing' in suite_name.lower():
         self.check_success(suite_name, self.assertTrue,
-                   'expected valid test suite to pass')
+                   'expected valid test suite to pass: {}'.format(suite_name))
       elif 'failing' in suite_name.lower():
         self.check_success(suite_name, self.assertFalse,
-                   'expected failing test suite to fail')
+                   'expected failing test suite to fail: {}'.format(suite_name))
       else:
         self.fail(
             'found neither "passing" nor "failing" in suite name "{}"'
