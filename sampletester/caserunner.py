@@ -163,8 +163,7 @@ class TestCase:
     self.local_symbols[var_name] = self.get_env(env_var)
     return None, None
 
-  # Extracts first regular expression capture via code. `None` as results OK.
-  # Like the assert_* calls, this only operates on self.last_call_output.
+  # Extracts regular expression captures from output via code.
   def extract_match(self, pattern, variable=None, group_variables=None):
     if not pattern:
       raise ConfigError("extract_match requires pattern to match")
@@ -192,7 +191,7 @@ class TestCase:
           self.local_symbols[variable_name] = captures[idx]
     return None, None
 
-  # Gets an environment variable via YAML.
+  # Extracts regular expression captures from output via code.
   def yaml_extract_match(self, parts):
     key_pattern = 'pattern'
     key_variable = 'variable'
