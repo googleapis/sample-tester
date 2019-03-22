@@ -20,7 +20,7 @@ sets:       # a list of groupings
 # prepended to the value specified in the item. The idea is that you
 # can specify repeated parts of a path up here, and only the parts
 # that vary in each item
-- language: python
+- environment: python
   path: "/home/nobody/api/samples/"
   bin: python3  # used to run these items
   __items__:
@@ -42,12 +42,12 @@ sets:       # a list of groupings
 # like we do here for illustrative purposes.
 - __items__:
   - path: "/home/nobody/api/samples/trivial/method/sample_alice"
-    language: python
+    environment: python
     bin: python3  # used to run this item
     region_tag: "alice"
     canonical: "trivial"
   - path: "/home/nobody/api/samples/complex/method/usecase_bob"
-    language: python
+    environment: python
     bin: python3  # used to run this item
     region_tag: "robert"
     tag: "guide"
