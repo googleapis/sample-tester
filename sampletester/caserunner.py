@@ -184,11 +184,10 @@ class TestCase:
       captures = match.groups()
       if variable:
         self.local_symbols[variable] = captures[0]
-
-    if group_variables:
-      for idx, variable_name in enumerate(group_variables):
-        if len(captures) > idx:
-          self.local_symbols[variable_name] = captures[idx]
+      if group_variables:
+        for idx, variable_name in enumerate(group_variables):
+          if len(captures) > idx:
+            self.local_symbols[variable_name] = captures[idx]
     return None, None
 
   # Extracts regular expression captures from output via code.
