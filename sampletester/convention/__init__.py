@@ -16,7 +16,7 @@ import importlib
 import logging
 import os
 
-DEFAULT="tag:region_tag"
+DEFAULT="tag:sample"
 
 __abs_file__ = os.path.abspath(__file__)
 __abs_file_path__ = os.path.split(__abs_file__)[0]

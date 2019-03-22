@@ -49,8 +49,8 @@ to actual, specific files on disk for given languages and
 environments. Each convention may choose to take some set-up
 arguments. You can specify an alternate convention and/or convention
 arguments via the flag ``--convention=CONVENTION:ARG,ARGS``. The
-default convention is ``tag:region_tag``, which uses the
-``region_tag`` key in the manifest files. To use, say, the ``target``
+default convention is ``tag:sample``, which uses the
+``sample`` key in the manifest files. To use, say, the ``target``
 key in the manifest, simply pass ``--convention=tag:target``.
 
 If you want to define an additional convention, refer to the

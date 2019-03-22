@@ -23,14 +23,14 @@ class TestManifest(unittest.TestCase):
   def test_read_no_version(self):
     manifest_source = self.get_manifest_source()
     manifest_source[0][1].pop('version')
-    manifest = sample_manifest.Manifest('language', 'region_tag')
+    manifest = sample_manifest.Manifest('language', 'sample')
     with self.assertRaises(Exception):
       manifest.read_sources([manifest_source])
 
   def test_read_invalid_version(self):
     manifest_source = self.get_manifest_source()
     manifest_source[0][1]['version'] = 'foo'
-    manifest = sample_manifest.Manifest('language', 'region_tag')
+    manifest = sample_manifest.Manifest('language', 'sample')
     with self.assertRaises(Exception):
       manifest.read_sources(manifest_source)
 
@@ -38,7 +38,7 @@ class TestManifest(unittest.TestCase):
     manifest_source, expect_alice, expect_bob, expect_carol, expect_dan = self.get_manifest_source(
     )
 
-    manifest = sample_manifest.Manifest('language', 'region_tag')
+    manifest = sample_manifest.Manifest('language', 'sample')
     manifest.read_sources([manifest_source])
     manifest.index()
 
@@ -71,7 +71,7 @@ class TestManifest(unittest.TestCase):
     (manifest_source, expect_alice, expect_bob, expect_carol,
      expect_dan) = self.get_manifest_source()
 
-    manifest = sample_manifest.Manifest('language', 'region_tag')
+    manifest = sample_manifest.Manifest('language', 'sample')
     manifest.read_sources([manifest_source])
     manifest.index()
 
@@ -112,12 +112,12 @@ class TestManifest(unittest.TestCase):
                 sample_manifest.Manifest.ELEMENTS_KEY:
                     [{
                         'path': 'trivial/method/sample_alice',
-                        'region_tag': 'alice',
+                        'sample': 'alice',
                         'canonical': 'trivial'
                     },
                      {
                          'path': 'complex/method/usecase_bob',
-                         'region_tag': 'robert',
+                         'sample': 'robert',
                          'tag': 'guide'
                      }]
             },
@@ -126,10 +126,10 @@ class TestManifest(unittest.TestCase):
                      '/tmp/',
                  sample_manifest.Manifest.ELEMENTS_KEY: [{
                      'path': 'newer/carol',
-                     'region_tag': 'math'
+                     'sample': 'math'
                  }, {
                      'path': 'newest/dan',
-                     'region_tag': 'math'
+                     'sample': 'math'
                  }]
              }]
     }
@@ -137,17 +137,17 @@ class TestManifest(unittest.TestCase):
     expect_alice = {
         'path': '/home/nobody/api/samples/trivial/method/sample_alice',
         'language': 'python',
-        'region_tag': 'alice',
+        'sample': 'alice',
         'canonical': 'trivial'
     }
     expect_bob = {
         'path': '/home/nobody/api/samples/complex/method/usecase_bob',
         'language': 'python',
-        'region_tag': 'robert',
+        'sample': 'robert',
         'tag': 'guide'
     }
-    expect_carol = {'path': '/tmp/newer/carol', 'region_tag': 'math'}
-    expect_dan = {'path': '/tmp/newest/dan', 'region_tag': 'math'}
+    expect_carol = {'path': '/tmp/newer/carol', 'sample': 'math'}
+    expect_dan = {'path': '/tmp/newest/dan', 'sample': 'math'}
     return ('valid_manifest',
             manifest), expect_alice, expect_bob, expect_carol, expect_dan
 
