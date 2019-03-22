@@ -169,7 +169,9 @@ class TestCase:
     if not pattern:
       raise ConfigError("extract_match requires pattern to match")
     if not variable and not group_variables:
-      raise ConfigError("extract_match requires variable or group_variables")
+      raise ConfigError("extract_match requires variable or groups")
+    if variable and group_variables:
+      raise ConfigError("extract_match cannot accept both variables and groups")
 
     # Add all variable names to local_symbols (None is OK value if no match)
     self.local_symbols[variable] = None

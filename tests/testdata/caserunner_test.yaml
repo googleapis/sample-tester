@@ -210,26 +210,23 @@ test:
       spec:
       - code: |
           shell('/bin/echo', '"It was the best of times"')
-          extract_match('^([^\\s]+) was (.*) of', 'default_match_variable',
-            ['first_capture', 'second_capture', 'third_capture'])
-          shell('/bin/echo', 'Default:', default_match_variable, 'First: ',
-            first_capture, 'Second:', second_capture, 'Third:', third_capture)
-          assert_contains('Default: It First: It Second: the best Third: None')
+          extract_match('^([^\\s]+) was (.*) of',
+            group_variables=['first_capture', 'second_capture', 'third_capture'])
+          shell('/bin/echo', 'First: ', first_capture, 'Second:', second_capture,
+            'Third:', third_capture)
+          assert_contains('First: It Second: the best Third: None')
     - name: "yaml"
       spec:
       - shell:
         - /bin/echo "It was the best of times"
       - extract_match:
           pattern: ^([^\s]+) was (.*) of
-          variable: default_match_variable
           groups:
           - first_capture
           - second_capture
           - third_capture # not matched
       - shell:
         - /bin/echo
-        - "Default:"
-        - default_match_variable
         - "First:"
         - first_capture
         - "Second:"
@@ -237,4 +234,26 @@ test:
         - "Third:"
         - third_capture
       - assert_contains:
-        - literal: 'Default: It First: It Second: the best Third: None'
+        - literal: 'First: It Second: the best Third: None'
+  - name: Failing, erroring extract_match (cannot use variable together with groups)
+    cases:
+    - name: "code"
+      spec:
+      - code: |
+          shell('/bin/echo', '"It was the best of times"')
+          extract_match('^([^\\s]+) was (.*) of', variable='my_variable'
+            group_variables=['first_capture', 'second_capture', 'third_capture'])
+          assert_success('if extract_match fails, this is not run')
+    - name: "yaml"
+      spec:
+      - shell:
+        - /bin/echo "It was the best of times"
+      - extract_match:
+          pattern: ^([^\s]+) was (.*) of
+          variable: my_variable
+          groups:
+          - first_capture
+          - second_capture
+          - third_capture # not matched
+      - assert_success:
+        - if extract_match fails, this is not run
