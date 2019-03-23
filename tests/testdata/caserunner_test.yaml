@@ -29,13 +29,13 @@ test:
           assert_not_contains("worst")
           assert_that('ime' in out, 'expected "ime" in the preceding output')
           expect('ime' in out, 'expected "ime" in the preceding output')
-          assert_that('ime' in last_call_output, 'expected "ime" in the last_call_output')
+          assert_that('ime' in _last_call_output, 'expected "ime" in the preceding output')
 
           call('output', 'Greetings')
           assert_success("call should have succeeded")
           assert_contains("ree")
           assert_not_contains("farewell")
-          assert_that('eti' in last_call_output, 'expected "eti" in the preceding output')
+          assert_that('eti' in _last_call_output, 'expected "eti" in the preceding output')
 
           shell('/nonexistent/dir/foobar')
           assert_failure("foobar call should have failed")

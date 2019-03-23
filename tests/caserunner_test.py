@@ -86,9 +86,11 @@ class TestCaseRunner(unittest.TestCase):
             .format(suite_name))
 
       if 'erroring' in suite_name.lower():
-        self.check_error(suite_name, self.assertFalse, 'expected test suite to error')
+        self.check_error(suite_name, self.assertFalse,
+                         'expected test suite to error: {}'.format(suite_name))
       else:
-        self.check_error(suite_name, self.assertTrue, 'expected test suite to not error')
+        self.check_error(suite_name, self.assertTrue,
+                         'expected test suite to not error: {}'.format(suite_name))
 
   def check_success(self, suite_name, assertion, message):
     assertion(self.results.cases[suite_name + ':code'].success(),

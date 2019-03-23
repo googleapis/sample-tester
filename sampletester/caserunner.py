@@ -55,7 +55,7 @@ class TestCase:
         # Variables: meta info about the test case, last output
         "testcase_num": (self.idx, None),
         "testcase_id": (self.label, None),
-        "last_call_output": (self.last_call_output, None),
+        "_last_call_output": (self.last_call_output, None),
 
         # Functions to execute processes
         "call": (self.call_no_error, self.params_for_call),
@@ -194,7 +194,7 @@ class TestCase:
       self.last_return_code = return_code
       # TODO: De-dupe the following. Either some accessor magic, or have it live in local_symbols
       self.last_call_output = new_output
-      self.local_symbols['last_call_output'] = new_output
+      self.local_symbols['_last_call_output'] = new_output
 
       self.output += new_output
       return return_code, new_output
@@ -362,7 +362,8 @@ class TestCase:
     """Gets printf-style arguments from a YAML directive.
 
     Interprets `parts` as a list whose first element is a print string (without
-    argument substitution) and whose subsequent elements are local symbol names.
+    argument substitution) and whose subsequent elements are local symbol names
+    or string literals.
 
     Returns the list with the names of the symbols substituted by their values
     in the self.local_symbols.
@@ -458,8 +459,14 @@ class TestCase:
                 type, item))
     return item
 
-  def lookup_values(self, variables):
-    return [self.local_symbols.get(p, '"{}"'.format(str(p))) for p in variables]
+  def lookup_values(self, strings):
+    """Returns a list containing variable values and/or literals.
+
+    For each string in the input, the corresponding output element is either the
+    value of the variable with that name, if such exists, or the quoted string
+    itself..
+    """
+    return [self.local_symbols.get(p, '"{}"'.format(str(p))) for p in strings]
 
 
 class TestFailure(Exception):
