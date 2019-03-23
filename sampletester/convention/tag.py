@@ -40,21 +40,17 @@ class ManifestEnvironment(testenv.Base):
   def get_call(self, *args, **kwargs):
     full_call, cli_args = testenv.process_args(*args, **kwargs)
 
-    if '/' in full_call:
-      artifact = full_call
-    else:
-      indices = self.const_indices.copy()
-      indices.extend(full_call.split(' '))
-      try:
-        artifact = self.manifest.get_one(*indices)  # wrap exception?
-      except Exception as e:
-        raise Exception('object "{}" not defined: {}'.format(indices, e))
-      try:
-        bin = artifact.get(BINARY_KEY, '')
-        artifact = ' '.join([bin, artifact['path']])
-      except Exception as e:
-        raise Exception('object "{}" does not contain "path": {}'.format(
-            indices, e))
+    indices = self.const_indices.copy()
+    indices.extend(full_call.split(' '))
+    artifact = self.manifest.get_one(*indices)  # wrap exception?
+    if not artifact:
+      raise Exception('object "{}" not defined'.format(indices))
+    try:
+      bin = artifact.get(BINARY_KEY, '')
+      artifact = ' '.join([bin, artifact['path']])
+    except Exception as e:
+      raise Exception('object "{}" does not contain "path": {}'.format(
+          indices, e))
     return '{} {}'.format(artifact, cli_args)
 
   def adjust_suite_name(self, name):

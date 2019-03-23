@@ -40,7 +40,7 @@ setup(
     platforms='Posix; MacOS X',
     include_package_data=True,
     install_requires=(
-        'pyyaml >= 5.1',
+        'pyyaml',
     ),
 
     classifiers=(

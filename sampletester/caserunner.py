@@ -52,9 +52,10 @@ class TestCase:
     # the yaml_prep returns None, the test function is not called (this is
     # useful to provide an alternate representation in the YAML)
     self.builtins = {
-        # Meta info about the test case
+        # Variables: meta info about the test case, last output
         "testcase_num": (self.idx, None),
         "testcase_id": (self.label, None),
+        "last_call_output": (self.last_call_output, None),
 
         # Functions to execute processes
         "call": (self.call_no_error, self.params_for_call),
@@ -139,7 +140,7 @@ class TestCase:
 
   # Executes YAML directive "code".
   def execute(self, code):
-    exec(code, self.local_symbols)
+    exec(code, None, self.local_symbols)
 
   # Gets a UUID via code.
   def get_uuid(self):
@@ -152,6 +153,7 @@ class TestCase:
 
   # Gets an environment variable via code.
   def get_env(self, env_var):
+    # TODO: Catch key error
     return os.environ[env_var]
 
   # Gets an environment variable via YAML.
@@ -162,7 +164,11 @@ class TestCase:
 
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
   def call_allow_error(self, *args, **kwargs):
-    return self._call_external(self.environment.get_call(*args, **kwargs))
+    try:
+      call = self.environment.get_call(*args, **kwargs)
+    except Exception as e:
+      raise CallError('could not resolve call: {}'.format(str(e)))
+    return self._call_external(call)
 
   def shell(self, cmd, *args):
     return self._call_external(self.format_string(cmd + " {}"*len(args), *args))
@@ -186,7 +192,10 @@ class TestCase:
     finally:
       new_output = out.decode("utf-8")
       self.last_return_code = return_code
+      # TODO: De-dupe the following. Either some accessor magic, or have it live in local_symbols
       self.last_call_output = new_output
+      self.local_symbols['last_call_output'] = new_output
+
       self.output += new_output
       return return_code, new_output
 
@@ -258,6 +267,12 @@ class TestCase:
           self.run_segment(spec_segment)  # this is a list of maps!
 
         except TestFailure:
+          break
+
+        except CallError as e:
+          status = "CALL ERROR in stage {} ".format(stage_name)
+          self.record_error(status, e.msg)
+          self.print_out(status + ": " + e.msg)
           break
 
         except KeyboardInterrupt:
@@ -346,8 +361,8 @@ class TestCase:
   def yaml_args_string(self, parts):
     """Gets printf-style arguments from a YAML directive.
 
-    Interprets `parts` as a list whose first element is a print format string
-    and whose subsequent elements are local symbol names.
+    Interprets `parts` as a list whose first element is a print string (without
+    argument substitution) and whose subsequent elements are local symbol names.
 
     Returns the list with the names of the symbols substituted by their values
     in the self.local_symbols.
@@ -453,6 +468,10 @@ class TestFailure(Exception):
 
 
 class ConfigError(Exception):
+  def __init__(self, msg):
+    self.msg = msg
+
+class CallError(Exception):
   def __init__(self, msg):
     self.msg = msg
 

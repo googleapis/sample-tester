@@ -29,20 +29,29 @@ test:
           assert_not_contains("worst")
           assert_that('ime' in out, 'expected "ime" in the preceding output')
           expect('ime' in out, 'expected "ime" in the preceding output')
-          call_may_fail('/nonexistent/dir/foobar')
+          assert_that('ime' in last_call_output, 'expected "ime" in the last_call_output')
+
+          call('output', 'Greetings')
+          assert_success("call should have succeeded")
+          assert_contains("ree")
+          assert_not_contains("farewell")
+          assert_that('eti' in last_call_output, 'expected "eti" in the preceding output')
+
+          shell('/nonexistent/dir/foobar')
           assert_failure("foobar call should have failed")
-          shell('/nonexistent/dir/wibble')
+          
+          call_may_fail('wibble')
           assert_failure("wibble call should have failed")
+          
           homedir = env('HOME')
           log('homedir: {}'.format(homedir))
           my_uuid = uuid()
           log('uuid: {}'.format(my_uuid))
     - name: "yaml"
       spec:
-      - call:
-          target: "/bin/echo"
-          args:
-            - literal: "It was the best of times"
+      - shell:
+          - "/bin/echo"
+          - "It was the best of times"
       - assert_success:
         - "echo should have succeeded"
       - assert_contains:
@@ -51,16 +60,38 @@ test:
       - assert_not_contains:
         - message: "Expected no 'worst'"            
         - literal: "worst"
-      - call_may_fail:
-          target: '/nonexistent/dir/foobar'
+          
+      - call:
+          target: 'output'
+          args:
+            - literal: "Greetings"
+      - assert_success:
+        - "call should have succeeded"
+      - assert_contains:
+          - message: "should contain ree"
+          - literal: "ree"
+      - assert_not_contains:
+          - message: "should not contain farewell"
+          - literal: "farewell"
+
+      - shell:
+          - "/nonexistent/dir/foobar"
       - assert_failure:
         - message: "foobar call should have failed"
+        
+      - call_may_fail:
+          target: 'wibble'
+      - assert_failure:
+        - message: "wibble call should have failed"
+        
       - env:
           what: HOME
           var: homedir
+          
       - log:
         - "homedir: {}"
         - homedir
+        
       - uuid: my_uuid
       - log:
         - "uuid: {}"
@@ -79,21 +110,21 @@ test:
     cases:
     - name: code
       spec:
-      - code: out=call('/foo/foo')
+      - code: out=call('wibble')
     - name: yaml
       spec:
       - call:
-          target: '/foo/foo'
+          target: 'wibble'
   - name: Failing assert_success
     cases:
     - name: code
       spec:
       - code: |
-          out = call_may_fail('/bin/ls', '/foo/foo')
+          out = call_may_fail('wibble')
           assert_success('claim this passes')
     - name: yaml
       spec:
-      - code: out=call_may_fail('/bin/ls', '/foo/foo')
+      - code: out = call_may_fail('wibble')
       - assert_success:
         - "claim this passes"
   - name: Failing assert_failure
@@ -101,11 +132,11 @@ test:
     - name: code
       spec:
       - code: |
-          out = call_may_fail('/bin/echo', 'Hello')
+          out = call_may_fail('output', 'Hello')
           assert_failure('claim this fails')
     - name: yaml
       spec:
-      - code: out = call_may_fail('/bin/echo', 'Hello')
+      - code: out = call_may_fail('output', 'Hello')
       - assert_failure:
         - "claim this fails"
   - name: Failing assert_contains
@@ -113,11 +144,11 @@ test:
     - name: code
       spec:
       - code: |
-          out = call('/bin/echo', 'It was the best of times')
+          out = call('output', 'It was the best of times')
           assert_contains('claim this is in there', 'worst')  # TODO: reverse these args; they're counterintuitive
     - name: yaml
       spec:
-      - code: out = call('/bin/echo', 'It was the best of times')
+      - code: out = call('output', 'It was the best of times')
       - assert_contains:
         - message: "claim this is in there"
         - literal: "worst"
@@ -126,11 +157,11 @@ test:
     - name: code
       spec:
       - code: |
-          out = call('/bin/echo', 'It was the best of times')
+          out = call('output', 'It was the best of times')
           assert_not_contains('claim this is not in there', 'best')  # TODO: reverse these args; they're counterintuitive
     - name: yaml
       spec:
-      - code: out = call('/bin/echo', 'It was the best of times')
+      - code: out = call('output', 'It was the best of times')
       - assert_not_contains:
         - message: "claim this is not in there"
         - literal: "best"
@@ -152,7 +183,7 @@ test:
           executed_after_failure = True # in a later segment than the abort()
     - name: yaml
       spec:
-      - code: out = call('/bin/echo', 'It was the best of times')
+      - code: out = call('output', 'It was the best of times')
       - assert_not_contains:
         - message: "claim this is not in there"
         - literal: "best"
@@ -176,7 +207,7 @@ test:
           executed_after_failure = True # in the same segment as the abort()
     - name: yaml # same as in the previous test suite
       spec:
-      - code: out = call('/bin/echo', 'It was the best of times')
+      - code: out = call('output', 'It was the best of times')
       - assert_not_contains:
         - message: "claim this is not in there"
         - literal: "best"
