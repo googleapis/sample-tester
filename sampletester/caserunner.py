@@ -66,6 +66,7 @@ class TestCase:
         "uuid": (self.get_uuid, self.yaml_get_uuid),
         "env": (self.get_env, self.yaml_get_env),
         "log": (self.print_out, self.yaml_args_string),
+        "extract_match": (self.extract_match, self.yaml_extract_match),
 
         # Code
         "code": (self.execute, lambda p: ([p], {})),
@@ -87,8 +88,6 @@ class TestCase:
         # the test to continue even if an expectation is not met).
         # "expect_contains": (self.expect_contains, self.params_for_contains),
         # "expect_not_contains": (self.expect_not_contains, self.params_for_contains),
-
-        "extract_match": (self.extract_match, self.yaml_extract_match),
     }
 
     self.local_symbols = {}
