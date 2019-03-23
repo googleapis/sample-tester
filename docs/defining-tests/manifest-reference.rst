@@ -13,16 +13,16 @@ The fundamental unit in a manifest is the "item", which is a
 collection of label name/value pairs; each unit should correspond to
 exactly one artifact on disk. Some labels are of special interest to
 the sample test runner, such as those named ``language``, ``path``,
-``bin``, and ``region_tag``. These four are interpreted, respectively,
-as the programming language of the given artifact, the path to that
+``bin``, and ``sample``. These four are interpreted, respectively, as
+the programming language of the given artifact, the path to that
 artifact on disk, the binary used to execute the artifact (if the
-artifact is not itself executable), and the unique region tag by which
-to quickly identify the artifact for the given language. In
-particular, artifacts with the same ``region_tag`` but different
+artifact is not itself executable), and the unique sample identifier
+by which to quickly identify the artifact in any language. In
+particular, artifacts with the same ``sample`` but different
 ``language``\ s are taken to represent the same conceptual sample, but
 implemented in the different programming languages; this allows a test
-specification to refer to the ``region_tag``\ s only and the runner
-will then run that test for each of the ``language``\ s available.
+specification to refer to the ``sample``\ s only and the runner will
+then run that test for each of the ``language``\ s available.
 
 Since a lot of the artifacts will share part or all of some labels
 (for example, the initial directory components, or the binary used to

@@ -91,7 +91,8 @@ def main():
   quiet = verbosity == summary.Detail.NONE
   visitor = testplan.MultiVisitor(runner.Visitor(args.fail_fast),
                                   summary.SummaryVisitor(verbosity,
-                                                         not args.suppress_failures))
+                                                         not args.suppress_failures,
+                                                         debug=DEBUGME))
   try:
     success = manager.accept(visitor)
   except KeyboardInterrupt:

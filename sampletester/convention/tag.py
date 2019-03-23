@@ -19,20 +19,27 @@ from typing import Iterable
 from sampletester import sample_manifest
 from sampletester import testenv
 
-LANGUAGE_KEY = 'language'
+ENVIRONMENT_KEY = 'environment'
 BINARY_KEY = 'bin'
 
 
 class ManifestEnvironment(testenv.Base):
-  """Sets up a manifest-derived Base for a single language.
+  """Sets up a manifest-derived Base for a single environment.
 
-  All artifacts with the same LANGUAGE_KEY are grouped in an instance of this
+  All artifacts with the same ENVIRONMENT_KEY are grouped in an instance of this
   class. Artifacts may also have a BINARY_KEY to denote how to run the artifact,
   if it is not executable.
   """
 
   def __init__(self, name: str, description: str, manifest: sample_manifest.Manifest,
                indices: Iterable[str]):
+    """Initializes ManifestEnvironment.
+
+    Args:
+      indices: the manifest index values that are not explicitly specified in
+        each call but are assumed to correspond to initial indices before
+        call-specific indices.
+    """
     super().__init__(name, description)
     self.manifest = manifest
     self.const_indices = indices
@@ -64,10 +71,12 @@ class ManifestEnvironment(testenv.Base):
 
 
 all_manifests = []
-languages = []
+env_names = []
 environments = []
 def test_environments(manifest_paths, convention_parameters):
-  num_params = 0 if convention_parameters is None else len(convention_parameters)
+  if convention_parameters is None:
+    convention_parameters = []
+  num_params = len(convention_parameters)
   if num_params < 1:
     raise Exception('expected at least 1 parameter to convention "tag", got %d: %s'
                     .format(num_params, convention_parameters))
@@ -76,17 +85,16 @@ def test_environments(manifest_paths, convention_parameters):
     all_manifests.extend(
         glob.glob(path)
     )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
-  manifest = sample_manifest.Manifest(LANGUAGE_KEY, *convention_parameters) # read only, so don't need a copy
+  manifest = sample_manifest.Manifest(ENVIRONMENT_KEY, *convention_parameters) # read only, so don't need a copy
   manifest.read_files(*all_manifests)
   manifest.index()
-  languages = manifest.get_keys()
-  if len(languages) == 0:
-    languages = ['(nolang)']
-  for language in languages:
-    description = 'Tags by language:{} {}'.format(language, convention_parameters)
-    name = language
-    env  = ManifestEnvironment(name, description, manifest,
-                               [language])
+  env_names = manifest.get_keys()
+  if len(env_names) == 0:
+    env_names = ['(nolang)']
+  for name in env_names:
+    description = 'Tags by environment:{} {}'.format(name,
+                                                     convention_parameters)
+    env  = ManifestEnvironment(name, description, manifest, [name])
     environments.append(env)
   logging.info('convention "tag" generated environments: {}'.format([env.name() for env in environments]))
   return environments

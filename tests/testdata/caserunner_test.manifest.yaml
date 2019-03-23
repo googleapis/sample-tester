@@ -17,6 +17,6 @@ sets:
 - language: shell
   __items__:
   - path: "/bin/echo"
-    region_tag: "output"
+    sample: "output"
   - path: "/none/wibble"
-    region_tag: "wibble"
+    sample: "wibble"
