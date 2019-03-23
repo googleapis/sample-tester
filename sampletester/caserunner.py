@@ -194,9 +194,8 @@ class TestCase:
     key_pattern = 'pattern'
     key_variable = 'variable'
     key_groups = 'groups'
-    self.extract_match(parts.get(key_pattern), parts.get(key_variable),
-      parts.get(key_groups))
-    return None, None
+    return [parts.get(key_pattern), parts.get(key_variable),
+      parts.get(key_groups)], None
 
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
   def call_allow_error(self, *args, **kwargs):
