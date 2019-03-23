@@ -59,7 +59,7 @@ class Manifest:
     self.interpreter = {'1': self.index_source_v1}
 
     # tags[key1][key2]...[keyn] == [metadata, metadata, ...]
-    # eg with self.indices == ["language", "region_tag"]:
+    # eg with self.indices == ["language", "sample"]:
     #    tags["python"]["analyze_sentiment"] = [ sentiment_john_meta, sentiment_mary_meta ]
     self.tags = {}
 

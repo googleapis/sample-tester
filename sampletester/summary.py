@@ -33,12 +33,14 @@ class SummaryVisitor(testplan.Visitor):
   """
 
   def __init__(self, verbosity, show_errors,
-               progress_out=sys.stderr):
+               progress_out=sys.stderr,
+               debug=False):
     self.verbosity = verbosity
     self.show_errors = show_errors
     self.lines = []
     self.indent = '  '
     self.progress_out = progress_out if progress_out else os.devnull
+    self.debug = debug
 
   def visit_environment(self, environment: testplan.Environment, doit: bool):
     if self.verbosity == Detail.NONE and (environment.success() or not self.show_errors):
@@ -72,6 +74,9 @@ class SummaryVisitor(testplan.Visitor):
                       .format(status, name))
     if runner and (self.verbosity == Detail.FULL or (self.show_errors and not tcase.success())):
       self.append_lines(runner.get_output(6, '| '))
+    if self.debug and runner:
+      for error in runner.get_errors():
+        self.append_lines('DEBUGGING: Error "{}":\n{}'.format(error[0],error[1]))
 
   def output(self):
     return '\n'.join(self.lines)

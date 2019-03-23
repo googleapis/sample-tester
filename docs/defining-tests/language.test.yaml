@@ -65,7 +65,7 @@ test:
     - name: "A test defined via 'code', with explicit calls to specific samples"
       spec:
       - code: |
-          out = call("python3 examples/mock-samples/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py", content="happy happy smile hope")
+          _, out = shell("python3 examples/mock-samples/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py -content='happy happy smile hope'")
 
       # You can interleave yaml and code!
       - assert_success:

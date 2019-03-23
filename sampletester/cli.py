@@ -72,7 +72,6 @@ def main():
   try:
     test_files, user_paths = get_files(args.files)
 
-    # TODO(vchudnov): Catch exceptions and print
     registry = environment_registry.new(args.convention, user_paths)
 
     test_suites = testplan.suites_from(test_files, args.suites, args.cases)
@@ -92,7 +91,8 @@ def main():
   quiet = verbosity == summary.Detail.NONE
   visitor = testplan.MultiVisitor(runner.Visitor(args.fail_fast),
                                   summary.SummaryVisitor(verbosity,
-                                                         not args.suppress_failures))
+                                                         not args.suppress_failures,
+                                                         debug=DEBUGME))
   try:
     success = manager.accept(visitor)
   except KeyboardInterrupt:

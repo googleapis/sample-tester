@@ -6,7 +6,6 @@ jobs:
       - image: circleci/python:3.7.2
     steps:
       - checkout
-      - run: echo "A first hello"
       - run:
           command: |
             python3 -m venv venv

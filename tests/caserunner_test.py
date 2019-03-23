@@ -19,6 +19,7 @@ import os
 from sampletester import convention
 from sampletester import environment_registry
 from sampletester import runner
+from sampletester import summary
 from sampletester import testplan
 
 _ABS_FILE = os.path.abspath(__file__)
@@ -60,12 +61,14 @@ class Visitor(testplan.Visitor):
 class TestCaseRunner(unittest.TestCase):
 
   def setUp(self):
-    self.environment_registry = environment_registry.new(convention.DEFAULT, [])
+    self.environment_registry = environment_registry.new(convention.DEFAULT, [full_path('testdata/caserunner_test.manifest.yaml')])
     self.manager = testplan.Manager(
         self.environment_registry,
         testplan.suites_from([full_path('testdata/caserunner_test.yaml')]))
     self.results = Visitor()
-    self.manager.accept(runner.Visitor())
+    self.manager.accept(testplan.MultiVisitor(runner.Visitor(),
+                                              summary.SummaryVisitor(verbosity=summary.Detail.FULL,
+                                                                     show_errors=True)))
     if self.manager.accept(self.results) is not None:
       self.fail('error running test plan: {}'.format(self.results.error))
 
@@ -73,19 +76,21 @@ class TestCaseRunner(unittest.TestCase):
     for suite_name in list(self.results.suites.keys()):
       if 'passing' in suite_name.lower():
         self.check_success(suite_name, self.assertTrue,
-                   'expected valid test suite to pass')
+                   'expected valid test suite to pass: {}'.format(suite_name))
       elif 'failing' in suite_name.lower():
         self.check_success(suite_name, self.assertFalse,
-                   'expected failing test suite to fail')
+                   'expected failing test suite to fail: {}'.format(suite_name))
       else:
         self.fail(
             'found neither "passing" nor "failing" in suite name "{}"'
             .format(suite_name))
 
       if 'erroring' in suite_name.lower():
-        self.check_error(suite_name, self.assertFalse, 'expected test suite to error')
+        self.check_error(suite_name, self.assertFalse,
+                         'expected test suite to error: {}'.format(suite_name))
       else:
-        self.check_error(suite_name, self.assertTrue, 'expected test suite to not error')
+        self.check_error(suite_name, self.assertTrue,
+                         'expected test suite to not error: {}'.format(suite_name))
 
   def check_success(self, suite_name, assertion, message):
     assertion(self.results.cases[suite_name + ':code'].success(),
