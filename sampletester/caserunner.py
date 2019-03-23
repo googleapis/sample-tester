@@ -16,6 +16,7 @@ import copy
 from datetime import datetime
 import logging
 import os
+import re
 import subprocess
 import traceback
 import uuid
@@ -66,6 +67,7 @@ class TestCase:
         "uuid": (self.get_uuid, self.yaml_get_uuid),
         "env": (self.get_env, self.yaml_get_env),
         "log": (self.print_out, self.yaml_args_string),
+        "extract_match": (self.extract_match, self.yaml_extract_match),
 
         # Code
         "code": (self.execute, lambda p: ([p], {})),
@@ -161,6 +163,41 @@ class TestCase:
     var_name, env_var = self.params_for_set(parts)
     self.local_symbols[var_name] = self.get_env(env_var)
     return None, None
+
+  # Extracts regular expression captures from output via code.
+  def extract_match(self, pattern, variable=None, group_variables=None):
+    if not pattern:
+      raise ConfigError("extract_match requires pattern to match")
+    if not variable and not group_variables:
+      raise ConfigError("extract_match requires variable or groups")
+    if variable and group_variables:
+      raise ConfigError("extract_match cannot accept both variables and groups")
+
+    # Add all variable names to local_symbols (None is OK value if no match)
+    self.local_symbols[variable] = None
+    if group_variables:
+      for variable_name in group_variables:
+       self.local_symbols[variable_name] = None
+
+    text = self.last_call_output
+    match = re.search(pattern, text)
+    if match and match.groups():
+      captures = match.groups()
+      if variable:
+        self.local_symbols[variable] = captures[0]
+      if group_variables:
+        for idx, variable_name in enumerate(group_variables):
+          if len(captures) > idx:
+            self.local_symbols[variable_name] = captures[idx]
+    return None, None
+
+  # Extracts regular expression captures from output via code.
+  def yaml_extract_match(self, parts):
+    key_pattern = 'pattern'
+    key_variable = 'variable'
+    key_groups = 'groups'
+    return [parts.get(key_pattern), parts.get(key_variable),
+      parts.get(key_groups)], None
 
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
   def call_allow_error(self, *args, **kwargs):
