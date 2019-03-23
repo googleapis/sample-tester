@@ -16,10 +16,10 @@ import copy
 from datetime import datetime
 import logging
 import os
+import re
 import subprocess
 import traceback
 import uuid
-import re
 
 from sampletester import testenv
 
