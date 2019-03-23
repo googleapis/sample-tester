@@ -30,6 +30,7 @@ class Base:
     logging.info('{}: teardown'.format(self._name))
 
   def get_call(self, *args, **kwargs):
+    """Translates the call arguments into a call to a binary on disk"""
     logging.fatal(
         'get_call() invoked on Base (should be overridden)')
 

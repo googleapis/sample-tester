@@ -19,6 +19,7 @@ import os
 from sampletester import convention
 from sampletester import environment_registry
 from sampletester import runner
+from sampletester import summary
 from sampletester import testplan
 
 _ABS_FILE = os.path.abspath(__file__)
@@ -60,12 +61,14 @@ class Visitor(testplan.Visitor):
 class TestCaseRunner(unittest.TestCase):
 
   def setUp(self):
-    self.environment_registry = environment_registry.new(convention.DEFAULT, [])
+    self.environment_registry = environment_registry.new(convention.DEFAULT, [full_path('testdata/caserunner_test.manifest.yaml')])
     self.manager = testplan.Manager(
         self.environment_registry,
         testplan.suites_from([full_path('testdata/caserunner_test.yaml')]))
     self.results = Visitor()
-    self.manager.accept(runner.Visitor())
+    self.manager.accept(testplan.MultiVisitor(runner.Visitor(),
+                                              summary.SummaryVisitor(verbosity=summary.Detail.FULL,
+                                                                     show_errors=True)))
     if self.manager.accept(self.results) is not None:
       self.fail('error running test plan: {}'.format(self.results.error))
 
