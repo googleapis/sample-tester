@@ -40,6 +40,7 @@ how to run the samples and what checks to perform.
      a ``call``, it must have succeeded so this assertion will fail.
    - ``env``: assign the value of an environment variable to a
      test case variable
+   - ``extract_match``: extrack regex matches into local variables
    - ``code``: execute the argument as a chunk of Python code. The
      other directives above are available as Python calls with the
      names above. In addition, the following functions are available
