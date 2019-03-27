@@ -27,7 +27,7 @@ test:
     - name: "A test defined via yaml directives"
       spec:
       - call:
-          target: "language_analyze_sentiment_text"
+          sample: "language_analyze_sentiment_text"
           params:
             content:
               literal: "happy happy smile hope"
