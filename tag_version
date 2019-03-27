@@ -31,18 +31,32 @@ if [ -n "${STATUS_OUTPUT}" ] ; then
   echo -e "Uncommitted/unignored files in repository.\n${STATUS_OUTPUT}\n\nAborting tag_version."
   exit 1
 fi
+TAG="v${VER}"
 
-echo "Applying tag ${VER} ${MESSAGE}"
+CURRENT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2)
+echo "Current branch: ${CURRENT_BRANCH}"
+if [ "${CURRENT_BRANCH}" != "master" ] ; then
+  echo "   *** NOT MASTER! ***"
+fi
+echo "Applying tag \"${TAG}\": ${MESSAGE}"
+read -p "Proceed? " -n 1 -r
+echo    
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    exit 3
+fi
+
+git checkout -b "TAG_RELEASE_${TAG}" master
 sed -i -E "s/VERSION = '([.0-9]+)'/VERSION = '${VER}'/" sampletester/cli.py && \
 sed -i -E "s/Version: ([.0-9]+)/Version: ${VER}/" README.rst && \
 sed -i -E "s/version='([.0-9]+)'/version='${VER}'/" setup.py && \
 sed -i -E "s/version = '([.0-9]+)'/version = '${VER}'/" docs/conf.py && \
 sed -i -E "s/release = '([.0-9]+)'/release = '${VER}'/" docs/conf.py && \
 git commit -m "Tagging ${VER}" -m "${MESSAGE}" sampletester/cli.py README.rst setup.py docs/conf.py && \
-git tag -a "v${VER}" -m "${MESSAGE}" && \
-echo "Finished applying tag ${VER}" && exit 0
+git tag -a "${TAG}" -m "${MESSAGE}" && \
+echo "Finished applying tag ${TAG}" && exit 0
 
 echo "Could not complete tagging process"
-exit 1
+exit 4
 
 
