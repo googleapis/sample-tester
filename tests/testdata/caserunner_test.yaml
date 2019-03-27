@@ -62,7 +62,7 @@ test:
         - literal: "worst"
           
       - call:
-          target: 'output'
+          sample: 'output'
           args:
             - literal: "Greetings"
       - assert_success:
@@ -80,7 +80,7 @@ test:
         - message: "foobar call should have failed"
         
       - call_may_fail:
-          target: 'wibble'
+          sample: 'wibble'
       - assert_failure:
         - message: "wibble call should have failed"
         
@@ -114,7 +114,7 @@ test:
     - name: yaml
       spec:
       - call:
-          target: 'wibble'
+          sample: 'wibble'
   - name: Failing assert_success
     cases:
     - name: code
