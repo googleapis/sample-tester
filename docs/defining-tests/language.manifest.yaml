@@ -21,10 +21,10 @@ sets:
   __items__:
   - path: "analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py"
     sample: "language_analyze_sentiment_text"
-- environment: go
+- environment: bash
   # notice: no "bin:" because artifacts are already executable
-  path: "examples/mock-samples/googleapis/artman-genfiles/go/language-v1/samples/google/cloud/language_v1/gapic/"
+  path: "examples/mock-samples/googleapis/artman-genfiles/sh/language-v1/samples/google/cloud/language_v1/gapic/"
   __items__:
-  - path: "analyze_sentiment/analyze_sentiment.go"
+  - path: "analyze_sentiment/analyze_sentiment.sh"
     sample: "language_analyze_sentiment_text"
     
