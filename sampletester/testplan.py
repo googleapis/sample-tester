@@ -224,7 +224,7 @@ CASE_NAME = "name"
 CASE_SPEC = "spec"
 
 class Manager:
-
+  """Hosts Visitors to a Wrapper hierarchy"""
   def __init__(self, environment_registry, test_suites, env_filter:str = None):
     self.test_suites = test_suites
 
@@ -264,6 +264,10 @@ class Manager:
 
 
 def suite_configs_from(test_files):
+  """Returns the suite configs (key/value pairs) from all the `test_files`.
+
+  Helper function for suites_from(), which is what most clients will want to call.
+  """
 
   # TODO(vchudnov): Append line number info to aid in error messages
   # cf: https://stackoverflow.com/a/13319530
@@ -280,8 +284,13 @@ def suite_configs_from(test_files):
 
 
 def suite_objects_from(all_suites, suite_filter = None, case_filter = None):
+  """Creates Suite objects from the given suite config key/value specs.
+
+  Helper function for suites_from(), which is what most clients will want to call.
+  """
   return [Suite(spec, suite_filter, case_filter) for spec in all_suites]
 
 
 def suites_from(test_files, suite_filter = None, case_filter = None):
+  """Creates Suite objects from the given YAML test_files"""
   return suite_objects_from(suite_configs_from(test_files), suite_filter, case_filter)

@@ -420,7 +420,7 @@ class TestCase:
     return parts[key_variable], parts[key_what]
 
   def params_for_call(self, parts):
-    key_cmd = "sample"
+    key_cmd = self.environment.get_testcase_settings().get('call.target', 'target')
     key_params = "params"
     key_args = "args"
     if len(parts) < 1 or not key_cmd in parts:

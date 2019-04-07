@@ -23,10 +23,14 @@ class Manifest:
   """Maintains a manifest of auto-generated sample artifacts.
 
   A manifest is a list of artifacts (read from one or more external sources,
-  such as files or arrays). Each artifact on the list is associated with any
-  number of labels. An artifact can be any value, but in our application is a
-  filepath to a sample. It is possible for more than one artifact to share the
-  same set of labels.
+  such as files or arrays). Each artifact on the list is, for the purposes of
+  the manifest, simply a set of labels. A Manifest object knows nothing of the
+  semantics of how it is used, but as an illustration, in sample-tester use
+  cases, the following typically hold:
+    - One of the labels for an artifact is the path to a sample on disk.
+    - It is possible for more than one artifact to share the same set of labels,
+      though typically some of the labels will be unique per artifact (eg sample
+      ID, sample file path).
 
   A label contains a "label name" (a name of some category) and a "label value"
   (the value within that category). Neither values nor names need to be
