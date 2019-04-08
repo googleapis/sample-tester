@@ -14,9 +14,7 @@
 
 version: 1
 sets:
-- environment: shell
+- environment: alps
   __items__:
-  - path: "/bin/echo"
-    sample: "output"
-  - path: "/none/wibble"
-    sample: "wibble"
+  - path: "/bin/echo 'called echo'"
+    alpine: "output"

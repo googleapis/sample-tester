@@ -19,7 +19,15 @@ from typing import Iterable
 from sampletester import sample_manifest
 from sampletester import testenv
 
+# The value of ENVIRONMENT_KEY in the manifest is a human convenience used to
+# group test suites for easier reporting. Its presence, absence, or value does
+# not affect the actual execution of the tests since we do not currently support
+# environment-specific set-up or tear-down.
 ENVIRONMENT_KEY = 'environment'
+
+# The value of BINARY_KEY in the manifest denotes the program used to invoke the
+# artifact in question, and should be specified if the artifact is not itself
+# executable.
 BINARY_KEY = 'bin'
 
 
@@ -32,7 +40,7 @@ class ManifestEnvironment(testenv.Base):
   """
 
   def __init__(self, name: str, description: str, manifest: sample_manifest.Manifest,
-               indices: Iterable[str]):
+               indices: Iterable[str], testcase_settings=None):
     """Initializes ManifestEnvironment.
 
     Args:
@@ -43,6 +51,7 @@ class ManifestEnvironment(testenv.Base):
     super().__init__(name, description)
     self.manifest = manifest
     self.const_indices = indices
+    self._testcase_settings = testcase_settings
 
   def get_call(self, *args, **kwargs):
     full_call, cli_args = testenv.process_args(*args, **kwargs)
@@ -69,10 +78,14 @@ class ManifestEnvironment(testenv.Base):
   def adjust_name(self, name):
     return '{}:{}'.format(name, ':'.join(self.const_indices))
 
+  def get_testcase_settings(self):
+    return self._testcase_settings
 
+# A global record of all the manifest and environments created via all the calls to test_environments()
 all_manifests = []
-env_names = []
-environments = []
+all_env_names = []
+all_environments = []
+
 def test_environments(manifest_paths, convention_parameters):
   if convention_parameters is None:
     convention_parameters = []
@@ -81,20 +94,28 @@ def test_environments(manifest_paths, convention_parameters):
     raise Exception('expected at least 1 parameter to convention "tag", got %d: %s'
                     .format(num_params, convention_parameters))
 
+  manifest_files = []
   for path in manifest_paths:
-    all_manifests.extend(
+    manifest_files.extend(
         glob.glob(path)
     )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
   manifest = sample_manifest.Manifest(ENVIRONMENT_KEY, *convention_parameters) # read only, so don't need a copy
-  manifest.read_files(*all_manifests)
+  manifest.read_files(*manifest_files)
   manifest.index()
+
+  env_names = []
   env_names = manifest.get_keys()
   if len(env_names) == 0:
     env_names = ['(nolang)']
+
+  environments = []
   for name in env_names:
     description = 'Tags by environment:{} {}'.format(name,
                                                      convention_parameters)
-    env  = ManifestEnvironment(name, description, manifest, [name])
+    env  = ManifestEnvironment(name, description, manifest, [name], testcase_settings={'call.target': convention_parameters[0]})
     environments.append(env)
   logging.info('convention "tag" generated environments: {}'.format([env.name() for env in environments]))
+  all_env_names.extend(env_names)
+  all_environments.extend(environments)
+  all_manifests.extend(manifest_files)
   return environments

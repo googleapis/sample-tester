@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: 1
-sets:
-- environment: shell
-  __items__:
-  - path: "/bin/echo"
-    sample: "output"
-  - path: "/none/wibble"
-    sample: "wibble"
+test:
+  suites:
+  - name: Failing call
+    cases:
+    - name: code
+      spec:
+      - code: out=call('output')

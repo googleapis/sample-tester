@@ -34,6 +34,10 @@ class Base:
     logging.fatal(
         'get_call() invoked on Base (should be overridden)')
 
+  def get_testcase_settings(self):
+    """Returns testenv parameters to be used by the test runner"""
+    return {}
+
 
 def process_args(*args, **kwargs):
   """returns a pair (artifact name, arg invocation)"""

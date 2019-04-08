@@ -128,6 +128,41 @@ class TestCaseRunnerCatchExceptions(unittest.TestCase):
     for _, tcase in self.results.cases.items():
       self.assertFalse(tcase.completed, 'keyboard interrupt should cause incomplete test case')
 
+class TestCaseRunnerNoMatchForCallTarget(unittest.TestCase):
+  def setUp(self):
+    self.environment_registry = environment_registry.new(convention.DEFAULT,  [full_path('testdata/caserunner_test_target.manifest.yaml')])
+    self.manager = testplan.Manager(
+        self.environment_registry,
+        testplan.suites_from([full_path('testdata/caserunner_test_target.yaml')]))
+    self.results = Visitor()
+
+  def test_did_not_call(self):
+    self.manager.accept(testplan.MultiVisitor(runner.Visitor(),
+                                              summary.SummaryVisitor(verbosity=summary.Detail.FULL,
+                                                                     show_errors=True)))
+    if self.manager.accept(self.results) is not None:
+      self.fail('error running test plan: {}'.format(self.results.error))
+    self.assertEqual(1, self.results.environments['alps'].num_erroring_cases,
+                     "expected error when they key name in 'call.target' is not present in manifest")
+
+class TestCaseRunnerMatchesForCallTarget(unittest.TestCase):
+  def setUp(self):
+    self.environment_registry = environment_registry.new('tag:alpine',  [full_path('testdata/caserunner_test_target.manifest.yaml')])
+    self.manager = testplan.Manager(
+        self.environment_registry,
+        testplan.suites_from([full_path('testdata/caserunner_test_target.yaml')]))
+    self.results = Visitor()
+
+  def test_did_call(self):
+    self.manager.accept(testplan.MultiVisitor(runner.Visitor(),
+                                              summary.SummaryVisitor(verbosity=summary.Detail.FULL,
+                                                                     show_errors=True)))
+    if self.manager.accept(self.results) is not None:
+      self.fail('error running test plan: {}'.format(self.results.error))
+    self.assertEqual(0, self.results.environments['alps'].num_erroring_cases,
+                     "expected no error when the key name in 'call.target' is present in manifest")
+
+
 
 def full_path(leaf_path):
   return os.path.join(_ABS_DIR, leaf_path)
