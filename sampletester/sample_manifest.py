@@ -141,17 +141,19 @@ class Manifest:
 
     for sample_set in input.get(self.SETS_KEY):
 
-      # get the tag defaults/prefixes for this set
-      set_values = sample_set.copy()
-      set_values.pop(self.ELEMENTS_KEY, None)
+      # Get the tag defaults/prefixes for this set
+      set_common_values = sample_set.copy()
+      set_common_values.pop(self.ELEMENTS_KEY, None)
 
       all_elements = sample_set.get(self.ELEMENTS_KEY, [])
       for element in all_elements:
-        # add the needed defaults/prefixes to this element
-        for key, value in set_values.items():
-          element[key] = value + element.get(key, '')
+        # Add the needed defaults/prefixes to this element
+        for key, common_value in set_common_values.items():
+          element[key] = common_value + element.get(key, '')
 
-        # store
+        # Now store the element
+        # First resolve all the indices, so that we end up with tag referring to the
+        # non-index list
         tags = self.tags
         for idx_num, idx_key in enumerate(self.indices):
           idx_value = element.get(idx_key, '')

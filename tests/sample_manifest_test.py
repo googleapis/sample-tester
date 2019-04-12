@@ -152,5 +152,41 @@ class TestManifest(unittest.TestCase):
             manifest), expect_alice, expect_bob, expect_carol, expect_dan
 
 
+  def get_manifest_source_braces_correct(self, version):
+    manifest = {
+        sample_manifest.Manifest.VERSION_KEY:
+            version,
+        sample_manifest.Manifest.SETS_KEY:
+            [{
+                'greetings': 'teatime',
+                'form': 'Would you like some {drink}?',
+                'drink': 'tea',
+                sample_manifest.Manifest.ELEMENTS_KEY:
+                    [{
+                        'name': 'Mary',
+                        'drink': ' with milk',
+                        'interruption': 'Excuse me, {name}. {form}'
+                    }]
+                }]
+        }
+    return ('manifest with braces', manifest)
+
+  def test_braces_v1(self):
+    manifest_source = self.get_manifest_source_braces_correct(1)
+    manifest = sample_manifest.Manifest('greetings')
+    manifest.read_sources([manifest_source])
+    manifest.index()
+
+    expect_mary = {
+        'name': 'Mary',
+        'greetings': 'teatime',
+        'form': 'Would you like some {drink}?',
+        'drink': 'tea with milk',
+        'interruption': 'Excuse me, {name}. {form}'
+    }
+
+    self.assertEqual(expect_mary, manifest.get_one('teatime', name='Mary'))
+
+
 if __name__ == '__main__':
   unittest.main()
