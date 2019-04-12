@@ -99,6 +99,19 @@ class TestManifest(unittest.TestCase):
 
     self.assertIsNone(manifest.get_one('', 'math'))
 
+  def test_get_all_elements(self):
+    (manifest_source, expect_alice, expect_bob, expect_carol,
+     expect_dan) = self.get_manifest_source()
+
+    manifest = sample_manifest.Manifest('language', 'sample')
+    manifest.read_sources([manifest_source])
+    manifest.index()
+
+    all_elements = [x for x in manifest.get_all_elements()]
+    self.assertEqual([expect_alice, expect_bob, expect_carol, expect_dan],
+                     all_elements)
+
+
   def get_manifest_source(self):
     manifest = {
         sample_manifest.Manifest.VERSION_KEY:

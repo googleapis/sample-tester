@@ -161,10 +161,31 @@ class Manifest:
         for idx_num, idx_key in enumerate(self.indices):
           idx_value = element.get(idx_key, '')
           tags = get_or_create(tags, idx_value,
-                               [] if idx_num == max_idx else {})
+                               [] if idx_num >= max_idx else {})
         tags.append(element)
 
         logging.info('read "{}"'.format(element))
+
+
+  def get_all_elements(self):
+    """Generators that yields each element in the manifest."""
+    yield from self._get_element(self.tags, idx_num = 0)
+
+  def _get_element(self, tags, idx_num):
+    """Recursive helper function for get_all_elements.
+
+    Traverses each index level to retrieve each list item individually.
+    """
+    idx_end = len(self.indices)
+    if idx_num >= idx_end:
+      # base case: we're done with indices, so just yield all the elements in the non-index list
+      for element in tags:
+        yield element
+      return
+
+    # recurse to the next index level
+    for key, subtag  in tags.items():
+      yield from self._get_element(subtag, idx_num+1)
 
   #TODO: add test
   def get_keys(self, *specified_keys):
