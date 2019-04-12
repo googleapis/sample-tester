@@ -60,7 +60,10 @@ class Manifest:
       indices: An optional list of labels by which to index the manifest read in
         from various sources
     """
-    self.interpreter = {'1': self.index_source_v1}
+    self.interpreter = {
+        '1': self.index_source_v1,
+        '2': self.index_source_v1,  #  TODO: change to v2 once coded
+    }
 
     # tags[key1][key2]...[keyn] == [metadata, metadata, ...]
     # eg with self.indices == ["language", "sample"]:

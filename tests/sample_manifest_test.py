@@ -187,6 +187,22 @@ class TestManifest(unittest.TestCase):
 
     self.assertEqual(expect_mary, manifest.get_one('teatime', name='Mary'))
 
+  def test_braces_v2(self):
+    manifest_source = self.get_manifest_source_braces_correct(2)
+    manifest = sample_manifest.Manifest('greetings')
+    manifest.read_sources([manifest_source])
+    manifest.index()
+
+    expect_mary = {
+        'name': 'Mary',
+        'greetings': 'teatime',
+        'form': 'Would you like some tea with milk?',
+        'drink': 'tea with milk',
+        'interruption': 'Excuse me, Mary. Would you like some tea with milk?'
+    }
+
+    self.assertEqual(expect_mary, manifest.get_one('teatime', name='Mary'))
+
 
 if __name__ == '__main__':
   unittest.main()
