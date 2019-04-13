@@ -49,6 +49,8 @@ class Manifest:
   A typical look-up involves specifying the keys and filters.
   """
 
+  # TODO: Change key to index in the doc above and usages below
+
   VERSION_KEY = 'version'
   SETS_KEY = 'sets'
   ELEMENTS_KEY = '__items__'
@@ -62,7 +64,7 @@ class Manifest:
     """
     self.interpreter = {
         '1': self.index_source_v1,
-        '2': self.index_source_v1,  #  TODO: change to v2 once coded
+        '2': self.index_source_v2,
     }
 
     # tags[key1][key2]...[keyn] == [metadata, metadata, ...]
@@ -140,35 +142,30 @@ class Manifest:
         raise
 
   def index_source_v1(self, input):
+    self._index_elements(get_flattened_elements(input))
+
+  def index_source_v2(self, input):
+    # v2 is an additive change over v1. It merely involves interpreting tags
+    # included within other tags via curly braces
+    self._index_elements(resolve_inclusions(get_flattened_elements(input)))
+
+  def _index_elements(self, all_elements):
     max_idx = len(self.indices) - 1
+    for element in all_elements:
 
-    for sample_set in input.get(self.SETS_KEY):
+      # first resolve all the indices, so that we end up with tags referring to the
+      # non-index list
+      tags = self.tags
+      for idx_num, idx_key in enumerate(self.indices):
+        idx_value = element.get(idx_key, '')
+        tags = get_or_create(tags, idx_value,
+                             [] if idx_num >= max_idx else {})
+      tags.append(element)
 
-      # Get the tag defaults/prefixes for this set
-      set_common_values = sample_set.copy()
-      set_common_values.pop(self.ELEMENTS_KEY, None)
-
-      all_elements = sample_set.get(self.ELEMENTS_KEY, [])
-      for element in all_elements:
-        # Add the needed defaults/prefixes to this element
-        for key, common_value in set_common_values.items():
-          element[key] = common_value + element.get(key, '')
-
-        # Now store the element
-        # First resolve all the indices, so that we end up with tag referring to the
-        # non-index list
-        tags = self.tags
-        for idx_num, idx_key in enumerate(self.indices):
-          idx_value = element.get(idx_key, '')
-          tags = get_or_create(tags, idx_value,
-                               [] if idx_num >= max_idx else {})
-        tags.append(element)
-
-        logging.info('read "{}"'.format(element))
-
+    logging.info('indexed elements')
 
   def get_all_elements(self):
-    """Generators that yields each element in the manifest."""
+    """Generators that yields each element in the (indexed) manifest."""
     yield from self._get_element(self.tags, idx_num = 0)
 
   def _get_element(self, tags, idx_num):
@@ -221,6 +218,180 @@ class Manifest:
       return None
     return values[0]
 
+
+### helpers for V1
+
+def get_flattened_elements(input):
+  """Instantiates elements from file, applying any set-wide tags to each one
+
+  Used by v1 and v2
+
+  Args:
+    input: the hierarchical manifest structure, typically as parsed from YAML
+  """
+  element_list=[]
+  for sample_set in input.get(Manifest.SETS_KEY):
+
+    # Get the tag defaults/prefixes for this set
+    set_common_values = sample_set.copy()
+    set_common_values.pop(Manifest.ELEMENTS_KEY, None)
+
+    all_elements = sample_set.get(Manifest.ELEMENTS_KEY, [])
+    for element in all_elements:
+      # Add the needed defaults/prefixes to this element
+      for key, common_value in set_common_values.items():
+        element[key] = common_value + element.get(key, '')
+      element_list.append(element)
+      logging.info('read "{}"'.format(element))
+  return element_list
+
+### helpers for v2
+
+class SyntaxError(Exception):
+  def __init__(self, message):
+    self.message = message
+
+class CycleError(Exception):
+  def __init__(self, message):
+    self.message = message
+
+
+def resolve_inclusions(all_elements):
+  """Resolves tag inclusions in each element"""
+  for element in all_elements:
+    resolve_element_inclusions(element)
+  logging.info('resolved inclusions')
+  return all_elements
+
+def resolve_element_inclusions(element):
+  """Resolves tag inclusions in element tags"""
+  resolved=set()
+  for tag_name in element.keys():
+    resolve_tag_inclusion(element, tag_name, history=set(), resolved=resolved,
+                          original_element = element.copy(), original_tag = tag_name)
+
+def resolve_tag_inclusion (element, tag_name, history,
+                           resolved, original_element, original_tag):
+    """Recursive helper function for resolve_element_inclusions
+
+    Args:
+       element: the element whose tags we are to resolve
+       tag_name: the tag to resolve in this invocation
+       history: the tags that we have attempted to resolve in the process of
+          resolving original_tag. Used to check for cycles.
+       original_element: a copy of the element before any tag inclusions, for
+          reporting errors
+       original_tag: the original tag we are trying to resolve, for
+          reporting errors
+    """
+    if tag_name in resolved:
+      return element
+    if tag_name in history:
+      raise CycleError(
+          'resolution of tag "{}"" creates a loop at included tag "{}" in item {}'
+          .format(original_tag, tag_name, original_element))
+
+    new_history = history.copy()
+    new_history.add(tag_name)
+    inclusion = Inclusions.determine(element[tag_name], element, tag_name)
+    for child_tag_name in inclusion.needs.keys():
+      resolve_tag_inclusion(element, child_tag_name, new_history, resolved,
+                            original_element, original_tag)
+    element[tag_name] = inclusion.resolve(element)
+    resolved.add(tag_name)
+    return element
+
+
+class Inclusions:
+  """Class to determine what tag substitutions are needed and performer them"""
+
+
+  def __init__(self, parts):
+    # a list of strings where each even-indexed string is a literal, and
+    # each odd-index string is the name of a key. The inclusions are resolved
+    # by substituting the values of the keys (with a map that is passed to
+    # resolve())
+    self.parts = parts
+
+    # a map of keys to a list of indices in self.parts where that value of that
+    # key should be substituted in. These indices are all odd numbers.
+    self.needs = {}
+    for idx in range(1,len(self.parts), 2):
+      needed_where = get_or_create(self.needs, self.parts[idx], [])
+      needed_where.append(idx)
+
+  def resolve(self, values):
+    for tag, locs in self.needs.items():
+      for idx in locs:
+        self.parts[idx] = values[tag]
+    return ''.join(self.parts)
+
+  def determine(value, element, tag_name):
+    """Static method to instantiate Inclusions for tag_name in element"""
+    find_position = 0
+    write = ''
+    parts = []
+
+    # find all inclusions, taking care with escaped opening braces
+    while True:
+      open_idx = value.find('{', find_position)
+      if open_idx == -1:
+        parts.append(write+value[find_position:])
+        break
+
+      # we found open brace
+
+      if open_idx >= len(value) - 1:  # need room for closing brace or escaped open
+        raise SyntaxError(
+            'no inclusion key for tag "{}" at position {} in item {}'
+            .format(tag_name, open_idx, element))
+      if value[open_idx+1] == '{':
+        write = write + value[find_position:open_idx+1]
+        find_position = open_idx + 2
+        continue
+
+      # this really is a tag inclusion
+
+      parts.append(write + value[find_position:open_idx])
+
+      close_idx = value.find('}', open_idx)
+      if close_idx == -1:
+        raise SyntaxError(
+            'inclusion key starting at position {} is not terminated in '+
+            'tag "{}" in item {}'
+            .format(open_idx, tag_name, element))
+      inclusion_name = value[open_idx+1:close_idx]
+      if len(inclusion_name) == 0:
+        raise SyntaxError(
+            'inclusion key is empty at position {} for tag "{}" in item {}'
+            .format(open_idx, tag_name, element))
+      if inclusion_name.find('{') != -1:
+        raise SyntaxError(
+            'inclusion key "{}" cannot contain braces'.format(inclusion_name))
+      parts.append(inclusion_name)
+
+      find_position = close_idx+1
+      write = ''
+
+    # check that all closing braces are escaped in the literals
+    for idx in range(0,len(parts),2):
+      part = parts[idx]
+      pos = -2
+      while True:
+        pos = part.find('}', pos+2)
+        if pos == -1:
+          break
+        if (pos == len(part) - 1 or part[pos+1]!='}'):
+          raise SyntaxError('closing brace not escaped')
+        part=part[:pos+1]+part[pos+2:]
+      parts[idx]=part.replace('}}','}')
+
+
+    # everything is fine
+    return Inclusions(parts)
+
+
+# Low-level helpers
 
 def get_or_create(d, key, empty_value):
   value = d.get(key)
