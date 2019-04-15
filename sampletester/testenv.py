@@ -63,4 +63,4 @@ def process_args(*args, **kwargs):
 
 
 def quote(s: str):
-  return '"{}"'.format(s)
+  return '"{}"'.format(s.replace('"',r'\"'))

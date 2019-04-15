@@ -160,7 +160,7 @@ class Manifest:
         idx_value = element.get(idx_key, '')
         tags = get_or_create(tags, idx_value,
                              [] if idx_num >= max_idx else {})
-      tags.append(element)
+      tags.append(element) # appending to the  non-indexed list
 
     logging.info('indexed elements')
 
