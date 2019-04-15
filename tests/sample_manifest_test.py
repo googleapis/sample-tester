@@ -99,6 +99,19 @@ class TestManifest(unittest.TestCase):
 
     self.assertIsNone(manifest.get_one('', 'math'))
 
+  def test_get_all_elements(self):
+    (manifest_source, expect_alice, expect_bob, expect_carol,
+     expect_dan) = self.get_manifest_source()
+
+    manifest = sample_manifest.Manifest('language', 'sample')
+    manifest.read_sources([manifest_source])
+    manifest.index()
+
+    all_elements = [x for x in manifest.get_all_elements()]
+    self.assertEqual([expect_alice, expect_bob, expect_carol, expect_dan],
+                     all_elements)
+
+
   def get_manifest_source(self):
     manifest = {
         sample_manifest.Manifest.VERSION_KEY:
@@ -150,6 +163,164 @@ class TestManifest(unittest.TestCase):
     expect_dan = {'path': '/tmp/newest/dan', 'sample': 'math'}
     return ('valid_manifest',
             manifest), expect_alice, expect_bob, expect_carol, expect_dan
+
+
+  def get_manifest_source_braces_correct(self, version):
+    manifest = {
+        sample_manifest.Manifest.VERSION_KEY:
+            version,
+        sample_manifest.Manifest.SETS_KEY:
+            [{
+                'greetings': 'teatime-{name}{{',
+                'fond_wish': 'hope{{',
+                'form': 'Would you like some {drink}? {{maybe}}',
+                'drink': 'tea',
+                sample_manifest.Manifest.ELEMENTS_KEY:
+                    [{
+                        'name': 'Mary',
+                        'drink': ' with milk',
+                        'interruption': 'Excuse me, {name}. {form}'
+                    }]
+                }]
+        }
+    return ('manifest with braces', manifest)
+
+  def test_braces_v1(self):
+    manifest_source = self.get_manifest_source_braces_correct(1)
+    manifest = sample_manifest.Manifest('greetings')
+    manifest.read_sources([manifest_source])
+    manifest.index()
+
+    expect_mary = {
+        'name': 'Mary',
+        'fond_wish': 'hope{{',
+        'greetings': 'teatime-{name}{{',
+        'form': 'Would you like some {drink}? {{maybe}}',
+        'drink': 'tea with milk',
+        'interruption': 'Excuse me, {name}. {form}'
+    }
+
+    self.assertEqual(expect_mary, manifest.get_one('teatime-{name}{{', name='Mary'))
+
+  def test_braces_v2(self):
+    manifest_source = self.get_manifest_source_braces_correct(2)
+    manifest = sample_manifest.Manifest('greetings')
+    manifest.read_sources([manifest_source])
+    manifest.index()
+
+    expect_mary = {
+        'name': 'Mary',
+        'fond_wish': 'hope{',
+        'greetings': 'teatime-Mary{',
+        'form': 'Would you like some tea with milk? {maybe}',
+        'drink': 'tea with milk',
+        'interruption': 'Excuse me, Mary. Would you like some tea with milk? {maybe}'
+    }
+
+    self.assertEqual(expect_mary, manifest.get_one('teatime-Mary{', name='Mary'))
+
+
+  def test_braces_error_unfinished(self):
+    manifest_content = {
+        sample_manifest.Manifest.VERSION_KEY: 2,
+        sample_manifest.Manifest.SETS_KEY:
+            [{
+                'greetings': 'teatime',
+                'form': 'Would you like some {drink?', # error
+                'drink': 'tea',
+                sample_manifest.Manifest.ELEMENTS_KEY:
+                    [{
+                        'name': 'Mary',
+                        'drink': ' with milk',
+                        'interruption': 'Excuse me, {name}. {form}'
+                    }]
+                }]
+        }
+    manifest = sample_manifest.Manifest('greetings')
+    manifest.read_sources([('erroring manifest', manifest_content)])
+    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+
+  def test_braces_error_unfinished_at_end(self):
+    manifest_content = {
+        sample_manifest.Manifest.VERSION_KEY: 2,
+        sample_manifest.Manifest.SETS_KEY:
+            [{
+                'greetings': 'teatime',
+                'form': 'Would you like some {', # error
+                'drink': 'tea',
+                sample_manifest.Manifest.ELEMENTS_KEY:
+                    [{
+                        'name': 'Mary',
+                        'drink': ' with milk',
+                        'interruption': 'Excuse me, {name}. {form}'
+                    }]
+                }]
+        }
+    manifest = sample_manifest.Manifest('greetings')
+    manifest.read_sources([('erroring manifest', manifest_content)])
+    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+
+  def test_braces_error_empty(self):
+    manifest_content = {
+        sample_manifest.Manifest.VERSION_KEY: 2,
+        sample_manifest.Manifest.SETS_KEY:
+            [{
+                'greetings': 'teatime',
+                'form': 'Would you like some {}?', # error
+                'drink': 'tea',
+                sample_manifest.Manifest.ELEMENTS_KEY:
+                    [{
+                        'name': 'Mary',
+                        'drink': ' with milk',
+                        'interruption': 'Excuse me, {name}. {form}'
+                    }]
+                }]
+        }
+    manifest = sample_manifest.Manifest('greetings')
+    manifest.read_sources([('erroring manifest', manifest_content)])
+    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+
+  def test_braces_error_key_with_braces(self):
+    manifest_content = {
+        sample_manifest.Manifest.VERSION_KEY: 2,
+        sample_manifest.Manifest.SETS_KEY:
+            [{
+                'greetings': 'teatime',
+                'form': 'Would you like some {drink{yea}}}?', # error
+                'drink{yea}}': 'tea',
+                sample_manifest.Manifest.ELEMENTS_KEY:
+                    [{
+                        'name': 'Mary',
+                        'drink': ' with milk',
+                        'interruption': 'Excuse me, {name}. {form}'
+                    }]
+                }]
+        }
+    manifest = sample_manifest.Manifest('greetings')
+    manifest.read_sources([('erroring manifest', manifest_content)])
+    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+
+  def test_braces_error_loop(self):
+    manifest_content = {
+        sample_manifest.Manifest.VERSION_KEY: 2,
+        sample_manifest.Manifest.SETS_KEY:
+            [{
+                'greetings': '{drink} time',
+                'form': 'It is {greetings}. Would you like some {drink}?',
+                'drink': 'tea',
+                sample_manifest.Manifest.ELEMENTS_KEY:
+                    [{
+                        'name': 'Mary',
+                        'drink': ' with milk',
+                        'greetings': ' {form}', # cycle
+                        'interruption': 'Excuse me, {name}. {form}'
+                    }]
+                }]
+        }
+    manifest = sample_manifest.Manifest('greetings')
+    manifest.read_sources([('erroring manifest', manifest_content)])
+    self.assertRaises(sample_manifest.CycleError, manifest.index)
+
 
 
 if __name__ == '__main__':
