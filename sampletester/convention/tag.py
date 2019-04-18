@@ -30,6 +30,11 @@ ENVIRONMENT_KEY = 'environment'
 # indicate where command-line arguments are to be inserted at invocation time.
 INVOCATION_KEY = 'invocation'
 
+# The value of CHDIR_KEY in the manifest encodes the working directory the
+# sample-tester should be in before invoking the artifact. If not specified, the
+# current working directory is assumed.
+CHDIR_KEY = 'chdir'
+
 # This the special character that introduced placeholder strings for the
 # INVOCATION_KEY value. To obtain this special character literally in the
 # invocation (i.e. to escape it), insert it twice in succession.
@@ -69,8 +74,11 @@ class ManifestEnvironment(testenv.Base):
   If none of INVOCATION_KEY, BINARY_KEY, nor PATH_KEY are specified, calls
   result in errors.
 
-  The invocation key can be changed by passing a key-value pair
+  The default invocation key can be overriden by passing a key-value pair
   (INVOCATION_KEY:  "new_invocation_key") in the manifest_options argument to init.
+
+  Similarly, the default chdir key can be overriden by passing a key-value pair
+  (CHDIR_KEY:  "new_chdir_key") in the manifest_options argument to init.
   """
 
   def __init__(self, name: str, description: str, manifest: sample_manifest.Manifest,
@@ -116,8 +124,10 @@ class ManifestEnvironment(testenv.Base):
             .format(indices, invocation_key, artifact))
       invocation = '{} {}'.format(artifact_name, PLACEHOLDER_ARGS)
 
+    chdir_key = self.manifest_options.get(CHDIR_KEY, CHDIR_KEY)
+    chdir = artifact.get(chdir_key, None)
     return escape_placeholder(insert_into(invocation,
-                                          PLACEHOLDER_ARGS, cli_args))
+                                          PLACEHOLDER_ARGS, cli_args)), chdir
 
   def adjust_suite_name(self, name):
     return self.adjust_name(name)
@@ -185,8 +195,9 @@ def test_environments(manifest_paths, convention_parameters, manifest_options):
     env_names = ['(nolang)']
 
   manifest_options_dict = {}
-  if manifest_options is not None:
-    manifest_options_dict[INVOCATION_KEY] = manifest_options[0]
+  num_options = len(manifest_options) if manifest_options else 0
+  manifest_options_dict[INVOCATION_KEY] = manifest_options[0] if num_options > 0 else INVOCATION_KEY
+  manifest_options_dict[CHDIR_KEY] = manifest_options[1] if num_options > 1 else CHDIR_KEY
 
   environments = []
   for name in env_names:

@@ -202,21 +202,21 @@ class TestCase:
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
   def call_allow_error(self, *args, **kwargs):
     try:
-      call = self.environment.get_call(*args, **kwargs)
+      call, chdir = self.environment.get_call(*args, **kwargs)
     except Exception as e:
       raise CallError('could not resolve call: {}'.format(str(e)))
-    return self._call_external(call)
+    return self._call_external(call, chdir)
 
   def shell(self, cmd, *args):
     return self._call_external(self.format_string(cmd + " {}"*len(args), *args))
 
-  def _call_external(self, cmd):
+  def _call_external(self, cmd, chdir=None):
     self.last_return_code = 0
     self.last_call_output = ""
 
     try:
       self.print_out("\n# Calling: " + cmd)
-      out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+      out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, cwd=chdir)
       return_code = 0
     except subprocess.CalledProcessError as e:
       return_code = e.returncode

@@ -38,6 +38,18 @@ sets:
   - situation: alternate-invocation
     invocation: "not this way"
     callthisway: "correct way to call"
+- environment: Chdir
+  __items__:
+  - situation: no-chdir
+    invocation: "no chdir present"
+  - situation: with-chdir
+    invocation: "with chdir present"
+    chdir: /my/foo/dir
+  - situation: with-alternate-chdir
+    invocation: "this will pass when specifying alternate chdir key"
+    chdir: /not/this/dir
+    switch-dir-to: /the/correct/dir
+    
     
     
  

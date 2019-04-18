@@ -16,7 +16,7 @@ import importlib
 import logging
 import os
 
-DEFAULT="tag:sample:invocation"
+DEFAULT="tag:sample:invocation,chdir"
 
 __abs_file__ = os.path.abspath(__file__)
 __abs_file_path__ = os.path.split(__abs_file__)[0]

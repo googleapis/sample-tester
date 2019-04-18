@@ -61,7 +61,7 @@ class PythonSamplesEnvironment(testenv.Base):
       interpreter = 'python3'
       artifact = '{} {}'.format(interpreter, sample_path)
     command_line = '{} {}'.format(artifact, cli_arguments)
-    return command_line
+    return command_line, None
 
   def id(self):
     """Returns a unique ID for this processor instance"""
