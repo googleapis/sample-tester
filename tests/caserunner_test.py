@@ -162,6 +162,26 @@ class TestCaseRunnerMatchesForCallTarget(unittest.TestCase):
     self.assertEqual(0, self.results.environments['alps'].num_erroring_cases,
                      "expected no error when the key name in 'call.target' is present in manifest")
 
+class TestChdir(unittest.TestCase):
+
+  def setUp(self):
+    self.environment_registry = environment_registry.new(
+        convention.DEFAULT,
+        [full_path('testdata/caserunner_test.chdir.manifest.yaml')])
+    self.manager = testplan.Manager(
+        self.environment_registry,
+        testplan.suites_from([full_path('testdata/caserunner_chdir_test.yaml')]))
+    self.results = Visitor()
+    self.manager.accept(testplan.MultiVisitor(runner.Visitor(),
+                                              summary.SummaryVisitor(verbosity=summary.Detail.FULL,
+                                                                     show_errors=True)))
+    if self.manager.accept(self.results) is not None:
+      self.fail('error running test plan: {}'.format(self.results.error))
+
+  def test_chdir(self):
+    for suite_name in list(self.results.suites.keys()):
+      self.assertTrue(self.results.cases[suite_name + ':code'].success(),
+                      'expected suite to pass: {}'.format(suite_name))
 
 
 def full_path(leaf_path):

@@ -30,7 +30,11 @@ class Base:
     logging.info('{}: teardown'.format(self._name))
 
   def get_call(self, *args, **kwargs):
-    """Translates the call arguments into a call to a binary on disk"""
+    """Translates the call arguments into a call to a binary on disk
+
+    Returns a pair consisting of the resolved call and the working directory to
+    be in when making that call (or None for the latter if not specified)
+    """
     logging.fatal(
         'get_call() invoked on Base (should be overridden)')
 
@@ -63,4 +67,4 @@ def process_args(*args, **kwargs):
 
 
 def quote(s: str):
-  return '"{}"'.format(s)
+  return '"{}"'.format(s.replace('"',r'\"'))

@@ -11,12 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from .cloud import CloudRepos
-
-def test_environments(files, convention_parameters, _unused):
-  num_params = 0 if convention_parameters is None else len(convention_parameters)
-  if num_params != 0:
-    raise Exception('expected no parameters to convention "cloud", got %d: %s'
-                    .format(num_params, convention_parameters))
-  return CloudRepos(files).test_environments()

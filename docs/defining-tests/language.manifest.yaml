@@ -13,18 +13,27 @@
 # limitations under the License.
 
 # Example manifest file
-version: 1
+version: 2
 sets:
+- environment: java
+  invocation: "{jar} -D{class} {path} @args"
+  path: "examples/mock-samples/java/"
+  __items__:
+  - class: AnalyzeSentiment
+    jar: "./do_java"
+    chdir: "examples/mock-samples/java/"
+    path: "language-v1/AnalyzeSentiment"
+    sample: "language_analyze_sentiment_text"
 - environment: python
   bin: "python3"
-  path: "examples/mock-samples/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/"
+  path: "examples/mock-samples/python/"
   __items__:
-  - path: "analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py"
+  - path: "language-v1/analyze_sentiment_request_language_sentiment_text.py"
     sample: "language_analyze_sentiment_text"
 - environment: bash
   # notice: no "bin:" because artifacts are already executable
-  path: "examples/mock-samples/googleapis/artman-genfiles/sh/language-v1/samples/google/cloud/language_v1/gapic/"
+  path: "examples/mock-samples/sh/"
   __items__:
-  - path: "analyze_sentiment/analyze_sentiment.sh"
+  - path: "language-v1/analyze_sentiment.sh"
     sample: "language_analyze_sentiment_text"
     

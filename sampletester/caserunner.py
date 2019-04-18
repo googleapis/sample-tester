@@ -202,21 +202,21 @@ class TestCase:
   # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
   def call_allow_error(self, *args, **kwargs):
     try:
-      call = self.environment.get_call(*args, **kwargs)
+      call, chdir = self.environment.get_call(*args, **kwargs)
     except Exception as e:
       raise CallError('could not resolve call: {}'.format(str(e)))
-    return self._call_external(call)
+    return self._call_external(call, chdir)
 
   def shell(self, cmd, *args):
     return self._call_external(self.format_string(cmd + " {}"*len(args), *args))
 
-  def _call_external(self, cmd):
+  def _call_external(self, cmd, chdir=None):
     self.last_return_code = 0
     self.last_call_output = ""
 
     try:
       self.print_out("\n# Calling: " + cmd)
-      out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+      out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, cwd=chdir)
       return_code = 0
     except subprocess.CalledProcessError as e:
       return_code = e.returncode
@@ -226,15 +226,15 @@ class TestCase:
       # return return_code, out
     except Exception as e:
       raise
-    finally:
-      new_output = out.decode("utf-8")
-      self.last_return_code = return_code
-      # TODO: De-dupe the following. Either some accessor magic, or have it live in local_symbols
-      self.last_call_output = new_output
-      self.local_symbols['_last_call_output'] = new_output
 
-      self.output += new_output
-      return return_code, new_output
+    new_output = out.decode("utf-8")
+    self.last_return_code = return_code
+    # TODO: De-dupe the following. Either some accessor magic, or have it live in local_symbols
+    self.last_call_output = new_output
+    self.local_symbols['_last_call_output'] = new_output
+
+    self.output += new_output
+    return return_code, new_output
 
   # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
   def call_no_error(self, *args, **kwargs):

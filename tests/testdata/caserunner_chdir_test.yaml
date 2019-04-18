@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,4 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sample-tester -v detailed --convention=cloud ${FLAGS:---xunit=/tmp/xunit.cloud.xml} examples/convention-cloud/language.test.yaml examples/mock-samples/googleapis
+test:
+  suites:
+  - name: Test-chdir-works
+    cases:
+    - name: "code"
+      spec:
+      - code: |
+          out = call('sample-chdir')
+          assert_contains('/etc')

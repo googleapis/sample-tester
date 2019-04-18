@@ -16,7 +16,7 @@ import importlib
 import logging
 import os
 
-DEFAULT="tag:sample"
+DEFAULT="tag:sample:invocation,chdir"
 
 __abs_file__ = os.path.abspath(__file__)
 __abs_file_path__ = os.path.split(__abs_file__)[0]
@@ -39,7 +39,7 @@ for convention in all_conventions:
     logging.info('registering convention "{}"'.format(convention))
     environment_creators[convention] = module.test_environments
 
-def generate_environments(requested_conventions, convention_args, files):
+def generate_environments(requested_conventions, testcase_args, manifest_options, files):
   """Generates the environments for the requested conventions with the given args.
 
   Note that a given convention may (and usually will) generate multiple
@@ -48,8 +48,13 @@ def generate_environments(requested_conventions, convention_args, files):
   Args:
     requested_conventions: A list of strings, each of which contains the
        name of a convention previously registered in `environment_creators`
-    convention_args: A list of args to pass in its entirety to each convention
-       in `requested_conventions`
+    testcase_args: A list of args to pass in its entirety to each convention in
+       `requested_conventions`. These are intended to be passed through to the
+       caserunner.
+    manifest_options: A dict of options to pass in its entirety to each
+      convention. These are intended to address how the convention itself parses
+      the manifest file.
+
     files: A list of files needed by the convention to instantiate environments.
   """
   all_environments = []
@@ -58,7 +63,7 @@ def generate_environments(requested_conventions, convention_args, files):
     if create_fn is None:
       raise ValueError('convention "{}" not implemented'.format(convention))
     try:
-      all_environments.extend(create_fn(files, convention_args))
+      all_environments.extend(create_fn(files, testcase_args, manifest_options))
     except Exception as ex:
       raise ValueError(
           'could not create test environments for convention "{}": {}'
