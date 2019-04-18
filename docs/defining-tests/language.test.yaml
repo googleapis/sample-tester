@@ -18,10 +18,10 @@ test:
   - name:  "Language samples test"
     setup:     # can have yaml and/or code, just as in the cases below
       - code:
-          log('In setup')
+          log('In setup "hi"')
     teardown:  # can have yaml and/or code, just as in the cases below
       - code:
-          log('In teardown')          
+          log('In teardown bye')          
     cases:
       
     - name: "A test defined via yaml directives"
@@ -65,7 +65,7 @@ test:
     - name: "A test defined via 'code', with explicit calls to specific samples"
       spec:
       - code: |
-          _, out = shell("python3 examples/mock-samples/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py -content='happy happy smile hope'")
+          _, out = shell("python3 examples/mock-samples/python/language-v1/analyze_sentiment_request_language_sentiment_text.py -content='happy happy smile hope'")
 
       # You can interleave yaml and code!
       - assert_success:

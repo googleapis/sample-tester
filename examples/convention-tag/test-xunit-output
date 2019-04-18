@@ -16,17 +16,17 @@
 
 echo "Test sample-tester --xunit=file output"
 
-xunit_file="$( mktemp /tmp/sample-tester.XXXXXXXXX )"
+xunit_file="$(mktemp /tmp/sample-tester.XXXXXXXXX )"
 
-sample-tester --xunit="$xunit_file" --convention=cloud examples/convention-cloud/language.test.yaml examples/mock-samples/googleapis
+sample-tester --xunit="$xunit_file" --convention=tag:sample examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml
 
 xunit_xml="$( cat "$xunit_file" )"
 
 for expected_text in                        \
   '<testsuite name="Language samples test'  \
-  '<testcase name="Sentiment from text'     \
+  '<testcase name="A test defined via yaml'     \
   '<system-out>'                            \
-  'In setup &quot;hi&quot'                  \
+  'In setup &quot;hi&quot;'                  \
   'Calling: python3 examples/mock-samples/' \
   'In teardown bye'                         \
 ;

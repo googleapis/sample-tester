@@ -66,10 +66,10 @@ Some manifest tags are of special interest to the sample test runner:
 * ``invocation``: The command line to use to run the sample. The
   invocation typically makes use of two features for flexibility:
   
-  * manifest tag inclusion: By including a ``${TAG_NAME}``,
+  * manifest tag inclusion: By including a ``{TAG_NAME}``,
     ``invocation`` (just like any tag) can include the value of
     another tag.
-  * tester argument substitution: By including a ``$args`` literal,
+  * tester argument substitution: By including a ``@args`` literal,
     the ``invocation`` tag can specify where to insert the sample
     parameters as determined by the sample-tester from the test plan
     file.
@@ -80,7 +80,7 @@ Some manifest tags are of special interest to the sample test runner:
 
   .. code-block:: yaml
 
-     invocation: "java {jar} -D{class_name} -Dexec.arguments='$args'"
+     invocation: "java {jar} -D{class_name} -Dexec.arguments='@args'"
      
 * (deprecated) ``bin``: The executable used to run the sample. The
   sample ``path`` and arguments are appended to the value of this tag
