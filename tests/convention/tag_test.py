@@ -29,7 +29,7 @@ class TestSubstitution(unittest.TestCase):
     self.assertEqual('hi @@here there', tag.insert_into('hi @@here there', '@here', 'foo'))
     self.assertEqual('hi @@foo there',  tag.insert_into('hi @@@here there', '@here', 'foo'))
 
-class TestEnvironments(unittest.TestCase):
+class TestArgSubstitution(unittest.TestCase):
   def setUp(self):
     filename = full_path('testdata/tag_test.manifest.yaml')
     manifest = sample_manifest.Manifest('situation')
@@ -92,6 +92,19 @@ class TestEnvironments(unittest.TestCase):
     self.assertRaises(Exception, self.env.get_call,
                       'invocation-with-unescaped-@', 'Asia')
 
+class TestChangingInvocationKey(unittest.TestCase):
+  def setUp(self):
+    filename = full_path('testdata/tag_test.manifest.yaml')
+    manifest = sample_manifest.Manifest('situation')
+    manifest.read_files(filename)
+    manifest.index()
+    self.env = tag.ManifestEnvironment(
+        filename, '', manifest, [],
+        manifest_options = {'invocation': 'callthisway'})
+
+  def test_alternate_invocation(self):
+    self.assertEqual('correct way to call',
+                     self.env.get_call('alternate-invocation'))
 
 
 def full_path(leaf_path):

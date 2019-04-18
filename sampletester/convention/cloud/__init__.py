@@ -14,7 +14,7 @@
 
 from .cloud import CloudRepos
 
-def test_environments(files, convention_parameters):
+def test_environments(files, convention_parameters, _unused):
   num_params = 0 if convention_parameters is None else len(convention_parameters)
   if num_params != 0:
     raise Exception('expected no parameters to convention "cloud", got %d: %s'

@@ -33,6 +33,11 @@ sets:
     foo: bar
   - situation: invocation-with-unescaped-@
     invocation: "Cambodia is a @country"
+- environment: Changing invocation key
+  __items__:
+  - situation: alternate-invocation
+    invocation: "not this way"
+    callthisway: "correct way to call"
     
     
  

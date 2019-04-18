@@ -68,21 +68,32 @@ class ManifestEnvironment(testenv.Base):
 
   If none of INVOCATION_KEY, BINARY_KEY, nor PATH_KEY are specified, calls
   result in errors.
+
+  The invocation key can be changed by passing a key-value pair
+  (INVOCATION_KEY:  "new_invocation_key") in the manifest_options argument to init.
   """
 
   def __init__(self, name: str, description: str, manifest: sample_manifest.Manifest,
-               indices: Iterable[str], testcase_settings=None):
+               indices: Iterable[str], testcase_settings=None, manifest_options=None):
     """Initializes ManifestEnvironment.
 
     Args:
       indices: the manifest index values that are not explicitly specified in
         each call but are assumed to correspond to initial indices before
         call-specific indices.
+      testcase_settings: settings that change the fields expected in the
+        testplan files
+      manifest_options: settings that change how the manifest file is
+        interpreted for this convention. Currently supported: a
+        (INVOCATION_KEY: "new_invocation_key") key/value pair to
+        configure which field is interpreted as the invocation format.
     """
     super().__init__(name, description)
     self.manifest = manifest
     self.const_indices = indices
     self._testcase_settings = testcase_settings
+    self.manifest_options = (manifest_options
+                             if manifest_options is not None else {})
 
   def get_call(self, *args, **kwargs):
     full_call, cli_args = testenv.process_args(*args, **kwargs)
@@ -93,14 +104,16 @@ class ManifestEnvironment(testenv.Base):
     if not artifact:
       raise Exception('object "{}" not defined'.format(indices))
 
-    invocation = artifact.get(INVOCATION_KEY, None)
+    invocation_key = self.manifest_options.get(INVOCATION_KEY,
+                                               INVOCATION_KEY)
+    invocation = artifact.get(invocation_key, None)
     if not invocation:
       bin = artifact.get(BINARY_KEY, '')
       artifact_name = ' '.join([bin, artifact.get(PATH_KEY, '')]).strip()
       if len(artifact_name) == 0:
         raise Exception(
-            'object "{}" must contain one of "invocation", "bin", or "path": {}'
-            .format(indices, artifact))
+            'object "{}" must contain one of "{}", "bin", or "path": {}'
+            .format(indices, invocation_key, artifact))
       invocation = '{} {}'.format(artifact_name, PLACEHOLDER_ARGS)
 
     return escape_placeholder(insert_into(invocation,
@@ -149,7 +162,7 @@ all_manifests = []
 all_env_names = []
 all_environments = []
 
-def test_environments(manifest_paths, convention_parameters):
+def test_environments(manifest_paths, convention_parameters, manifest_options):
   if convention_parameters is None:
     convention_parameters = []
   num_params = len(convention_parameters)
@@ -171,11 +184,17 @@ def test_environments(manifest_paths, convention_parameters):
   if len(env_names) == 0:
     env_names = ['(nolang)']
 
+  manifest_options_dict = {}
+  if manifest_options is not None:
+    manifest_options_dict[INVOCATION_KEY] = manifest_options[0]
+
   environments = []
   for name in env_names:
     description = 'Tags by environment:{} {}'.format(name,
                                                      convention_parameters)
-    env  = ManifestEnvironment(name, description, manifest, [name], testcase_settings={'call.target': convention_parameters[0]})
+    env  = ManifestEnvironment(name, description, manifest, [name],
+                               testcase_settings={'call.target': convention_parameters[0]},
+                               manifest_options=manifest_options_dict)
     environments.append(env)
   logging.info('convention "tag" generated environments: {}'.format([env.name() for env in environments]))
   all_env_names.extend(env_names)
