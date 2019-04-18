@@ -85,7 +85,16 @@ Some manifest tags are of special interest to the sample test runner:
 * (deprecated) ``bin``: The executable used to run the sample. The
   sample ``path`` and arguments are appended to the value of this tag
   to form the command line that the tester runs.
-  
+
+**Advanced usage**: you can tell sample-tester to use different key names than the ones above. For example, to use keys ``some_name``, ``how_to_call``, and ``switch_path`` instead of ``sample``, ``invocation``, and ``chdir``, respectively, you would simply specify this flag when calling sample-tester:
+
+
+  .. code-block:: bash
+
+     -c tag:some_name:how_to_call,switch_path
+
+
+Here's a typical manifest file:
 
 .. literalinclude:: language.manifest.yaml
    :start-after: Example manifest file
