@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 print('FAKE: analyze_sentiment_request_language_sentiment_text.py')
 print('score: 0.8')
 print('magnitude: 0.8')
+print(os.getcwd())

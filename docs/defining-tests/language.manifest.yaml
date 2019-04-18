@@ -13,8 +13,17 @@
 # limitations under the License.
 
 # Example manifest file
-version: 1
+version: 2
 sets:
+- environment: java
+  invocation: "{jar} -D{class} {path} @args"
+  path: "examples/mock-samples/java/"
+  __items__:
+  - class: AnalyzeSentiment
+    jar: "./do_java"
+    chdir: "examples/mock-samples/java/"
+    path: "language-v1/AnalyzeSentiment"
+    sample: "language_analyze_sentiment_text"
 - environment: python
   bin: "python3"
   path: "examples/mock-samples/python/"

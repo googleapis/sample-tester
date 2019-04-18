@@ -18,4 +18,4 @@ sets:
   __items__:
   - invocation: "pwd"
     sample: "sample-chdir"
-    chdir: /usr/bin
+    chdir: /etc

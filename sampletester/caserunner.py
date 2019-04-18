@@ -226,15 +226,15 @@ class TestCase:
       # return return_code, out
     except Exception as e:
       raise
-    finally:
-      new_output = out.decode("utf-8")
-      self.last_return_code = return_code
-      # TODO: De-dupe the following. Either some accessor magic, or have it live in local_symbols
-      self.last_call_output = new_output
-      self.local_symbols['_last_call_output'] = new_output
 
-      self.output += new_output
-      return return_code, new_output
+    new_output = out.decode("utf-8")
+    self.last_return_code = return_code
+    # TODO: De-dupe the following. Either some accessor magic, or have it live in local_symbols
+    self.last_call_output = new_output
+    self.local_symbols['_last_call_output'] = new_output
+
+    self.output += new_output
+    return return_code, new_output
 
   # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
   def call_no_error(self, *args, **kwargs):
