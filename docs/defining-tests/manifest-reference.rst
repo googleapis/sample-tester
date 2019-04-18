@@ -1,12 +1,13 @@
 .. _defining-tests/manifest-reference:
 
 Manifest file format
---------
+--------------------
 
 A manifest file is a YAML file that associates each artifact (sample)
 of interest on disk with a series of tags that can be used to uniquely
 identify that artifact. Right now both versions "1" and "2" of the
-manifest file format are supported; version "2" is a superset of version "1".
+manifest file format are supported; version "2" is a superset of
+version "1".
 
 The fundamental unit in a manifest is the "item", which is a
 collection of tag name/value pairs; each unit should correspond to
@@ -44,24 +45,47 @@ will define the same sets of tags as
    name: Zoe
    greeting: "Hello, Zoe!"
 
-While tags can be referenced arbitrarily deep, no reference can form a loop (ie a tag directly or indirectly including itself).
+While tags can be referenced arbitrarily deep, no reference can form a
+loop (ie a tag directly or indirectly including itself).
 
 Tags for sample-tester
-----
+----------------------
 
-Some manifest tags are of special interest to the sample test runner,
-such as those named ``environment``, ``path``, ``bin``, and
-``sample``. These four are interpreted, respectively, as the
-programming language of the given artifact, the path to that artifact
-on disk, the binary used to execute the artifact (if the artifact is
-not itself executable), and the unique sample identifier by which to
-quickly identify the artifact in any language. In particular,
-artifacts with the same ``sample`` but different ``environment``\ s
-are taken to represent the same conceptual sample, but implemented in
-the different programming languages or execution environments; this
-allows a test specification to refer to the ``sample``\ s only and the
-runner will then run that test for each of the ``emvironment``\ s
-available.
+Some manifest tags are of special interest to the sample test runner:
+
+* ``sample``: The unique ID for the sample.
+* ``path``: The path to the sample source code on disk.
+* ``environment``: A label used to group samples that share the same
+  programming language or execution environment. In particular,
+  artifacts with the same ``sample`` but different ``environment``\ s
+  are taken to represent the same conceptual sample, but implemented
+  in the different languages/environments; this allows a test
+  specification to refer to the ``sample``\ s only and sample-tester
+  will then run that test for each of the ``environment``\ s
+  available.
+* ``invocation``: The command line to use to run the sample. The
+  invocation typically makes use of two features for flexibility:
+  
+  * manifest tag inclusion: By including a ``${TAG_NAME}``,
+    ``invocation`` (just like any tag) can include the value of
+    another tag.
+  * tester argument substitution: By including a ``$args`` literal,
+    the ``invocation`` tag can specify where to insert the sample
+    parameters as determined by the sample-tester from the test plan
+    file.
+
+  Thus, the following would be the typical usage for Java, where each
+  sample item in the manifest includes a ``class_name`` tag and a
+  ``jar`` tag:
+
+  .. code-block:: yaml
+
+     invocation: "java {jar} -D{class_name} -Dexec.arguments='$args'"
+     
+* (deprecated) ``bin``: The executable used to run the sample. The
+  sample ``path`` and arguments are appended to the value of this tag
+  to form the command line that the tester runs.
+  
 
 .. literalinclude:: language.manifest.yaml
    :start-after: Example manifest file
