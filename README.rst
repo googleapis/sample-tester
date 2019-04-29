@@ -14,11 +14,3 @@ Documentation
 Documentation is available on Read the Docs:
 `Stable <https://sample-tester.readthedocs.io/en/stable/>`_,
 `Latest <https://sample-tester.readthedocs.io/en/latest/>`_
-
-
-Disclaimer
-----------
-
-This is not an official Google product.
-
-
