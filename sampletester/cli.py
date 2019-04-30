@@ -60,7 +60,7 @@ DEBUGME=False
 def main():
 
   ## Redirect to generate manifest. Temporary solution.
-  if len(sys.argv) > 1 and sys.argv[1] == 'gen-manifest'
+  if len(sys.argv) > 1 and sys.argv[1] == 'gen-manifest':
     from sampletester.gen_manifest import gen_manifest
     gen_manifest()
     sys.exit()

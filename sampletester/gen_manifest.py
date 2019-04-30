@@ -43,7 +43,7 @@ def parse_args():
 	parser.add_argument('--output_dir', help='The directory to save the manifest file')
 	parser.add_argument('--output_name', help='The name of the output file, excluding extensions.')
 
-	args = parser.parse_args()
+	args = parser.parse_args(sys.argv[2:])
 	if args.lang not in ALL_LANGS:
 		sys.exit("Unrecognized language.")
 	if args.lang not in SUPPORTED_LANGS:
@@ -122,8 +122,6 @@ def dump(manifest, output_dir, output_name):
 	Dumper.add_representer(OrderedDict, dict_representer)
 	Dumper.add_representer(str,
                        SafeRepresenter.represent_str)
-	Dumper.add_representer(unicode,
-                       SafeRepresenter.represent_unicode)
 
 	with open(os.path.join(output_dir, '{}.manifest.yaml'.format(output_name)), 'w') as output_file:
 			yaml.dump(manifest, output_file, Dumper=Dumper, default_flow_style=False)
