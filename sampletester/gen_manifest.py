@@ -25,7 +25,7 @@ from yaml.representer import SafeRepresenter
 SUPPORTED_LANGS = ["python"]
 ALL_LANGS = ["python", "java", "csharp", "nodejs", "ruby", "php", "go"]
 
-def main():
+def gen_manifest():
 	args = parse_args()
 	if args.lang == 'python':
 		manifest = python_manifest(args.sample_dir)

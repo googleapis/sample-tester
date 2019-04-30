@@ -58,6 +58,13 @@ DEFAULT_LOG_LEVEL = 100
 DEBUGME=False
 
 def main():
+
+  ## Redirect to generate manifest. Temporary solution.
+  if len(sys.argv) > 1 and sys.argv[1] == 'gen-manifest'
+    from sampletester.gen_manifest import gen_manifest
+    gen_manifest()
+    sys.exit()
+
   args, usage = parse_cli()
   if not args:
     exit(EXITCODE_SETUP_ERROR)
