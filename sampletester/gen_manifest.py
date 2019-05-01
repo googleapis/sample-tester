@@ -18,6 +18,7 @@ import re
 import yaml
 
 from collections import OrderedDict
+from glob import glob
 from yaml import CDumper as Dumper
 from yaml.representer import SafeRepresenter
 
@@ -27,9 +28,9 @@ ALL_LANGS = ["python", "java", "csharp", "nodejs", "ruby", "php", "go"]
 
 def gen_manifest():
 	args = parse_args()
-	if args.lang == 'python':
-		manifest = python_manifest(args.sample_dir)
-		dump(manifest, args.output_dir, args.output_name)
+	if args.env == 'python':
+		manifest = python_manifest(args.bin, args.chdir, args.samples)
+		dump(manifest, args.output)
 	else:
 		sys.exit("Unrecognized languages.")
 	print("*********")
@@ -38,28 +39,16 @@ def gen_manifest():
 
 def parse_args():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--lang', help='Language to generate manifest for.')
-	parser.add_argument('--sample_dir', help='Sample directory to search for samples.')
-	parser.add_argument('--output_dir', help='The directory to save the manifest file')
-	parser.add_argument('--output_name', help='The name of the output file, excluding extensions.')
-
+	parser.add_argument('--env', help='Language to generate manifest for.')
+	parser.add_argument('--output', required=True, help='The name of the output file, should include the manifest.yaml` extension.')
+	parser.add_argument('--bin', help='Fills in the `bin` directive.')
+	parser.add_argument('--chdir', help='Fills in the `chdir` directive.')
+	parser.add_argument('samples', nargs='*', help='Relative paths of sample files.')
 	args = parser.parse_args(sys.argv[2:])
-	if args.lang not in ALL_LANGS:
+	if args.env not in ALL_LANGS:
 		sys.exit("Unrecognized language.")
-	if args.lang not in SUPPORTED_LANGS:
+	if args.env not in SUPPORTED_LANGS:
 		sys.exit("Unsupported language.")
-
-	if not os.path.isdir(args.sample_dir):
-		sys.exit("Sample directory does not exist.")
-	if not os.path.isdir(args.output_dir):
-		try:
-			os.mkdir(args.output_dir)
-		except OSError:
-			sys.exit("Failed to created output directory.")
-
-	if args.output_name is None:
-		sys.exit("Output file name not specified.")
-
 	return args
 
 def base_manifest():
@@ -68,24 +57,28 @@ def base_manifest():
 	manifest['sets'] = []
 	return manifest
 
-def python_manifest(sample_dir):
+def python_manifest(bin, chdir, samples):
 	manifest = base_manifest()
 	py_environment = OrderedDict()
-	py_environment['bin'] = 'python3'
-	py_environment['path'] = sample_dir
-	py_environment['__items__'] = path_sample_pairs(sample_dir)
+	if bin is not None:
+		py_environment['bin'] = bin 
+	if chdir is not None:
+		py_environment['chdir'] = chdir
+	py_environment['path'] = os.getcwd()
+	py_environment['__items__'] = path_sample_pairs(samples)
 	manifest['sets'].append(py_environment)
 	return manifest
 
 
-def path_sample_pairs(sample_dir):
+def path_sample_pairs(samples):
 	items = []
-	for root, dirs, files in os.walk(sample_dir):
-		for file in files:
+
+	for s in samples:
+		for sample in glob(s):
 			items.append({
-				'path': file,
-				'sample': get_region_tag(os.path.join(root, file))
-				})
+				'path': sample,
+				'sample': get_region_tag(os.path.join(os.getcwd(), sample))
+			})
 	return items
 
 
@@ -118,12 +111,12 @@ def get_region_tag(sample_file_path):
 def dict_representer(dumper, data):
   return dumper.represent_dict(data.items())
 
-def dump(manifest, output_dir, output_name):
+def dump(manifest, output):
 	Dumper.add_representer(OrderedDict, dict_representer)
 	Dumper.add_representer(str,
                        SafeRepresenter.represent_str)
 
-	with open(os.path.join(output_dir, '{}.manifest.yaml'.format(output_name)), 'w') as output_file:
+	with open(output, 'w') as output_file:
 			yaml.dump(manifest, output_file, Dumper=Dumper, default_flow_style=False)
 
 
