@@ -61,7 +61,9 @@ def python_manifest(bin, chdir, samples):
 		py_environment['bin'] = bin 
 	if chdir is not None:
 		py_environment['chdir'] = chdir
-	py_environment['path'] = os.getcwd()
+	# Force a trailing '/' to make it work with tester
+	# However we should actually do `os.path.join` in sample-tester as well
+	py_environment['path'] = os.getcwd() + "/"
 	py_environment['__items__'] = path_sample_pairs(samples)
 	manifest['sets'].append(py_environment)
 	return manifest
