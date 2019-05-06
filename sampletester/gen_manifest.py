@@ -19,11 +19,9 @@ import yaml
 
 from collections import OrderedDict
 from glob import glob
-from yaml import CDumper as Dumper
+from yaml import Dumper
 from yaml.representer import SafeRepresenter
 
-# Only python is supported for now
-SUPPORTED_LANGS = ["python"]
 ALL_LANGS = ["python", "java", "csharp", "nodejs", "ruby", "php", "go"]
 
 def gen_manifest():
@@ -46,9 +44,8 @@ def parse_args():
 	parser.add_argument('samples', nargs='*', help='Relative paths of sample files.')
 	args = parser.parse_args(sys.argv[2:])
 	if args.env not in ALL_LANGS:
+		print("invalid value: --env, should be one of [python, java, csharp, nodejs, ruby, php, go]")
 		sys.exit("Unrecognized language.")
-	if args.env not in SUPPORTED_LANGS:
-		sys.exit("Unsupported language.")
 	return args
 
 def base_manifest():
@@ -121,5 +118,4 @@ def dump(manifest, output):
 
 
 if __name__ == '__main__':
-	main()
-
+	gen_manifest()
