@@ -26,11 +26,8 @@ ALL_LANGS = ["python", "java", "csharp", "nodejs", "ruby", "php", "go"]
 
 def gen_manifest():
 	args = parse_args()
-	if args.env == 'python':
-		manifest = python_manifest(args.bin, args.chdir, args.samples)
-		dump(manifest, args.output)
-	else:
-		sys.exit("Unrecognized languages.")
+	ma = manifest(args.bin, args.chdir, args.env, args.samples)
+	dump(ma, args.output)
 	print("*********")
 	print("Done.")
 	print("*********")
@@ -54,18 +51,19 @@ def base_manifest():
 	manifest['sets'] = []
 	return manifest
 
-def python_manifest(bin, chdir, samples):
+def manifest(bin, chdir, env, samples):
 	manifest = base_manifest()
-	py_environment = OrderedDict()
+	environment = OrderedDict()
+	environment['environment'] = env
 	if bin is not None:
-		py_environment['bin'] = bin 
+		environment['bin'] = bin 
 	if chdir is not None:
-		py_environment['chdir'] = chdir
+		environment['chdir'] = chdir
 	# Force a trailing '/' to make it work with tester
 	# However we should actually do `os.path.join` in sample-tester as well
-	py_environment['path'] = os.getcwd() + "/"
-	py_environment['__items__'] = path_sample_pairs(samples)
-	manifest['sets'].append(py_environment)
+	environment['path'] = os.getcwd() + "/"
+	environment['__items__'] = path_sample_pairs(samples)
+	manifest['sets'].append(environment)
 	return manifest
 
 
