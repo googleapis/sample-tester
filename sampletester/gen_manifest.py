@@ -26,7 +26,7 @@ ALL_LANGS = ["python", "java", "csharp", "nodejs", "ruby", "php", "go"]
 
 def gen_manifest():
 	args = parse_args()
-	ma = manifest(args.bin, args.chdir, args.env, args.samples)
+	ma = manifest(args.bin, args.invocation, args.chdir, args.env, args.samples)
 	dump(ma, args.output)
 	print("*********")
 	print("Done.")
@@ -37,6 +37,7 @@ def parse_args():
 	parser.add_argument('--env', help='Language to generate manifest for.')
 	parser.add_argument('--output', required=True, help='The name of the output file, should include the manifest.yaml` extension.')
 	parser.add_argument('--bin', help='Fills in the `bin` directive.')
+	parser.add_argument('--invocation', help='Fills in the `invocation` directive.')
 	parser.add_argument('--chdir', help='Fills in the `chdir` directive.')
 	parser.add_argument('samples', nargs='*', help='Relative paths of sample files.')
 	args = parser.parse_args(sys.argv[2:])
@@ -51,12 +52,14 @@ def base_manifest():
 	manifest['sets'] = []
 	return manifest
 
-def manifest(bin, chdir, env, samples):
+def manifest(bin, invocation, chdir, env, samples):
 	manifest = base_manifest()
 	environment = OrderedDict()
 	environment['environment'] = env
 	if bin is not None:
 		environment['bin'] = bin 
+	if invocation is not None:
+		environment['invocation'] = invocation
 	if chdir is not None:
 		environment['chdir'] = chdir
 	# Force a trailing '/' to make it work with tester
