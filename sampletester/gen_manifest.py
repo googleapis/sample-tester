@@ -74,7 +74,7 @@ def path_sample_pairs(samples):
 	items = []
 
 	for s in samples:
-		for sample in glob(s):
+		for sample in glob(s, recursive=True):
 			items.append({
 				'path': sample,
 				'sample': get_region_tag(os.path.join(os.getcwd(), sample))
