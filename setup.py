@@ -24,7 +24,7 @@ with io.open(os.path.join(PACKAGE_ROOT, 'README.rst')) as file_obj:
 
 setup(
     name='sample-tester',
-    version='0.11.1',
+    version='0.12.0',
 
     license='Apache 2.0',
     author='Victor Chudnovsky',
