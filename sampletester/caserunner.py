@@ -413,14 +413,14 @@ class TestCase:
     return [parts[0]] + self.lookup_values(parts[1:]), {}
 
   def params_for_set(self, parts):
-    key_what = 'what'
-    key_variable = 'var'
+    key_name = 'name'
+    key_variable = 'variable'
     if len(parts) < 2:
       log_raise(
           logging.critical, ValueError,
           'need both "{}" and "{}"'
-          .format(key_what, key_variable))
-    return parts[key_variable], parts[key_what]
+          .format(key_name, key_variable))
+    return parts[key_variable], parts[key_name]
 
   def params_for_call(self, parts):
     key_cmd = self.environment.get_testcase_settings().get('call.target', 'target')

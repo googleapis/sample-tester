@@ -85,9 +85,11 @@ test:
         - message: "wibble call should have failed"
         
       - env:
+          name: HOME
+          variable: homedir
           what: HOME
           var: homedir
-          
+
       - log:
         - "homedir: {}"
         - homedir
@@ -104,8 +106,8 @@ test:
     - name: yaml
       spec:
       - env:
-          what: FOOLALA
-          var: homedir    
+          name: FOOLALA
+          variable: homedir
   - name: Failing call
     cases:
     - name: code
