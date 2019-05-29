@@ -375,7 +375,7 @@ class TestCase:
   #### Helper methods
 
   def last_output_contains(self, substr):
-    return substr in self.last_call_output
+    return substr.lower() in self.last_call_output.lower()
 
   def format_string(self, msg, *args):
     """Formats `msg` formatted with `*args`.
