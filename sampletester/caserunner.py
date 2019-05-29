@@ -79,16 +79,22 @@ class TestCase:
         "assert_that": (self.assert_that, None),
 
         # Functions to fail the test: intended for YAML, may be used in code as well.
-        "assert_contains": (self.assert_contains, self.params_for_contains),
-        "assert_not_contains": (self.assert_not_contains,
+        "assert_contains_any": (self.assert_contains_any, self.params_for_contains),
+        "assert_not_contains": (self.assert_not_contains_any,
                                 self.params_for_contains),
+        "assert_contains": (self.assert_contains_all, self.params_for_contains),
+        "assert_not_contains_some": (self.assert_not_contains_some,
+                                     self.params_for_contains),
         "assert_success": (self.assert_success, self.yaml_args_string),
         "assert_failure": (self.assert_failure, self.yaml_args_string),
         # Due to feedback in the spec, we only allow assert_ functions (which exit
         # the test case immediately) and not expect_ functions (which would allow
         # the test to continue even if an expectation is not met).
-        # "expect_contains": (self.expect_contains, self.params_for_contains),
-        # "expect_not_contains": (self.expect_not_contains, self.params_for_contains),
+        # "expect_contains_any": (self.expect_contains_any, self.params_for_contains),
+        # "expect_not_contains": (self.expect_not_contains_any, self.params_for_contains),
+        # "expect_contains": (self.expect_contains_all, self.params_for_contains),
+        # "expect_not_contains_some": (self.expect_not_contains_some, self.params_for_contains),
+
     }
 
     self.local_symbols = {}
@@ -242,28 +248,57 @@ class TestCase:
     self.assert_that(return_code == 0, 'call failed: "{}"', args)
     return out
 
-  # Expectation on the output of the last call.
-  def expect_contains(self, message, *values, **kwargs):
-    self._contain_check(
-        self.expect, lambda substr: self.last_output_contains(substr, **kwargs), message,
+  # Requirement on the output of the last call: at least one of the values is contained.
+  def assert_contains_any(self, message, *values, **kwargs):
+    self._check_several(
+        self.assert_that, any,
+        lambda substr: self.last_output_contains(substr, **kwargs),
+        message, values)
+
+  # Expectation on the output of the last call: at least one of the values is contained.
+  def expect_contains_any(self, message, *values, **kwargs):
+    self._check_several(
+        self.expect, any,
+        lambda substr: self.last_output_contains(substr, **kwargs),
+        message, values)
+
+  # Requirement on the output of the last call: at least one of the values is NOT contained.
+  def assert_not_contains_some(self, message, *values, **kwargs):
+    self._check_several(
+        self.assert_that, any,
+        lambda substr: not self.last_output_contains(substr, **kwargs),
+        message, values)
+
+  # Expectation on the output of the last call: at least one of the values is NOT contained.
+  def expect_not_contains_some(self, message, *values, **kwargs):
+    self._check_several(
+        self.expect, any,
+        lambda substr: not self.last_output_contains(substr, **kwargs),
+        message, values)
+
+  # Expectation on the output of the last call: each of the values is contained.
+  def expect_contains_all(self, message, *values, **kwargs):
+    self._check_several(
+        self.expect, all,
+        lambda substr: self.last_output_contains(substr, **kwargs), message,
         values)
 
-  # Requirement on the output of the last call.
-  def assert_contains(self, message, *values, **kwargs):
-    self._contain_check(
-        self.assert_that, lambda substr: self.last_output_contains(substr, **kwargs),
+  # Requirement on the output of the last call: each of the values is contained.
+  def assert_contains_all(self, message, *values, **kwargs):
+    self._check_several(
+        self.assert_that, all, lambda substr: self.last_output_contains(substr, **kwargs),
         message, values)
 
-  # Negative expectation on the output of the last call.
-  def expect_not_contains(self, message, *values, **kwargs):
-    self._contain_check(
-        self.expect, lambda substr: not self.last_output_contains(substr, **kwargs),
+  # Negative expectation on the output of the last call: each of the values is NOT contained.
+  def expect_not_contains_any(self, message, *values, **kwargs):
+    self._check_several(
+        self.expect, all, lambda substr: not self.last_output_contains(substr, **kwargs),
         message, values)
 
-  # Negative assertion on the output of the last call.
-  def assert_not_contains(self, message, *values, **kwargs):
-    self._contain_check(
-        self.assert_that, lambda substr: not self.last_output_contains(substr, **kwargs),
+  # Negative assertion on the output of the last call: each of the values is NOT contained.
+  def assert_not_contains_any(self, message, *values, **kwargs):
+    self._check_several(
+        self.assert_that, all, lambda substr: not self.last_output_contains(substr, **kwargs),
         message, values)
 
   # Assertion on the return value of the last call indicating success.
@@ -276,19 +311,33 @@ class TestCase:
     message = message or "expected last call to fail"
     self.assert_that(self.last_return_code != 0, message, *args)
 
-  def _contain_check(self, check, condition, message, values):
+  def _check_several(self, check, which, condition, message, values):
     """Utility function for the `expect_*` and `assert_*` calls.
 
-    Runs `check` on `condition` for each element of `values` reporting any
-    errors either with the default error message or `message`, if non-
-    empty.
+    Runs `check` on `condition` for each element of `values`, reporting on
+    aggregate errors (as determined by `which`) either with the default error
+    message or `message`, if non- empty.
+
+    Args:
+      check: one of `self.assert`_that or `self.expect`
+      which: one of `any` or `all`
+      condition: a function that evaluates to true in the expected case
+      message: if non-empty, the message to output if the condition fails. If
+         empty, a default message will be constructed
+      values: the values to be tested using condition. This check will pass or
+         fail depending on the result of `which` applies to the result of
+         `condition` on these `values`.
     """
     default_message = len(message) == 0
-    label = "required" if check == self.assert_that else "expected"
-    for substr in values:
-      if default_message:
-        message = '{} "{}" absent in preceding output'.format(label, substr)
-      check(condition(substr), message)
+    label_check = 'required' if check == self.assert_that else 'expected' if check == self.expect else None
+    label_which = 'all of' if which == all else 'any of' if which == any else None
+    if not label_check or not label_which:
+      raise Exception('`check` must be `self.assert` or `self.expect`; `which` must be `any` or `all`')
+
+    if default_message:
+      message = ('{}, but did not find, {} the following values in the preceding output: {}'
+                 .format(label_check, label_which, values))
+    check(which([condition(substr) for substr in values]), message)
 
   def run(self):
     self.start_time = datetime.now()
@@ -487,18 +536,20 @@ class TestCase:
     return values
 
   def get_variable_or_literal(self, map):
+    key_variable = 'variable'
+    key_literal = 'literal'
     if len(map) > 1:
-      log_raise(
+     log_raise(
           logging.critical, ValueError,
-          'expected each element to contain only one of "variable", "test", but got {}'
-          .format(map))
+          'expected each element to contain only one of "{}", "{}", but got {}'
+          .format(key_variable, key_literal, map))
     for type, item in map.items():
-      if type == "variable":
+      if type == key_variable:
         item = self.local_symbols[item]
-      elif type != "literal":
+      elif type != key_literal:
         raise ConfigError(
-            'expected "variable" or "literal", got "{}":""{}"'.format(
-                type, item))
+            'expected "{}" or "{}", got "{}":""{}"'.format(
+                key_variable, key_literal, type, item))
     return item
 
   def lookup_values(self, strings):
