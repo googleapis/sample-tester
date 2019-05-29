@@ -27,9 +27,9 @@ how to run the samples and what checks to perform.
    - ``call_may_fail``: call the artifact named in the argument; do
      not error even if the call fails
    - ``assert_contains``: require the given variable to contain a
-     string; abort the test case otherwise
+     string (case-insensitively); abort the test case otherwise
    - ``assert_not_contains``: require the given variable to not
-     contain a string; abort the test case otherwise
+     contain a string (case-insensitively); abort the test case otherwise
    - ``assert_success``: require that the exit code of the last
      ``call_may_fail`` was 0; abort the test case otherwise. If the
      preceding call was a just a ``call``, it would have already
@@ -38,8 +38,9 @@ how to run the samples and what checks to perform.
      ``call_may_fail`` or ``call`` was NOT 0; abort the test case
      otherwise. Note, though, that if we're executing this after just
      a ``call``, it must have succeeded so this assertion will fail.
-   - ``env``: assign the value of an environment variable to a
-     test case variable
+   - ``env``: assign the value of an environment (identified by
+     ``variable``) variable to a test case variable (given by
+     ``name``)
    - ``extract_match``: extrack regex matches into local variables
    - ``code``: execute the argument as a chunk of Python code. The
      other directives above are available as Python calls with the
