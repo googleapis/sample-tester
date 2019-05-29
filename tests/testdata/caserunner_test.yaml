@@ -25,8 +25,8 @@ test:
       - code: |
           _, out = shell('/bin/echo', '"It was the best of times"')
           assert_success("echo should have succeeded")
-          assert_contains("BEST")
-          assert_not_contains("worst")
+          assert_contains("BeSt")
+          assert_not_contains("wOrSt")
           assert_that('ime' in out, 'expected "ime" in the preceding output')
           expect('ime' in out, 'expected "ime" in the preceding output')
           assert_that('ime' in _last_call_output, 'expected "ime" in the preceding output')
@@ -56,10 +56,10 @@ test:
         - "echo should have succeeded"
       - assert_contains:
         - message: "Expected 'best'"
-        - literal: "BEST"
+        - literal: "bEsT"
       - assert_not_contains:
         - message: "Expected no 'worst'"            
-        - literal: "worst"
+        - literal: "wOrSt"
           
       - call:
           sample: 'output'
