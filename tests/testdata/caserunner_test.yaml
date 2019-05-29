@@ -23,7 +23,7 @@ test:
     - name: "code"
       spec:
       - code: |
-          _, out = shell('/bin/echo', '"It was the best of times"')
+          _, out = shell('/bin/echo', '"It was the bEsT of times"')
           assert_success("echo should have succeeded")
           assert_contains("BeSt")
           assert_not_contains("wOrSt")
@@ -51,11 +51,11 @@ test:
       spec:
       - shell:
           - "/bin/echo"
-          - "It was the best of times"
+          - "It was the beSt of times"
       - assert_success:
         - "echo should have succeeded"
       - assert_contains:
-        - message: "Expected 'best'"
+        - message: "Expected 'bEsT' to match"
         - literal: "bEsT"
       - assert_not_contains:
         - message: "Expected no 'worst'"            
