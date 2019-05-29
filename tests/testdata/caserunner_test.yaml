@@ -23,10 +23,10 @@ test:
     - name: "code"
       spec:
       - code: |
-          _, out = shell('/bin/echo', '"It was the best of times"')
+          _, out = shell('/bin/echo', '"It was the bEsT of times"')
           assert_success("echo should have succeeded")
-          assert_contains("BEST")
-          assert_not_contains("worst")
+          assert_contains("BeSt")
+          assert_not_contains("wOrSt")
           assert_that('ime' in out, 'expected "ime" in the preceding output')
           expect('ime' in out, 'expected "ime" in the preceding output')
           assert_that('ime' in _last_call_output, 'expected "ime" in the preceding output')
@@ -51,15 +51,15 @@ test:
       spec:
       - shell:
           - "/bin/echo"
-          - "It was the best of times"
+          - "It was the beSt of times"
       - assert_success:
         - "echo should have succeeded"
       - assert_contains:
-        - message: "Expected 'best'"
-        - literal: "BEST"
+        - message: "Expected 'bEsT' to match"
+        - literal: "bEsT"
       - assert_not_contains:
         - message: "Expected no 'worst'"            
-        - literal: "worst"
+        - literal: "wOrSt"
           
       - call:
           sample: 'output'
