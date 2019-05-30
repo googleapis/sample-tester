@@ -25,18 +25,18 @@ test:
       - code: |
           _, out = shell('/bin/echo', '"It was the bEsT of times"')
           assert_success("echo should have succeeded")
-          assert_contains('', "BeSt")
-          assert_not_contains('', "wOrSt")
-          assert_contains_any('', 'commonest', 'best', 'worst')
-          assert_not_contains_some('', 'best', 'worst')
+          assert_contains("BeSt")
+          assert_not_contains("wOrSt")
+          assert_contains_any('commonest', 'best', 'worst')
+          assert_not_contains_some('best', 'worst')
           assert_that('ime' in out, 'expected "ime" in the preceding output')
           expect('ime' in out, 'expected "ime" in the preceding output')
           assert_that('ime' in _last_call_output, 'expected "ime" in the preceding output')
 
           call('output', 'Greetings')
           assert_success("call should have succeeded")
-          assert_contains('', "ree")
-          assert_not_contains('', "farewell")
+          assert_contains("ree")
+          assert_not_contains("farewell")
           assert_that('eti' in _last_call_output, 'expected "eti" in the preceding output')
 
           shell('/nonexistent/dir/foobar')
@@ -155,12 +155,12 @@ test:
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_contains('claim this is in there', 'worst')  # TODO: reverse these args; they're counterintuitive
+          assert_contains('worst', message='claim this is in there vmessage')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
       - assert_contains:
-        - message: "claim this is in there"
+        - message: "claim this is in there wmsg"
         - literal: "worst"
   - name: Failing assert_contains, multiple args
     cases:
@@ -168,7 +168,7 @@ test:
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_contains('claim this is in there', 'best', 'of', 'all')
+          assert_contains('best', 'of', 'all', message='claim this is in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
@@ -183,7 +183,7 @@ test:
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_contains_any('claim this is in there', 'worst', 'time', 'ever')
+          assert_contains_any('worst', 'time', 'ever', message='claim this is in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
@@ -198,7 +198,7 @@ test:
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_contains_any('claim this is in there', 'worst', 'epoch', 'ever')
+          assert_contains_any('worst', 'epoch', 'ever', message='claim this is in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
@@ -213,7 +213,7 @@ test:
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains('claim this is not in there', 'best')
+          assert_not_contains('best', message='claim this is not in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
@@ -226,7 +226,7 @@ test:
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains('claim this is not in there', 'worst', 'epoch', 'ever')
+          assert_not_contains('worst', 'epoch', 'ever', message='claim this is not in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
@@ -241,7 +241,7 @@ test:
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains('claim this is not in there', 'worst', 'time', 'ever') # 'time' causes this to fail
+          assert_not_contains('worst', 'time', 'ever', message='claim this is not in there') # 'time' causes this to fail
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
@@ -256,7 +256,7 @@ test:
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains_some('claim this is not in there', 'best', 'of', 'times')
+          assert_not_contains_some('best', 'of', 'times', message='claim this is not in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
@@ -271,7 +271,7 @@ test:
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains_some('claim this is not in there', 'best', 'of', 'epochs')
+          assert_not_contains_some('best', 'of', 'epochs', message='claim this is not in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
@@ -336,7 +336,7 @@ test:
           shell('/bin/echo', '"It was the best of times"')
           extract_match('It was the best of (.*)', 'the_best_of')
           shell('/bin/echo', 'Captured: {}'.format(the_best_of))
-          assert_contains('', 'Captured: times')
+          assert_contains('Captured: times')
     - name: "yaml"
       spec:
       - shell:
@@ -360,7 +360,7 @@ test:
             group_variables=['first_capture', 'second_capture', 'third_capture'])
           shell('/bin/echo', 'First: ', first_capture, 'Second:', second_capture,
             'Third:', third_capture)
-          assert_contains('', 'First: It Second: the best Third: None')
+          assert_contains('First: It Second: the best Third: None')
     - name: "yaml"
       spec:
       - shell:

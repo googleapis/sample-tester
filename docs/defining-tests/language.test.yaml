@@ -60,7 +60,7 @@ test:
           magnitude = float(magnitude_found.group(1))
           assert_that(magnitude > 0.7, 'magnitude is high')
 
-          assert_not_contains("random message", "the rain in Spain")
+          assert_not_contains("the rain in Spain", message="random message")
           
     - name: "A test defined via 'code', with explicit calls to specific samples"
       spec:

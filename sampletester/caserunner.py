@@ -249,54 +249,102 @@ class TestCase:
     return out
 
   # Requirement on the output of the last call: at least one of the values is contained.
-  def assert_contains_any(self, message, *values, **kwargs):
+  def assert_contains_any(self, *values, **kwargs):
+    MSG='message'
+    message = ''
+
+    if MSG in kwargs:
+      message = kwargs[MSG]
+      del(kwargs[MSG])
     self._check_several(
         self.assert_that, any,
         lambda substr: self.last_output_contains(substr, **kwargs),
         message, values)
 
   # Expectation on the output of the last call: at least one of the values is contained.
-  def expect_contains_any(self, message, *values, **kwargs):
+  def expect_contains_any(self, *values, **kwargs):
+    MSG='message'
+    message = ''
+
+    if MSG in kwargs:
+      message = kwargs[MSG]
+      del(kwargs[MSG])
     self._check_several(
         self.expect, any,
         lambda substr: self.last_output_contains(substr, **kwargs),
         message, values)
 
   # Requirement on the output of the last call: at least one of the values is NOT contained.
-  def assert_not_contains_some(self, message, *values, **kwargs):
+  def assert_not_contains_some(self, *values, **kwargs):
+    MSG='message'
+    message = ''
+
+    if MSG in kwargs:
+      message = kwargs[MSG]
+      del(kwargs[MSG])
     self._check_several(
         self.assert_that, any,
         lambda substr: not self.last_output_contains(substr, **kwargs),
         message, values)
 
   # Expectation on the output of the last call: at least one of the values is NOT contained.
-  def expect_not_contains_some(self, message, *values, **kwargs):
+  def expect_not_contains_some(self, *values, **kwargs):
+    MSG='message'
+    message = ''
+
+    if MSG in kwargs:
+      message = kwargs[MSG]
+      del(kwargs[MSG])
     self._check_several(
         self.expect, any,
         lambda substr: not self.last_output_contains(substr, **kwargs),
         message, values)
 
   # Expectation on the output of the last call: each of the values is contained.
-  def expect_contains_all(self, message, *values, **kwargs):
+  def expect_contains_all(self, *values, **kwargs):
+    MSG='message'
+    message = ''
+
+    if MSG in kwargs:
+      message = kwargs[MSG]
+      del(kwargs[MSG])
     self._check_several(
         self.expect, all,
         lambda substr: self.last_output_contains(substr, **kwargs), message,
         values)
 
   # Requirement on the output of the last call: each of the values is contained.
-  def assert_contains_all(self, message, *values, **kwargs):
+  def assert_contains_all(self, *values, **kwargs):
+    MSG='message'
+    message = ''
+
+    if MSG in kwargs:
+      message = kwargs[MSG]
+      del(kwargs[MSG])
     self._check_several(
         self.assert_that, all, lambda substr: self.last_output_contains(substr, **kwargs),
         message, values)
 
   # Negative expectation on the output of the last call: each of the values is NOT contained.
-  def expect_not_contains_any(self, message, *values, **kwargs):
+  def expect_not_contains_any(self, *values, **kwargs):
+    MSG='message'
+    message = ''
+
+    if MSG in kwargs:
+      message = kwargs[MSG]
+      del(kwargs[MSG])
     self._check_several(
         self.expect, all, lambda substr: not self.last_output_contains(substr, **kwargs),
         message, values)
 
   # Negative assertion on the output of the last call: each of the values is NOT contained.
-  def assert_not_contains_any(self, message, *values, **kwargs):
+  def assert_not_contains_any(self, *values, **kwargs):
+    MSG='message'
+    message = ''
+
+    if MSG in kwargs:
+      message = kwargs[MSG]
+      del(kwargs[MSG])
     self._check_several(
         self.assert_that, all, lambda substr: not self.last_output_contains(substr, **kwargs),
         message, values)
@@ -510,20 +558,21 @@ class TestCase:
   def params_for_contains(self, parts):
     # TODO: Allow case-sensitive matching as well, once we figure out the format
     # in the YAML.
-    return self.string_and_params("message", parts), {'case_sensitive': False}
+    params, message = self.string_and_params("message", parts)
+    return params, {'case_sensitive': False, 'message': message}
 
-  def string_and_params(self, name: str, parts, *, strict: bool = False):
-    if name in parts[0]:
-      params = [parts[0][name]]
+  def string_and_params(self, name_label: str, parts, *, strict: bool = False):
+    if name_label in parts[0]:
+      name_value = parts[0][name_label]
       start = 1
     else:
       if strict:
         log_raise(logging.critical, ValueError,
-                  'expected field "{}"'.format(name))
-      params = [""]
+                  'expected field "{}"'.format(name_label))
+      name_value = ''
       start = 0
-    params.extend(self.get_yaml_values(parts[start:]))
-    return params
+    params = self.get_yaml_values(parts[start:])
+    return params, name_value
 
   def get_yaml_values(self, list):
     """Gets values from the `list` of maps, each map containing at most the keys "variable" or "literal".
