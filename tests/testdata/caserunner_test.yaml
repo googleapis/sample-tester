@@ -27,6 +27,8 @@ test:
           assert_success("echo should have succeeded")
           assert_contains("BeSt")
           assert_not_contains("wOrSt")
+          assert_contains_any('commonest', 'best', 'worst')
+          assert_not_contains_some('best', 'worst')
           assert_that('ime' in out, 'expected "ime" in the preceding output')
           expect('ime' in out, 'expected "ime" in the preceding output')
           assert_that('ime' in _last_call_output, 'expected "ime" in the preceding output')
@@ -60,7 +62,13 @@ test:
       - assert_not_contains:
         - message: "Expected no 'worst'"            
         - literal: "wOrSt"
-          
+      - assert_contains_any:
+        - literal: 'commonest'
+        - literal: 'best'
+        - literal: 'worst'
+      - assert_not_contains_some:
+        - literal: 'best'
+        - literal: 'worst'
       - call:
           sample: 'output'
           args:
@@ -141,32 +149,137 @@ test:
       - code: out = call_may_fail('output', 'Hello')
       - assert_failure:
         - "claim this fails"
-  - name: Failing assert_contains
+  - name: Failing assert_contains, one arg
     cases:
     - name: code
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_contains('claim this is in there', 'worst')  # TODO: reverse these args; they're counterintuitive
+          assert_contains('worst', message='claim this is in there vmessage')
+    - name: yaml
+      spec:
+      - code: out = call('output', 'It was the best of times')
+      - assert_contains:
+        - message: "claim this is in there wmsg"
+        - literal: "worst"
+  - name: Failing assert_contains, multiple args
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call('output', 'It was the best of times')
+          assert_contains('best', 'of', 'all', message='claim this is in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
       - assert_contains:
         - message: "claim this is in there"
-        - literal: "worst"
-  - name: Failing assert_not_contains
+        - literal: "best"
+        - literal: "of"
+        - literal: "all"
+  - name: Passing assert_contains_any
     cases:
     - name: code
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains('claim this is not in there', 'best')  # TODO: reverse these args; they're counterintuitive
+          assert_contains_any('worst', 'time', 'ever', message='claim this is in there')
+    - name: yaml
+      spec:
+      - code: out = call('output', 'It was the best of times')
+      - assert_contains_any:
+        - message: "claim this is in there"
+        - literal: "worst"
+        - literal: "time"
+        - literal: "ever"
+  - name: Failing assert_contains_any
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call('output', 'It was the best of times')
+          assert_contains_any('worst', 'epoch', 'ever', message='claim this is in there')
+    - name: yaml
+      spec:
+      - code: out = call('output', 'It was the best of times')
+      - assert_contains_any:
+        - message: "claim this is in there"
+        - literal: "worst"
+        - literal: "epoch"
+        - literal: "ever"
+  - name: Failing assert_not_contains, one arg
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call('output', 'It was the best of times')
+          assert_not_contains('best', message='claim this is not in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
       - assert_not_contains:
         - message: "claim this is not in there"
         - literal: "best"
+  - name: Passing assert_not_contains, multiple args
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call('output', 'It was the best of times')
+          assert_not_contains('worst', 'epoch', 'ever', message='claim this is not in there')
+    - name: yaml
+      spec:
+      - code: out = call('output', 'It was the best of times')
+      - assert_not_contains:
+        - message: "claim this is not in there"
+        - literal: "worst"
+        - literal: "epoch"
+        - literal: "ever"
+  - name: Failing assert_not_contains, multiple args
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call('output', 'It was the best of times')
+          assert_not_contains('worst', 'time', 'ever', message='claim this is not in there') # 'time' causes this to fail
+    - name: yaml
+      spec:
+      - code: out = call('output', 'It was the best of times')
+      - assert_not_contains:
+        - message: "claim this is not in there"
+        - literal: "worst"
+        - literal: "time" # causes this to fail
+        - literal: "ever"
+  - name: Failing assert_not_contains_some
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call('output', 'It was the best of times')
+          assert_not_contains_some('best', 'of', 'times', message='claim this is not in there')
+    - name: yaml
+      spec:
+      - code: out = call('output', 'It was the best of times')
+      - assert_not_contains_some:
+        - message: "claim this is not in there"
+        - literal: "best"
+        - literal: "of"
+        - literal: "times"
+  - name: Passing assert_not_contains_some
+    cases:
+    - name: code
+      spec:
+      - code: |
+          out = call('output', 'It was the best of times')
+          assert_not_contains_some('best', 'of', 'epochs', message='claim this is not in there')
+    - name: yaml
+      spec:
+      - code: out = call('output', 'It was the best of times')
+      - assert_not_contains_some:
+        - message: "claim this is not in there"
+        - literal: "best"
+        - literal: "of"
+        - literal: "epochs"
   - name: Failing test when failing assertion stops test case from running next segment (should not error)
     setup:
     - code: |

@@ -33,6 +33,14 @@ test:
               literal: "happy happy smile hope"
       - assert_success: [] # try assert_failure to see how failure looks
       - assert_contains:
+          - message: "Have score and magnitude"
+          - literal: "score"
+          - literal: "magnitude"
+      - assert_contains_any:
+          - message: "Have magnitude or strength"
+          - literal: "strength"
+          - literal: "magnitude"
+      - assert_contains:
           - message: "Score is very positive"
           - literal: "score: 0.8"
       - assert_contains:
@@ -48,6 +56,10 @@ test:
       - code: |
           out = call("language_analyze_sentiment_text", content="happy happy smile hope")
           assert_success("that should have worked", "well")
+
+          assert_contains('score', 'magnitude', message='Have both score and magnitude')
+          assert_contains_any('strength', 'magnitude', message='Have either strength or magnitude')
+          
           import re
 
           score_found = re.search('score: ([0123456789.]+)', out) 
@@ -60,7 +72,7 @@ test:
           magnitude = float(magnitude_found.group(1))
           assert_that(magnitude > 0.7, 'magnitude is high')
 
-          assert_not_contains("random message", "the rain in Spain")
+          assert_not_contains("the rain in Spain", message="random message")
           
     - name: "A test defined via 'code', with explicit calls to specific samples"
       spec:
