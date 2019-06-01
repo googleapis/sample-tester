@@ -33,7 +33,7 @@ test:
       spec:
       - call:
           sample: "examples/testdata/samples/vision/product-search/list_products.py"
-      - assert_not_contains:
+      - assert_excludes:
           - variable: product_id
       - call:
           sample: "examples/testdata/samples/vision/product-search/create_product.py"
@@ -52,7 +52,7 @@ test:
           - variable: product_id
       - call:
           sample: "examples/testdata/samples/vision/product-search/list_products.py"
-      - assert_not_contains:
+      - assert_excludes:
           - variable: product_id
 
 

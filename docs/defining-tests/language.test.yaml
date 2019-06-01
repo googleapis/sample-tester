@@ -46,7 +46,7 @@ test:
       - assert_contains:
           - message: "Magnitude is very positive"
           - literal: "magnitude: 0.8"
-      - assert_not_contains:
+      - assert_excludes:
           - message: "Random message"
           - literal: "The rain in Spain falls mainly in the plain"
 # Above is the typical usage
@@ -72,7 +72,7 @@ test:
           magnitude = float(magnitude_found.group(1))
           assert_that(magnitude > 0.7, 'magnitude is high')
 
-          assert_not_contains("the rain in Spain", message="random message")
+          assert_excludes("the rain in Spain", message="random message")
           
     - name: "A test defined via 'code', with explicit calls to specific samples"
       spec:

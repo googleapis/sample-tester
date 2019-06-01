@@ -26,9 +26,9 @@ test:
           _, out = shell('/bin/echo', '"It was the bEsT of times"')
           assert_success("echo should have succeeded")
           assert_contains("BeSt")
-          assert_not_contains("wOrSt")
+          assert_excludes("wOrSt")
           assert_contains_any('commonest', 'best', 'worst')
-          assert_not_contains_some('best', 'worst')
+          assert_excludes_any('best', 'worst')
           assert_that('ime' in out, 'expected "ime" in the preceding output')
           expect('ime' in out, 'expected "ime" in the preceding output')
           assert_that('ime' in _last_call_output, 'expected "ime" in the preceding output')
@@ -36,7 +36,7 @@ test:
           call('output', 'Greetings')
           assert_success("call should have succeeded")
           assert_contains("ree")
-          assert_not_contains("farewell")
+          assert_excludes("farewell")
           assert_that('eti' in _last_call_output, 'expected "eti" in the preceding output')
 
           shell('/nonexistent/dir/foobar')
@@ -59,14 +59,14 @@ test:
       - assert_contains:
         - message: "Expected 'bEsT' to match"
         - literal: "bEsT"
-      - assert_not_contains:
+      - assert_excludes:
         - message: "Expected no 'worst'"            
         - literal: "wOrSt"
       - assert_contains_any:
         - literal: 'commonest'
         - literal: 'best'
         - literal: 'worst'
-      - assert_not_contains_some:
+      - assert_excludes_any:
         - literal: 'best'
         - literal: 'worst'
       - call:
@@ -78,7 +78,7 @@ test:
       - assert_contains:
           - message: "should contain ree"
           - literal: "ree"
-      - assert_not_contains:
+      - assert_excludes:
           - message: "should not contain farewell"
           - literal: "farewell"
 
@@ -207,75 +207,75 @@ test:
         - literal: "worst"
         - literal: "epoch"
         - literal: "ever"
-  - name: Failing assert_not_contains, one arg
+  - name: Failing assert_excludes, one arg
     cases:
     - name: code
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains('best', message='claim this is not in there')
+          assert_excludes('best', message='claim this is not in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
-      - assert_not_contains:
+      - assert_excludes:
         - message: "claim this is not in there"
         - literal: "best"
-  - name: Passing assert_not_contains, multiple args
+  - name: Passing assert_excludes, multiple args
     cases:
     - name: code
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains('worst', 'epoch', 'ever', message='claim this is not in there')
+          assert_excludes('worst', 'epoch', 'ever', message='claim this is not in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
-      - assert_not_contains:
+      - assert_excludes:
         - message: "claim this is not in there"
         - literal: "worst"
         - literal: "epoch"
         - literal: "ever"
-  - name: Failing assert_not_contains, multiple args
+  - name: Failing assert_excludes, multiple args
     cases:
     - name: code
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains('worst', 'time', 'ever', message='claim this is not in there') # 'time' causes this to fail
+          assert_excludes('worst', 'time', 'ever', message='claim this is not in there') # 'time' causes this to fail
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
-      - assert_not_contains:
+      - assert_excludes:
         - message: "claim this is not in there"
         - literal: "worst"
         - literal: "time" # causes this to fail
         - literal: "ever"
-  - name: Failing assert_not_contains_some
+  - name: Failing assert_excludes_any
     cases:
     - name: code
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains_some('best', 'of', 'times', message='claim this is not in there')
+          assert_excludes_any('best', 'of', 'times', message='claim this is not in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
-      - assert_not_contains_some:
+      - assert_excludes_any:
         - message: "claim this is not in there"
         - literal: "best"
         - literal: "of"
         - literal: "times"
-  - name: Passing assert_not_contains_some
+  - name: Passing assert_excludes_any
     cases:
     - name: code
       spec:
       - code: |
           out = call('output', 'It was the best of times')
-          assert_not_contains_some('best', 'of', 'epochs', message='claim this is not in there')
+          assert_excludes_any('best', 'of', 'epochs', message='claim this is not in there')
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
-      - assert_not_contains_some:
+      - assert_excludes_any:
         - message: "claim this is not in there"
         - literal: "best"
         - literal: "of"
@@ -299,7 +299,7 @@ test:
     - name: yaml
       spec:
       - code: out = call('output', 'It was the best of times')
-      - assert_not_contains:
+      - assert_excludes:
         - message: "claim this is not in there"
         - literal: "best"
       - code: |
@@ -323,7 +323,7 @@ test:
     - name: yaml # same as in the previous test suite
       spec:
       - code: out = call('output', 'It was the best of times')
-      - assert_not_contains:
+      - assert_excludes:
         - message: "claim this is not in there"
         - literal: "best"
       - code: |
