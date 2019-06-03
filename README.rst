@@ -5,7 +5,7 @@ The sample tester allows defining tests once and applying them to
 semantically identical executables (typically runnable code samples)
 instantiated in multiple languages and environments.
 
-Version: 0.13.0
+Version: 0.13.1
 
 **PRE-RELEASE**: This surface is not guaranteed to be stable. Breaking changes will still occur.
 
