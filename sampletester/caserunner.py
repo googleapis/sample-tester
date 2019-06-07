@@ -86,13 +86,13 @@ class TestCase:
         "assert_contains_any": (self.contain_checker(self.assert_that, any, True),
                                 self.params_for_contains),
         # does not contain any of a list (all list elements absent)
-        "assert_not_contains": (self.contain_checker(self.assert_that, all, False),
+        "assert_excludes": (self.contain_checker(self.assert_that, all, False),
                                 self.params_for_contains),
         # contains all of a list
         "assert_contains": (self.contain_checker(self.assert_that, all, True),
                                 self.params_for_contains),
         # does not contain some of the list (at least one list element absent)
-        "assert_not_contains_some": (self.contain_checker(self.assert_that, any, False),
+        "assert_excludes_any": (self.contain_checker(self.assert_that, any, False),
                                 self.params_for_contains),
         "assert_success": (self.assert_success, self.yaml_args_string),
         "assert_failure": (self.assert_failure, self.yaml_args_string),
