@@ -51,9 +51,16 @@ class Manifest:
 
   # TODO: Change key to index in the doc above and usages below
 
-  VERSION_KEY = 'version'
-  SETS_KEY = 'sets'
-  ELEMENTS_KEY = '__items__'
+  SCHEMA_TYPE_KEY = 'type'
+  SCHEMA_TYPE_VALUE = 'manifest'
+  SCHEMA_TYPE_SEPARATOR = '/'
+  SCHEMA_VERSION_KEY = 'schema_version'
+
+  # These values are deprecated and will go away once sampler tester stops
+  # supporting manifest schema versions v1 and v2
+  VERSION_KEY_v1v2 = 'version'
+  SETS_KEY_v1v2 = 'sets'
+  ELEMENTS_KEY_v1v2 = '__items__'
 
   def __init__(self, *indices: str):
     """Initializes manifest.
@@ -65,6 +72,7 @@ class Manifest:
     self.interpreter = {
         '1': self.index_source_v1,
         '2': self.index_source_v2,
+        '3': self.index_source_v3
     }
 
     # tags[key1][key2]...[keyn] == [metadata, metadata, ...]
@@ -88,13 +96,13 @@ class Manifest:
     self.read_sources(strings_to_yaml(*sources))
 
   def read_sources(self, sources):
-    """Reads a sample manifest.
+    """Reads a sample manifest from a single YAML document.
 
     Args:
       sources: An iterable of (name, manifest) pairs. Here, `manifest` is a dict
-        with a key `VERSION_KEY` and with the other keys structured as expected
-        by the interpreter for the version specified as the value of
-        `VERSION_KEY`.
+        with a version key (`SCHEMA_VERSION_KEY` or `VERSION_KEY_v1v2`)
+        and with the other keys structured as expected by the interpreter for
+        the version specified as the value of the version key.
 
     Returns:
       the list of sources successfully read
@@ -108,7 +116,9 @@ class Manifest:
         continue
       sources_read.append(name)
 
-      version = manifest.get(self.VERSION_KEY)
+      version = manifest.get(self.SCHEMA_VERSION_KEY)
+      if version is None:
+        version = manifest.get(self.VERSION_KEY_v1v2)
       if version is None:
         err_no_version.append(name)
         continue
@@ -142,14 +152,20 @@ class Manifest:
         raise
 
   def index_source_v1(self, input):
-    self._index_elements(get_flattened_elements(input))
+    self._index_elements(get_flattened_elements_v1_v2(input))
 
   def index_source_v2(self, input):
     # v2 is an additive change over v1. It merely involves interpreting tags
     # included within other tags via curly braces
-    self._index_elements(resolve_inclusions(get_flattened_elements(input)))
+    self._index_elements(resolve_inclusions(get_flattened_elements_v1_v2(input)))
+
+  def index_source_v3(self, input):
+    self._index_elements(resolve_inclusions(get_elements_v3(input)))
 
   def _index_elements(self, all_elements):
+    if not all_elements:
+      return
+
     max_idx = len(self.indices) - 1
     for element in all_elements:
 
@@ -219,9 +235,39 @@ class Manifest:
     return values[0]
 
 
-### helpers for V1
+### helpers for V3
 
-def get_flattened_elements(input):
+def get_elements_v3(input):
+  """Instantiates elements from file.
+
+  Used by v3
+
+  Args:
+    input: the hierarchical manifest structure, typically as parsed from YAML
+  """
+  specified_type = input.get(Manifest.SCHEMA_TYPE_KEY, None)
+  if not specified_type:
+    raise SyntaxError('no top-level "{}" field specified'
+                      .format(Manifest.SCHEMA_TYPE_KEY))
+  if not isinstance(specified_type, str):
+    raise SyntaxError('top level "{}" field is not a string: {}'
+                      .format(Manifest.SCHEMA_TYPE_KEY, specified_type))
+
+  type_parts = specified_type.split(Manifest.SCHEMA_TYPE_SEPARATOR)
+  type_name = type_parts[0]
+  if type_name != Manifest.SCHEMA_TYPE_VALUE:
+    return None
+  if len(type_parts) > 1:
+    list_item = type_parts[1]
+  if not list_item:
+    raise SyntaxEror('missing item list name in "{}" field: "{}"'
+                    .format(Manifest.SCHEMA_TYPE_KEY, specified_type))
+
+  return input.get(list_item, [])
+
+### helpers for V1/V2
+
+def get_flattened_elements_v1_v2(input):
   """Instantiates elements from file, applying any set-wide tags to each one
 
   Used by v1 and v2
@@ -230,13 +276,13 @@ def get_flattened_elements(input):
     input: the hierarchical manifest structure, typically as parsed from YAML
   """
   element_list=[]
-  for sample_set in input.get(Manifest.SETS_KEY):
+  for sample_set in input.get(Manifest.SETS_KEY_v1v2):
 
     # Get the tag defaults/prefixes for this set
     set_common_values = sample_set.copy()
-    set_common_values.pop(Manifest.ELEMENTS_KEY, None)
+    set_common_values.pop(Manifest.ELEMENTS_KEY_v1v2, None)
 
-    all_elements = sample_set.get(Manifest.ELEMENTS_KEY, [])
+    all_elements = sample_set.get(Manifest.ELEMENTS_KEY_v1v2, [])
     for element in all_elements:
       # Add the needed defaults/prefixes to this element
       for key, common_value in set_common_values.items():
@@ -245,7 +291,7 @@ def get_flattened_elements(input):
       logging.info('read "{}"'.format(element))
   return element_list
 
-### helpers for v2
+### helpers for inclusions
 
 class SyntaxError(Exception):
   def __init__(self, message):
@@ -258,6 +304,8 @@ class CycleError(Exception):
 
 def resolve_inclusions(all_elements):
   """Resolves tag inclusions in each element"""
+  if not all_elements:
+    return None
   for element in all_elements:
     resolve_element_inclusions(element)
   logging.info('resolved inclusions')
