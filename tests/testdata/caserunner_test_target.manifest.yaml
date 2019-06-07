@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: 1
-sets:
+type: manifest/samples
+schema_version: 3
+samples:
 - environment: alps
-  __items__:
-  - path: "/bin/echo 'called echo'"
-    alpine: "output"
+  path: "/bin/echo 'called echo'"
+  alpine: "output"

@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: 1
-sets:
+type: manifest/samples
+schema_version: 3
+samples:
 - environment: shell
-  __items__:
-  - path: "/bin/echo"
-    sample: "output"
-  - path: "/none/wibble"
-    sample: "wibble"
+  path: "/bin/echo"
+  sample: "output"
+- environment: shell
+  path: "/none/wibble"
+  sample: "wibble"
