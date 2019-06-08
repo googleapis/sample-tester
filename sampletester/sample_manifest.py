@@ -54,7 +54,7 @@ class Manifest:
   SCHEMA_TYPE_KEY = 'type'
   SCHEMA_TYPE_VALUE = 'manifest'
   SCHEMA_TYPE_SEPARATOR = '/'
-  SCHEMA_VERSION_KEY = 'config_schema_version'
+  SCHEMA_VERSION_KEY = 'schema_version'
 
   # These values are deprecated and will go away once sampler tester stops
   # supporting manifest schema versions v1 and v2

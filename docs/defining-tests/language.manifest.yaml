@@ -15,7 +15,7 @@
 # Example manifest file
 ---
 type: manifest/samples
-config_schema_version: 3
+schema_version: 3
 samples:
 - environment: java
   invocation: "{jar} -D{class} {path} @args"
