@@ -24,14 +24,6 @@ from yaml.representer import SafeRepresenter
 
 ALL_LANGS = ["python", "java", "csharp", "nodejs", "ruby", "php", "go"]
 
-def gen_manifest():
-	args = parse_args()
-	ma = manifest(args.bin, args.invocation, args.chdir, args.env, args.samples)
-	dump(ma, args.output)
-	print("*********")
-	print("Done.")
-	print("*********")
-
 def parse_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--env', help='Language to generate manifest for.')
@@ -57,7 +49,7 @@ def manifest(bin, invocation, chdir, env, samples):
 	environment = OrderedDict()
 	environment['environment'] = env
 	if bin is not None:
-		environment['bin'] = bin 
+		environment['bin'] = bin
 	if invocation is not None:
 		environment['invocation'] = invocation
 	if chdir is not None:
@@ -90,16 +82,16 @@ def get_region_tag(sample_file_path):
 		sample_text = sample.read()
 		start_region_tags = re.findall(start_region_tag_exp, sample_text)
 		end_region_tags = re.findall(end_region_tag_exp, sample_text)
-		
+
 		for srt in start_region_tags:
-			
+
 			# We don't need those with '_cores'
 			if 'core' in srt:
 				continue
 
 			if srt in end_region_tags:
 				region_tags.append(srt)
-	
+
 	if not region_tags:
 		sys.exit("Found no region tags.")
 
@@ -119,6 +111,14 @@ def dump(manifest, output):
 	with open(output, 'w') as output_file:
 			yaml.dump(manifest, output_file, Dumper=Dumper, default_flow_style=False)
 
+
+def main():
+	args = parse_args()
+	ma = manifest(args.bin, args.invocation, args.chdir, args.env, args.samples)
+	dump(ma, args.output)
+	print("*********")
+	print("Done.")
+	print("*********")
 
 if __name__ == '__main__':
 	gen_manifest()
