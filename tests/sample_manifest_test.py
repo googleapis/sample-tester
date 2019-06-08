@@ -18,7 +18,26 @@ import unittest
 from sampletester import sample_manifest
 
 class TestManifestV3(unittest.TestCase):
-  # test multiple yaml documents in stream
+  def test_multiple_yaml_docs_in_stream(self):
+    all_parsed = sample_manifest.strings_to_yaml(
+        ('january',
+         """---
+who: alice
+---
+who: bob
+"""),
+        ('december',
+         """---
+who: carol
+---
+who: dan
+""")
+    )
+    found = {}
+    for _, doc in all_parsed:
+      found[doc["who"]] = True
+    self.assertEquals(4, len(found))
+    self.assertTrue(all([name in found for name in ['alice', 'bob', 'carol', 'dan']]))
 
   def test_read_no_version(self):
     manifest_source, _ = self.get_manifest_source()

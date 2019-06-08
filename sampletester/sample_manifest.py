@@ -90,9 +90,19 @@ class Manifest:
     self.indices = indices or [None]
 
   def read_files(self, *files: str):
+    """Interprets files as YAML streams, each possibly containing multiple documents
+
+    Args:
+       files: any number of filenames to be parsed as YAML files
+    """
     self.read_sources(files_to_yaml(*files))
 
   def read_strings(self, *sources: str):
+    """Interprets strings as YAML streams, each possibly with multiple documents
+
+    Args:
+       str: any number of (label, yaml-string) pairs
+    """
     self.read_sources(strings_to_yaml(*sources))
 
   def read_sources(self, sources):
@@ -452,13 +462,15 @@ def get_or_create(d, key, empty_value):
 def files_to_yaml(*files: str):
   """ Reads sample manifests from files."""
   for name in files:
+    # we delegate to strings_to_yaml below to have single code path for easier
+    # testing and bug avoidance
     with open(name, 'r') as stream:
-      manifest = yaml.load(stream, Loader=yaml.SafeLoader)
-    yield (name, manifest)
+      content = stream.read()
+      yield from strings_to_yaml((name, content))
 
 
 def strings_to_yaml(*sources: str):
   """ Reads sample manifests from strings."""
-  for data in sources:
-    manifest = yaml.load(data)
-    yield (name, manifest)
+  for (name, data) in sources:
+    for manifest in yaml.load_all(data):
+      yield (name, manifest)
