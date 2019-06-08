@@ -14,7 +14,7 @@ A manifest YAML document has the general structure:
 		
    ---
    type: manifest/XXX
-   config_schema_version: 3
+   schema_version: 3
    XXX:
    - item1foo: value
      item1bar: value
@@ -25,7 +25,7 @@ A manifest YAML document has the general structure:
    desired).
 #. The arbitrary value "XXX" in the ``type`` field defines the
    top-level YAML field ``XXX`` as containing the actual manifest.
-#. The ``config_schema_version`` field is required.
+#. The ``schema_version`` field is required.
 #. Each item in the ``XXX`` list is simply a dictionary of tag keys
    and values. The tag keys that define the metadata used by
    sample-tester are described below.

@@ -15,7 +15,7 @@
 # Generic manifest file
 ---
 type: manifest/samples
-config_schema_version: 3
+schema_version: 3
 samples:
 - environment: python
   bin: python3
@@ -40,7 +40,7 @@ samples:
 # understandability.
 
 type: manifest/samples
-config_schema_version: 3
+schema_version: 3
 python: &python
 - environment: python
   bin: python3  # used to run these items
