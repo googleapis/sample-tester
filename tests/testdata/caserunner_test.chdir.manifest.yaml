@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-version: 1
-sets:
+---
+type: manifest/samples
+config_schema_version: 3
+samples:
 - environment: Test chdir
-  __items__:
-  - invocation: "pwd"
-    sample: "sample-chdir"
-    chdir: /etc
+  invocation: "pwd"
+  sample: "sample-chdir"
+  chdir: /etc

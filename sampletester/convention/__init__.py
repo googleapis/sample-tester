@@ -54,7 +54,6 @@ def generate_environments(requested_conventions, testcase_args, manifest_options
     manifest_options: A dict of options to pass in its entirety to each
       convention. These are intended to address how the convention itself parses
       the manifest file.
-
     files: A list of files needed by the convention to instantiate environments.
   """
   all_environments = []
