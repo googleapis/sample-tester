@@ -36,6 +36,7 @@ setup(
     long_description=README,
     entry_points="""[console_scripts]
         sample-tester=sampletester.cli:main
+        gen-manifest=gen_manifest.gen_manifest:main
     """,
     platforms='Posix; MacOS X',
     include_package_data=True,
