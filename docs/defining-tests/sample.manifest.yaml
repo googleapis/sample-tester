@@ -1,0 +1,56 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Generic manifest file
+---
+type: manifest/samples
+schema_version: 3
+samples:
+- environment: python
+  bin: python3
+  path: "/home/nobody/api/samples/trivial/method/sample_alice"
+  sample: "alice"
+  canonical: "trivial"
+- environment: python
+  bin: python3
+  path: "/home/nobody/api/samples/complex/method/usecase_bob"
+  sample: "robert"
+  tag: "guide"
+
+# A manifest file can contain any number of manifest documents, each
+# preceded by the YAML `---` document separator.
+
+---
+
+# In this second YAML document, we make use of YAML anchors (`&`) and
+# references (`*`) as well as the manifest file inclusion semantics
+# (`{}`) to illustrate how fields common to multiple elements of the
+# list may be factored out to reduce code duplication and increase
+# understandability.
+
+type: manifest/samples
+schema_version: 3
+python: &python
+- environment: python
+  bin: python3  # used to run these items
+  base_path: "/home/nobody/api/samples/"  
+samples:
+- << *python
+  path: "{base_path}/trivial/method/sample_alice"
+  sample: "alice2"
+  canonical: "trivial"
+- << *python
+  path: "{base_path}complex/method/usecase_bob"
+  sample: "robert2"
+  tag: "guide"

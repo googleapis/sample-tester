@@ -3,35 +3,40 @@
 Manifest file format
 --------------------
 
-A manifest file is a YAML file that associates each artifact (sample)
-of interest on disk with a series of tags that can be used to uniquely
-identify that artifact. Right now both versions "1" and "2" of the
-manifest file format are supported; version "2" is a superset of
-version "1".
+A manifest contains one or more YAML documents that associate each
+artifact (sample) of interest on disk with a series of metadata
+tags. The YAML documents within the file are separated by the usual
+YAML start-document indicator, ``---``.
 
-The fundamental unit in a manifest is the "item", which is a
-collection of tag name/value pairs; each unit should correspond to
-exactly one artifact on disk. 
+A manifest YAML document has the general structure:
 
-Since a lot of the artifacts will share part or all of some tags
-(for example, the initial directory components, or the binary used to
-execute them), "items" are grouped into "sets". Each set may define
-its own tag name/value pairs. These pairs are applied to each of the
-items inside the set as follows:
+.. code-block:: yaml
+		
+   ---
+   type: manifest/XXX
+   schema_version: 3
+   XXX:
+   - item1foo: value
+     item1bar: value
 
-#. If the item does not define a given tag name, then the tag
-   name/value pair in its set is applied to the item.
-#. If the item does define a given tag name, then the corresponding
-   tag value specified in the set is prepended to the corresponding
-   value specified in the item. This is particularly useful in the
-   case of paths: the set may define the common path for all of its
-   items, and each item specifies its unique trailing directories and
-   filename.
-
-In manifest version "2", tag values can include references to other
-tags: the value of tag “A” can reference the value of tag “B” by
-enclosing the name of tag “B” in curly brackets: ``{TAG_B_NAME}``. For
-example:
+#. The "manifest" in the ``type`` field defines this YAML document
+   as a manifest. Other document types are silently ignored (this
+   permits putting disparate YAML documents in the same file if
+   desired).
+#. The arbitrary value "XXX" in the ``type`` field defines the
+   top-level YAML field ``XXX`` as containing the actual manifest.
+#. The ``schema_version`` field is required.
+#. Each item in the ``XXX`` list is simply a dictionary of tag keys
+   and values. The tag keys that define the metadata used by
+   sample-tester are described below.
+#. Other top-level tags (outside of the ``XXX`` list) are
+   ignored. They can thus be used for additional metadata not used by
+   sample-tester, and/or for defining YAML anchors in order to reduce
+   duplication in the manifest document.
+   
+Tag values can include references to other tags: the value of tag “A”
+can reference the value of tag “B” by enclosing the name of tag “B” in
+curly brackets: ``{TAG_B_NAME}``. For example:
 
 .. code-block:: yaml
 		
@@ -47,6 +52,12 @@ will define the same sets of tags as
 
 While tags can be referenced arbitrarily deep, no reference can form a
 loop (ie a tag directly or indirectly including itself).
+
+Here's a generic manifest file illustrating these features:
+
+.. literalinclude:: sample.manifest.yaml
+   :start-after: Generic manifest file
+
 
 Tags for sample-tester
 ----------------------
