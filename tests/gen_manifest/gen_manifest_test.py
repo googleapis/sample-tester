@@ -24,16 +24,20 @@ _ABS_DIR = os.path.split(_ABS_FILE)[0]
 
 class TestGenManifest(unittest.TestCase):
 
-  def testGeneration(self):
+  def test_generation_v2(self):
     self.maxDiff = None
     BIN = '/my/bin/'
     INVOCATION = 'call this way'
     CHDIR = '/this/working/path/'
-    ENV = 'a new language'
+    ENV = 'python'
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
     sample_path = os.path.abspath(os.path.join(_ABS_DIR, '..','testdata','gen_manifest'))
-    manifest = gen_manifest.manifest(BIN, INVOCATION, CHDIR, ENV, [os.path.join(sample_path, '*.py')])
+    manifest = gen_manifest.create_manifest_v2(labels = [('env', ENV),
+                                                         ('bin', BIN),
+                                                         ('invocation', INVOCATION),
+                                                         ('chdir', CHDIR)],
+                                               samples = [os.path.join(sample_path, '*.py')])
     manifest_string = gen_manifest.dump(manifest)
 
     expected_string = """version: 2
