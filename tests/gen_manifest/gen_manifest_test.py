@@ -24,6 +24,80 @@ _ABS_DIR = os.path.split(_ABS_FILE)[0]
 
 class TestGenManifest(unittest.TestCase):
 
+  def test_generation_v3_factored(self):
+    self.maxDiff = None
+    BIN = '/my/bin/'
+    INVOCATION = 'call this way'
+    CHDIR = '/this/working/path/'
+    ENV = 'python'
+
+    gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
+    sample_path = os.path.abspath(os.path.join(_ABS_DIR, '..','testdata','gen_manifest'))
+    manifest_string = gen_manifest.emit_manifest_v3(
+        labels = [('env', ENV),
+                  ('bin', BIN),
+                  ('invocation', INVOCATION),
+                ('chdir', CHDIR)],
+        sample_globs = [os.path.join(sample_path, 'readbook.py'),
+                        os.path.join(sample_path, 'getbook.py')],
+        flat = False)
+
+    expected_string = """type: manifest/samples
+schema_version: 3
+base: &common
+  env: {env}
+  bin: {bin}
+  invocation: {invocation}
+  chdir: {chdir}
+  basepath: {cwd}
+samples:
+- <<: *common
+  path: {{basepath}}/{sample_path}/readbook.py
+  sample: readbook_sample
+- <<: *common
+  path: {{basepath}}/{sample_path}/getbook.py
+  sample: getbook_sample
+""".format(env=ENV, bin=BIN, invocation=INVOCATION,
+           chdir=CHDIR, sample_path=sample_path, cwd=gen_manifest_cwd)
+    self.assertEquals(expected_string, manifest_string)
+
+
+  def test_generation_v3_flat(self):
+    self.maxDiff = None
+    BIN = '/my/bin/'
+    INVOCATION = 'call this way'
+    CHDIR = '/this/working/path/'
+    ENV = 'python'
+
+    gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
+    sample_path = os.path.abspath(os.path.join(_ABS_DIR, '..','testdata','gen_manifest'))
+    manifest_string = gen_manifest.emit_manifest_v3(
+        labels = [('env', ENV),
+                  ('bin', BIN),
+                  ('invocation', INVOCATION),
+                  ('chdir', CHDIR)],
+        sample_globs = [os.path.join(sample_path, 'readbook.py'),
+                        os.path.join(sample_path, 'getbook.py')],
+        flat = True)
+
+    expected_string = """type: manifest/samples
+schema_version: 3
+samples:
+- bin: {bin}
+  chdir: {chdir}
+  env: {env}
+  invocation: {invocation}
+  path: {sample_path}/readbook.py
+  sample: readbook_sample
+- bin: {bin}
+  chdir: {chdir}
+  env: {env}
+  invocation: {invocation}
+  path: {sample_path}/getbook.py
+  sample: getbook_sample
+""".format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, sample_path=sample_path)
+    self.assertEquals(expected_string, manifest_string)
+
   def test_generation_v2(self):
     self.maxDiff = None
     BIN = '/my/bin/'
@@ -33,25 +107,27 @@ class TestGenManifest(unittest.TestCase):
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
     sample_path = os.path.abspath(os.path.join(_ABS_DIR, '..','testdata','gen_manifest'))
-    manifest = gen_manifest.create_manifest_v2(labels = [('env', ENV),
-                                                         ('bin', BIN),
-                                                         ('invocation', INVOCATION),
-                                                         ('chdir', CHDIR)],
-                                               samples = [os.path.join(sample_path, '*.py')])
-    manifest_string = gen_manifest.dump(manifest)
+    manifest_string = gen_manifest.emit_manifest_v2(
+        labels = [('env', ENV),
+                  ('bin', BIN),
+                  ('invocation', INVOCATION),
+                  ('chdir', CHDIR)],
+        sample_globs = [os.path.join(sample_path, 'readbook.py'),
+                        os.path.join(sample_path, 'getbook.py')],
+        flat = False)
 
     expected_string = """version: 2
 sets:
-- environment: {}
-  bin: {}
-  invocation: {}
-  chdir: {}
-  path: {}/
+- environment: {env}
+  bin: {bin}
+  invocation: {invocation}
+  chdir: {chdir}
+  path: {cwd}/
   __items__:
-  - path: {}/readbook.py
+  - path: {sample_path}/readbook.py
     sample: readbook_sample
-  - path: {}/getbook.py
+  - path: {sample_path}/getbook.py
     sample: getbook_sample
-""".format(ENV, BIN, INVOCATION, CHDIR, gen_manifest_cwd,
-           sample_path, sample_path)
+""".format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, cwd=gen_manifest_cwd,
+           sample_path=sample_path)
     self.assertEquals(expected_string, manifest_string)
