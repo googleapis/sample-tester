@@ -61,6 +61,17 @@ samples:
            chdir=CHDIR, sample_path=sample_path, cwd=gen_manifest_cwd)
     self.assertEquals(expected_string, manifest_string)
 
+  def test_generation_v3_factored_forbidden_label(self):
+    self.maxDiff = None
+
+    sample_path = os.path.abspath(os.path.join(_ABS_DIR, '..','testdata','gen_manifest'))
+    for forbidden_name in ['basepath', 'path', 'sample']:
+      with self.assertRaises(gen_manifest.LabelNameError):
+        manifest_string = gen_manifest.emit_manifest_v3(
+            labels = [(forbidden_name, 'foo')],
+            sample_globs = [os.path.join(sample_path, 'readbook.py'),
+                            os.path.join(sample_path, 'getbook.py')],
+            flat = False)
 
   def test_generation_v3_flat(self):
     self.maxDiff = None
@@ -75,7 +86,8 @@ samples:
         labels = [('env', ENV),
                   ('bin', BIN),
                   ('invocation', INVOCATION),
-                  ('chdir', CHDIR)],
+                  ('chdir', CHDIR),
+                  ('basepath', 'should not be forbidden when flat')],
         sample_globs = [os.path.join(sample_path, 'readbook.py'),
                         os.path.join(sample_path, 'getbook.py')],
         flat = True)
@@ -83,13 +95,15 @@ samples:
     expected_string = """type: manifest/samples
 schema_version: 3
 samples:
-- bin: {bin}
+- basepath: should not be forbidden when flat
+  bin: {bin}
   chdir: {chdir}
   env: {env}
   invocation: {invocation}
   path: {sample_path}/readbook.py
   sample: readbook_sample
-- bin: {bin}
+- basepath: should not be forbidden when flat
+  bin: {bin}
   chdir: {chdir}
   env: {env}
   invocation: {invocation}
@@ -97,6 +111,18 @@ samples:
   sample: getbook_sample
 """.format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, sample_path=sample_path)
     self.assertEquals(expected_string, manifest_string)
+
+  def test_generation_v3_flat_forbidden_label(self):
+    self.maxDiff = None
+
+    sample_path = os.path.abspath(os.path.join(_ABS_DIR, '..','testdata','gen_manifest'))
+    for forbidden_name in ['path', 'sample']:
+      with self.assertRaises(gen_manifest.LabelNameError):
+        manifest_string = gen_manifest.emit_manifest_v3(
+            labels = [(forbidden_name, 'foo')],
+            sample_globs = [os.path.join(sample_path, 'readbook.py'),
+                            os.path.join(sample_path, 'getbook.py')],
+            flat = True)
 
   def test_generation_v2(self):
     self.maxDiff = None
@@ -131,3 +157,15 @@ sets:
 """.format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, cwd=gen_manifest_cwd,
            sample_path=sample_path)
     self.assertEquals(expected_string, manifest_string)
+
+  def test_generation_v2_factored_forbidden_label(self):
+    self.maxDiff = None
+
+    sample_path = os.path.abspath(os.path.join(_ABS_DIR, '..','testdata','gen_manifest'))
+    for forbidden_name in ['path', 'sample']:
+      with self.assertRaises(gen_manifest.LabelNameError):
+        manifest_string = gen_manifest.emit_manifest_v2(
+            labels = [(forbidden_name, 'foo')],
+            sample_globs = [os.path.join(sample_path, 'readbook.py'),
+                            os.path.join(sample_path, 'getbook.py')],
+            flat = False)

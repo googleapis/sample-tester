@@ -50,7 +50,9 @@ def parse_args():
                       help="""path glob to one or more sample files, relative to the
                       current working directory""")
   (args, labels) = parser.parse_known_args()
-  labels = [(parts[0][2:], parts[1]) for parts in [label.split('=', 1) for label in labels]]
+  labels = [(parts[0][2:], (parts[1] if len(parts) > 1 else ''))
+            for parts in
+            [label.split('=', 1) for label in labels]]
   return args, labels
 
 ### For manifest schema version 3
@@ -71,6 +73,7 @@ def create_factored_manifest_v3(labels, sample_globs):
   lines = ['type: manifest/samples',
            'schema_version: 3',
            'base: &common']
+  forbid_label(labels, 'basepath', 'sample', 'path')
   for name, value in labels:
     lines.append('  {}: {}'.format(name, value))
   lines.extend([
@@ -95,6 +98,7 @@ def create_flat_manifest_v3(labels, sample_globs):
   `sample` (ID) for each item is the value of the single region tag inside that
   sample file.
   """
+  forbid_label(labels, 'sample', 'path')
   items = []
   for s in sample_globs:
     for sample in glob(s, recursive=True):
@@ -117,6 +121,7 @@ def create_flat_manifest_v3(labels, sample_globs):
 ### For manifest schema version 2
 
 def emit_manifest_v2(labels, sample_globs, flat):
+  forbid_label(labels, 'sample', 'path')
   return dump(create_manifest_v2(labels, sample_globs))
 
 def create_manifest_v2(labels, sample_globs):
@@ -156,6 +161,19 @@ def path_sample_pairs_v2(sample_globs):
       })
   return items
 
+### Helpers
+
+def forbid_label(labels, *forbidden_names):
+  """Raises an exception if any name in `labels` is in `forbidden`"""
+  found = []
+  for name, value in labels:
+    if name in forbidden_names:
+      found.append(name)
+  if found:
+    raise LabelNameError('the following label names are reserved because ' +
+                         'they are auto-generated, given the other options ' +
+                         'specified: {}'
+                         .format(' '.join(['"{}"'.format(f) for f in found])))
 
 def get_region_tag(sample_file_path):
   """Extracts the region tag from the given sample.
@@ -188,6 +206,10 @@ def get_region_tag(sample_file_path):
 
   return region_tags[0]
 
+
+class LabelNameError(Exception):
+  pass
+
 ### YAML helpers
 
 def dict_representer(dumper, data):
@@ -201,18 +223,22 @@ def dump(manifest):
 
 
 def main():
-  args, labels = parse_args()
-  if args.schema_version == '2':
-    serialized_manifest = emit_manifest_v2(labels, args.files, args.flat)
-  elif args.schema_version == '3':
-    serialized_manifest = emit_manifest_v3(labels, args.files, args.flat)
-  else:
-    raise Exception('manifest version "{}" is not supported'.format(args.schema_version))
-  if args.output:
-    with open(args.output, 'w') as output_file:
-      output_file.write(serialized_manifest)
-  else:
-    sys.stdout.write(serialized_manifest)
+  try:
+    args, labels = parse_args()
+    if args.schema_version == '2':
+      serialized_manifest = emit_manifest_v2(labels, args.files, args.flat)
+    elif args.schema_version == '3':
+      serialized_manifest = emit_manifest_v3(labels, args.files, args.flat)
+    else:
+      raise Exception('manifest version "{}" is not supported'.format(args.schema_version))
+    if args.output:
+      with open(args.output, 'w') as output_file:
+        output_file.write(serialized_manifest)
+    else:
+      sys.stdout.write(serialized_manifest)
+  except LabelNameError as e:
+    print("ERROR: {}".format(e))
+    sys.exit(2)
 
 if __name__ == '__main__':
   main()
