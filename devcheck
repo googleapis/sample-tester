@@ -40,6 +40,9 @@ pip install --upgrade . || \
 tests_passed=0
 tests_failed=0
 
+# Ensure all tests run even if some of them fail.
+set +e  
+
 for test_script in `find . -type f -name "test-*"`; do
   example_name="$( echo "$test_script" | sed 's^./^^' )"
   info_message "Running ${example_name}: "
