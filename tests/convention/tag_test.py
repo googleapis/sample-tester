@@ -20,7 +20,7 @@ from sampletester.convention import tag
 from sampletester import sample_manifest
 
 _ABS_FILE = os.path.abspath(__file__)
-_ABS_DIR = os.path.split(_ABS_FILE)[0]
+_ABS_DIR = os.path.dirname(_ABS_FILE)
 
 class TestSubstitution(unittest.TestCase):
   def test_substitution(self):

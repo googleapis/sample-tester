@@ -20,7 +20,7 @@ from collections import OrderedDict
 from gen_manifest import gen_manifest
 
 _ABS_FILE = os.path.abspath(__file__)
-_ABS_DIR = os.path.split(_ABS_FILE)[0]
+_ABS_DIR = os.path.dirname(_ABS_FILE)
 
 class TestGenManifest(unittest.TestCase):
 
@@ -59,7 +59,7 @@ samples:
   sample: getbook_sample
 """.format(env=ENV, bin=BIN, invocation=INVOCATION,
            chdir=CHDIR, sample_path=sample_path, cwd=gen_manifest_cwd)
-    self.assertEquals(expected_string, manifest_string)
+    self.assertEqual(expected_string, manifest_string)
 
   def test_generation_v3_factored_forbidden_tag(self):
     self.maxDiff = None
@@ -110,7 +110,7 @@ samples:
   path: {sample_path}/getbook.py
   sample: getbook_sample
 """.format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, sample_path=sample_path)
-    self.assertEquals(expected_string, manifest_string)
+    self.assertEqual(expected_string, manifest_string)
 
   def test_generation_v3_flat_forbidden_tag(self):
     self.maxDiff = None
@@ -156,7 +156,7 @@ sets:
     sample: getbook_sample
 """.format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, cwd=gen_manifest_cwd,
            sample_path=sample_path)
-    self.assertEquals(expected_string, manifest_string)
+    self.assertEqual(expected_string, manifest_string)
 
   def test_generation_v2_factored_forbidden_tag(self):
     self.maxDiff = None
