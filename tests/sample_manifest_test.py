@@ -41,7 +41,7 @@ who: dan
     found = {}
     for _, doc, _ in all_parsed:
       found[doc["who"]] = True
-    self.assertEquals(4, len(found))
+    self.assertEqual(4, len(found))
     self.assertTrue(all([name in found for name in ['alice', 'bob', 'carol', 'dan']]))
 
   def test_read_no_version(self):
@@ -462,9 +462,9 @@ who: dan
             "Pb": "lead"
         }
     ]
-    self.assertEquals(expected, sample_manifest.extend_all_with(add, manifest))
-    self.assertEquals(manifest, sample_manifest.extend_all_with(None, manifest))
-    self.assertEquals(None, sample_manifest.extend_all_with(add, None))
+    self.assertEqual(expected, sample_manifest.extend_all_with(add, manifest))
+    self.assertEqual(manifest, sample_manifest.extend_all_with(None, manifest))
+    self.assertEqual(None, sample_manifest.extend_all_with(add, None))
 
   def test_check_tag_names(self):
     invalid_manifest = [
@@ -490,7 +490,7 @@ who: dan
           "Be@": "Beryllium",
       }
     ]
-    self.assertEquals(correct_manifest,
+    self.assertEqual(correct_manifest,
                       sample_manifest.check_tag_names(correct_manifest))
 
   def test_read_files_with_implicit_tags(self):
