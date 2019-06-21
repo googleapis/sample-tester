@@ -38,7 +38,7 @@ CHDIR_KEY = 'chdir'
 # This the special character that introduced placeholder strings for the
 # INVOCATION_KEY value. To obtain this special character literally in the
 # invocation (i.e. to escape it), insert it twice in succession.
-PLACEHOLDER_CHAR = '@'
+PLACEHOLDER_CHAR = sample_manifest.RESERVED_SYMBOL_PREFIX
 
 # The substring PLACEHOLDER_ARGS in the INVOCATION_KEY value gets replaced at
 # run time with the arguments to be passed to the artifact.

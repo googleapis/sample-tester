@@ -13,9 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 
 from sampletester import sample_manifest
+
+_ABS_FILE = os.path.abspath(__file__)
+_ABS_DIR = os.path.dirname(_ABS_FILE)
+
 
 class TestManifestV1V2(unittest.TestCase):
 
@@ -34,8 +39,13 @@ class TestManifestV1V2(unittest.TestCase):
       manifest.read_sources([manifest_source])
 
   def test_get_(self):
-    manifest_source, (expect_alice, expect_bob, expect_carol, expect_dan) = self.get_manifest_source(
-    )
+    self.do_test_get_(self.get_manifest_source)
+
+  def test_get_with_implicits(self):
+    self.do_test_get_(self.get_manifest_source_with_implicits)
+
+  def do_test_get_(self, getter):
+    manifest_source, (expect_alice, expect_bob, expect_carol, expect_dan) = getter()
 
     manifest = sample_manifest.Manifest('language', 'sample')
     manifest.read_sources([manifest_source])
@@ -160,8 +170,75 @@ class TestManifestV1V2(unittest.TestCase):
     }
     expect_carol = {'path': '/tmp/newer/carol', 'sample': 'math'}
     expect_dan = {'path': '/tmp/newest/dan', 'sample': 'math'}
-    return ('valid_manifest',
-            manifest), (expect_alice, expect_bob, expect_carol, expect_dan)
+    return (('valid_manifest', manifest, {}),
+            (expect_alice, expect_bob, expect_carol, expect_dan))
+
+  def get_manifest_source_with_implicits(self):
+    manifest = {
+        sample_manifest.Manifest.VERSION_KEY_v1v2:
+            1,
+        sample_manifest.Manifest.SETS_KEY_v1v2:
+            [{
+                'language':
+                'python',
+                'path':
+                '/home/nobody/api/samples/',
+                sample_manifest.Manifest.ELEMENTS_KEY_v1v2:
+                [{
+                    'path': 'trivial/method/sample_alice',
+                    'sample': 'alice',
+                    'canonical': 'trivial'
+                },
+                 {
+                     'path': 'complex/method/usecase_bob',
+                     'sample': 'robert',
+                     'tag': 'guide'
+                 }]
+            },
+             {
+                 'path':
+                 '/tmp/',
+                 sample_manifest.Manifest.ELEMENTS_KEY_v1v2: [{
+                     'path': 'newer/carol',
+                     'sample': 'math'
+                 }, {
+                     'path': 'newest/dan',
+                     'sample': 'math'
+                 }]
+             }]
+    }
+
+    expect_alice = {
+        'path': '/home/nobody/api/samples/trivial/method/sample_alice',
+        'language': 'python',
+        'sample': 'alice',
+        'canonical': 'trivial',
+        '@datum': 'value',
+        'info': 'data'
+    }
+    expect_bob = {
+        'path': '/home/nobody/api/samples/complex/method/usecase_bob',
+        'language': 'python',
+        'sample': 'robert',
+        'tag': 'guide',
+        '@datum': 'value',
+        'info': 'data'
+    }
+    expect_carol = {
+        'path': '/tmp/newer/carol',
+        'sample': 'math',
+        '@datum': 'value',
+        'info': 'data'
+    }
+    expect_dan = {
+        'path': '/tmp/newest/dan',
+        'sample': 'math',
+        '@datum': 'value',
+        'info': 'data'
+    }
+    implicit_tags = {'@datum': 'value', 'info': 'data'}
+    return (('valid_manifest', manifest, implicit_tags),
+            (expect_alice, expect_bob, expect_carol, expect_dan))
 
 
   def get_manifest_source_braces_correct(self, version):
@@ -182,7 +259,7 @@ class TestManifestV1V2(unittest.TestCase):
                     }]
                 }]
         }
-    return ('manifest with braces', manifest)
+    return ('manifest with braces', manifest, {})
 
   def test_braces_v1(self):
     manifest_source = self.get_manifest_source_braces_correct(1)
@@ -236,7 +313,7 @@ class TestManifestV1V2(unittest.TestCase):
                 }]
         }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.SyntaxError, manifest.index)
 
   def test_braces_error_unfinished_at_end(self):
@@ -256,7 +333,7 @@ class TestManifestV1V2(unittest.TestCase):
                 }]
         }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.SyntaxError, manifest.index)
 
   def test_braces_error_empty(self):
@@ -276,7 +353,7 @@ class TestManifestV1V2(unittest.TestCase):
                 }]
         }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.SyntaxError, manifest.index)
 
   def test_braces_error_key_with_braces(self):
@@ -296,7 +373,7 @@ class TestManifestV1V2(unittest.TestCase):
                 }]
         }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.SyntaxError, manifest.index)
 
   def test_braces_error_loop(self):
@@ -317,8 +394,55 @@ class TestManifestV1V2(unittest.TestCase):
                 }]
         }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.CycleError, manifest.index)
+
+  def test_read_files_with_implicit_tags(self):
+    manifest_dir = os.path.abspath(os.path.join(_ABS_DIR,
+                                                'testdata',
+                                                'sample_manifest'))
+    manifest_h_he_path = os.path.join(manifest_dir,
+                                      'h_he',
+                                      '12.v2.manifest.yaml')
+    manifest_li_be_path = os.path.join(manifest_dir,
+                                       'li_be',
+                                       '34.v2.manifest.yaml')
+    manifest_h_he_dir = os.path.dirname(manifest_h_he_path)
+    manifest_li_be_dir = os.path.dirname(manifest_li_be_path)
+
+
+    manifest = sample_manifest.Manifest('model', 'sample')
+    manifest.read_files(manifest_h_he_path, manifest_li_be_path)
+    manifest.index()
+
+    expect_hydrogen = {
+        'model': 'periodic',
+        'sample': 'hydrogen',
+        sample_manifest.IMPLICIT_TAG_SOURCE: manifest_h_he_path,
+        sample_manifest.IMPLICIT_TAG_DIR: manifest_h_he_dir,
+    }
+    expect_helium = {
+        'model': 'periodic',
+        'sample': 'helium',
+        sample_manifest.IMPLICIT_TAG_SOURCE: manifest_h_he_path,
+        sample_manifest.IMPLICIT_TAG_DIR: manifest_h_he_dir,
+    }
+    expect_lithium = {
+        'model': 'periodic',
+        'sample': 'lithium',
+        sample_manifest.IMPLICIT_TAG_SOURCE: manifest_li_be_path,
+        sample_manifest.IMPLICIT_TAG_DIR: manifest_li_be_dir,
+    }
+    expect_beryllium = {
+        'model': 'periodic',
+        'sample': 'beryllium',
+        sample_manifest.IMPLICIT_TAG_SOURCE: manifest_li_be_path,
+        sample_manifest.IMPLICIT_TAG_DIR: manifest_li_be_dir,
+    }
+    self.assertEqual([expect_hydrogen], manifest.get('periodic', 'hydrogen'))
+    self.assertEqual([expect_helium], manifest.get('periodic', 'helium'))
+    self.assertEqual([expect_lithium], manifest.get('periodic', 'lithium'))
+    self.assertEqual([expect_beryllium], manifest.get('periodic', 'beryllium'))
 
 
 

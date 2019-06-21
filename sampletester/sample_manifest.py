@@ -19,6 +19,11 @@ from typing import Iterable
 import yaml
 
 
+# This prefix marks symbols that have special semantics for the purposes of
+# sample-tester, but that are not defined in the manifest schema itself.
+RESERVED_SYMBOL_PREFIX = '@'
+
+
 class Manifest:
   """Maintains a manifest of auto-generated sample artifacts.
 
@@ -120,7 +125,7 @@ class Manifest:
     err_no_version = []
     err_no_interpreter = []
     sources_read = []
-    for name, manifest in sources:
+    for name, manifest, implicit_tags in sources:
       logging.info('reading manifest "{}"'.format(name))
       if not manifest:
         continue
@@ -136,7 +141,7 @@ class Manifest:
       if not interpreter:
         err_no_interpreter.append(name)
         continue
-      self.sources.append((name, manifest, interpreter))
+      self.sources.append((name, manifest, interpreter, implicit_tags))
 
     error = []
     if len(err_no_version) > 0:
@@ -152,25 +157,36 @@ class Manifest:
     return sources_read
 
   def index(self):
-    """Indexes all the items in self.sources using the appropriate interpreter"""
+    """Indexes all items in self.sources using appropriate interpreters."""
     self.tags = {}
-    for name, manifest, interpreter in self.sources:
+    for name, manifest, interpreter, implicit_tags in self.sources:
       try:
-        interpreter(manifest)
+        interpreter(manifest, implicit_tags)
       except Exception as e:
         logging.error('error parsing manifest source "{}": {}'.format(name, e))
         raise
 
-  def index_source_v1(self, input):
-    self._index_elements(get_flattened_elements_v1_v2(input))
+  def index_source_v1(self, input, implicit_tags):
+    self._index_elements(
+        extend_all_with(implicit_tags,
+                        check_tag_names(
+                            get_flattened_elements_v1_v2(input))))
 
-  def index_source_v2(self, input):
+  def index_source_v2(self, input, implicit_tags):
     # v2 is an additive change over v1. It merely involves interpreting tags
     # included within other tags via curly braces
-    self._index_elements(resolve_inclusions(get_flattened_elements_v1_v2(input)))
+    self._index_elements(
+        resolve_inclusions(
+            extend_all_with(implicit_tags,
+                            check_tag_names(
+                                get_flattened_elements_v1_v2(input)))))
 
-  def index_source_v3(self, input):
-    self._index_elements(resolve_inclusions(get_elements_v3(input)))
+  def index_source_v3(self, input, implicit_tags):
+    self._index_elements(
+        resolve_inclusions(
+            extend_all_with(implicit_tags,
+                            check_tag_names(
+                                get_elements_v3(input)))))
 
   def _index_elements(self, all_elements):
     if not all_elements:
@@ -191,7 +207,7 @@ class Manifest:
     logging.info('indexed elements')
 
   def get_all_elements(self):
-    """Generators that yields each element in the (indexed) manifest."""
+    """Generator that yields each element in the (indexed) manifest."""
     yield from self._get_element(self.tags, idx_num = 0)
 
   def _get_element(self, tags, idx_num):
@@ -230,10 +246,10 @@ class Manifest:
       tags = self.tags
       for idx in range(0, len(self.indices)):
         tags = tags[keys[idx]]
-      return [
-          element for element in tags if all(tag_filter in element.items()
-                                             for tag_filter in filters.items())
-      ]
+      return [element
+              for element in tags
+              if all(tag_filter in element.items()
+                     for tag_filter in filters.items())]
     except Exception as e:
       return None
 
@@ -245,7 +261,7 @@ class Manifest:
     return values[0]
 
 
-### helpers for V3
+### Helpers for V3
 
 def get_elements_v3(input):
   """Instantiates elements from file.
@@ -275,7 +291,8 @@ def get_elements_v3(input):
 
   return input.get(list_item, [])
 
-### helpers for V1/V2
+
+### Helpers for V1/V2
 
 def get_flattened_elements_v1_v2(input):
   """Instantiates elements from file, applying any set-wide tags to each one
@@ -301,7 +318,8 @@ def get_flattened_elements_v1_v2(input):
       logging.info('read "{}"'.format(element))
   return element_list
 
-### helpers for inclusions
+
+### Helpers for inclusions
 
 class SyntaxError(Exception):
   def __init__(self, message):
@@ -361,8 +379,7 @@ def resolve_tag_inclusion (element, tag_name, history,
 
 
 class Inclusions:
-  """Class to determine what tag substitutions are needed and performer them"""
-
+  """Class to determine and perform the substitutions needed for one tag."""
 
   def __init__(self, parts):
     # a list of strings where each even-indexed string is a literal, and
@@ -379,6 +396,7 @@ class Inclusions:
       needed_where.append(idx)
 
   def resolve(self, values):
+    """Resolves `self` by substituting inclusions with items from `values`."""
     for tag, locs in self.needs.items():
       for idx in locs:
         self.parts[idx] = values[tag]
@@ -449,9 +467,43 @@ class Inclusions:
     return Inclusions(parts)
 
 
-# Low-level helpers
+### Helpers for implicit tags
+
+IMPLICIT_TAG_SOURCE = '{}manifest_source'.format(RESERVED_SYMBOL_PREFIX)
+IMPLICIT_TAG_DIR = '{}manifest_dir'.format(RESERVED_SYMBOL_PREFIX)
+
+def create_implicit_tags(source='', dir=''):
+  """Creates an implicit tag dict with the given values."""
+  return {
+      IMPLICIT_TAG_SOURCE: source,
+      IMPLICIT_TAG_DIR: dir,
+  }
+
+def extend_all_with(src, dst):
+  """Updates every map element of `dst` with the entries in `src`.
+
+  This can be used to add a fixed set of implicit tags `src` to every element of
+  a manifest `dst`.
+  """
+  if not src or not dst:
+    return dst
+  if not type(dst) in [list, tuple]:
+    raise Exception('internal error: `dst` should be `list` or `tuple` (is {})'
+                    .format(type(dst)))
+  if type(src) is not dict:
+    raise Exception('internal error: `src` should be `dict` is {}'
+                    .format(type(src)))
+  for element in dst:
+    if type(element) is dict:
+      element.update(src)
+
+  return dst # to allow for composition
+
+
+### Low-level helpers
 
 def get_or_create(d, key, empty_value):
+  """Returns the specified `key` from `d`, creating it if absent."""
   value = d.get(key)
   if value is None:
     value = empty_value
@@ -460,17 +512,61 @@ def get_or_create(d, key, empty_value):
 
 
 def files_to_yaml(*files: str):
-  """ Reads sample manifests from files."""
-  for name in files:
+  """Reads sample manifests from files.
+
+  Args:
+    sources: Any number of names of files, each containing one or more YAML
+      documents.
+
+  Yields:
+    a tuple per YAML document in each file, each tuple containing the filename
+    of its source file, the parsed YAML as a Python object, and the implicit
+    tags (which have not yet been applied to the object). The implicit tags
+    contain the filename itself and the directory of filename.  Note that none
+    of YAML documents are guaranteed to be of the manifest type yet.
+  """
+  for file_name in files:
     # we delegate to strings_to_yaml below to have single code path for easier
     # testing and bug avoidance
-    with open(name, 'r') as stream:
+    with open(file_name, 'r') as stream:
       content = stream.read()
-      yield from strings_to_yaml((name, content))
-
+      yield from strings_to_yaml(
+          (file_name,
+           content,
+           create_implicit_tags(source=file_name, dir=os.path.dirname(file_name))))
 
 def strings_to_yaml(*sources: str):
-  """ Reads sample manifests from strings."""
-  for (name, data) in sources:
+  """Reads sample manifests from strings.
+
+  Args:
+    sources: Any number of tuples, each containing the name of YAML source and
+      the actual string representation of the YAML. An optional third element
+      of each tuple is the set of implicit tags to add to the YAML; if not
+      provided, just the name in the tuple is made into an implicit tag.
+
+  Yields:
+    a tuple per YAML document in each source, each tuple containing the name of
+    its source, the parsed YAML as a Python object, and any implicit tags (which
+    have not yet been applied to the object). Note that none of YAML documents
+    are guaranteed to be of the manifest type yet.
+  """
+  for one_source in sources:
+    name, data = one_source[0], one_source[1]
+    implicit_tags = (one_source[2] if len(one_source) > 2
+                     else create_implicit_tags(source=name))
     for manifest in yaml.load_all(data):
-      yield (name, manifest)
+      yield (name, manifest, implicit_tags)
+
+def check_tag_names(src):
+  """Checks that all explicit tag names are valid."""
+  if not src:
+    return src
+  invalid = [name
+             for element in src
+             for name in element.keys()
+             if name.startswith(RESERVED_SYMBOL_PREFIX)]
+  if invalid:
+    raise SyntaxError('tag names may not begin with "{}": {}'
+                      .format(RESERVED_SYMBOL_PREFIX,
+                              ' '.join(['"{}"'.format(name) for name in invalid])))
+  return src # to allow for composition
