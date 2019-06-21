@@ -62,7 +62,11 @@ Here's a generic manifest file illustrating these features:
 Tags for sample-tester
 ----------------------
 
-Some manifest tags are of special interest to the sample test runner:
+You may define an arbitrary set of tags for any and all elements in
+your manifest, the only restriction being that no tag name you specify
+may begin with ``@`` (because that is how we identify "implicit tags";
+see below). Moreover, some manifest tags are of special interest to
+sample-tester:
 
 * ``sample``: The unique ID for the sample.
 * ``path``: The path to the sample source code on disk.
@@ -97,7 +101,17 @@ Some manifest tags are of special interest to the sample test runner:
   sample ``path`` and arguments are appended to the value of this tag
   to form the command line that the tester runs.
 
-**Advanced usage**: you can tell sample-tester to use different key names than the ones above. For example, to use keys ``some_name``, ``how_to_call``, and ``switch_path`` instead of ``sample``, ``invocation``, and ``chdir``, respectively, you would simply specify this flag when calling sample-tester:
+The sample-test runner also automatically adds certain **implicit
+tags** to manifest elements when it reads them from YAML
+files. Implicit tag names all begin with the symbol ``@``:
+
+* ``@manifest_source``: The full path, including filename, to the
+  manifest file from which this particular element was read.
+* ``@manifest_dir``: The directory part of ``@manifest_source``,
+  without the trailing filename.
+  
+
+**Advanced usage**: you can tell sample-tester to use different key names than the ones above. For example, to use keys ``some_name``,  ``how_to_call``, and ``switch_path`` instead of ``sample``,  ``invocation``, and ``chdir``, respectively, you would simply specify  this flag when calling sample-tester:
 
 
   .. code-block:: bash

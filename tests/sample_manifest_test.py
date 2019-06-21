@@ -13,9 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 
 from sampletester import sample_manifest
+
+_ABS_FILE = os.path.abspath(__file__)
+_ABS_DIR = os.path.dirname(_ABS_FILE)
+
 
 class TestManifestV3(unittest.TestCase):
   def test_multiple_yaml_docs_in_stream(self):
@@ -34,7 +39,7 @@ who: dan
 """)
     )
     found = {}
-    for _, doc in all_parsed:
+    for _, doc, _ in all_parsed:
       found[doc["who"]] = True
     self.assertEquals(4, len(found))
     self.assertTrue(all([name in found for name in ['alice', 'bob', 'carol', 'dan']]))
@@ -71,8 +76,13 @@ who: dan
 
 
   def test_get_(self):
-    manifest_source, (expect_alice, expect_bob, expect_carol, expect_dan) = self.get_manifest_source(
-    )
+    self.do_test_get_(self.get_manifest_source)
+
+  def test_get_with_implicits(self):
+    self.do_test_get_(self.get_manifest_source_with_implicits)
+
+  def do_test_get_(self, getter):
+    manifest_source, (expect_alice, expect_bob, expect_carol, expect_dan) = getter()
 
     manifest = sample_manifest.Manifest('language', 'sample')
     manifest.read_sources([manifest_source])
@@ -192,9 +202,70 @@ who: dan
     }
     expect_carol = {'path': '/tmp/newer/carol', 'sample': 'math'}
     expect_dan = {'path': '/tmp/newest/dan', 'sample': 'math'}
-    return ('valid_manifest',
-            manifest), (expect_alice, expect_bob, expect_carol, expect_dan)
+    return (('valid_manifest', manifest, {}),
+            (expect_alice, expect_bob, expect_carol, expect_dan))
 
+  def get_manifest_source_with_implicits(self):
+    list_name = 'mysamples'
+    manifest = {
+        sample_manifest.Manifest.SCHEMA_TYPE_KEY:
+            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+                           list_name),
+        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        list_name: [
+            {
+                'language': 'python',
+                'path': '/home/nobody/api/samples/trivial/method/sample_alice',
+                'sample': 'alice',
+                'canonical': 'trivial'
+            },
+            {
+                'language': 'python',
+                'path': '/home/nobody/api/samples/complex/method/usecase_bob',
+                'sample': 'robert',
+                'tag': 'guide'
+            },
+            {
+                'path': '/tmp/newer/carol',
+                'sample': 'math'
+            }, {
+                'path': '/tmp/newest/dan',
+                'sample': 'math'
+            }
+        ]
+    }
+
+    expect_alice = {
+        'path': '/home/nobody/api/samples/trivial/method/sample_alice',
+        'language': 'python',
+        'sample': 'alice',
+        'canonical': 'trivial',
+        '@datum': 'value',
+        'info': 'data'
+    }
+    expect_bob = {
+        'path': '/home/nobody/api/samples/complex/method/usecase_bob',
+        'language': 'python',
+        'sample': 'robert',
+        'tag': 'guide',
+        '@datum': 'value',
+        'info': 'data'
+    }
+    expect_carol = {
+        'path': '/tmp/newer/carol',
+        'sample': 'math',
+        '@datum': 'value',
+        'info': 'data'
+    }
+    expect_dan = {
+        'path': '/tmp/newest/dan',
+        'sample': 'math',
+        '@datum': 'value',
+        'info': 'data'
+    }
+    implicit_tags = {'@datum': 'value', 'info': 'data'}
+    return (('valid_manifest', manifest, implicit_tags),
+            (expect_alice, expect_bob, expect_carol, expect_dan))
 
   def get_manifest_source_braces_correct(self, version):
     list_name = 'mysamples'
@@ -215,7 +286,7 @@ who: dan
             }
         ]
     }
-    return ('manifest with braces', manifest)
+    return ('manifest with braces', manifest, {})
 
   def test_braces(self):   ### combine with above
     list_name = 'mysamples'
@@ -237,7 +308,7 @@ who: dan
         ]
     }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('manifest_with_braces', manifest_content)])
+    manifest.read_sources([('manifest_with_braces', manifest_content, {})])
     manifest.index()
 
     expect_mary = {
@@ -271,7 +342,7 @@ who: dan
         ]
     }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.SyntaxError, manifest.index)
 
   def test_braces_error_unfinished_at_end(self):
@@ -293,7 +364,7 @@ who: dan
         ]
     }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.SyntaxError, manifest.index)
 
   def test_braces_error_empty(self):
@@ -315,7 +386,7 @@ who: dan
         ]
     }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.SyntaxError, manifest.index)
 
   def test_braces_error_key_with_braces(self):
@@ -337,7 +408,7 @@ who: dan
         ]
     }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.SyntaxError, manifest.index)
 
   def test_braces_error_loop(self):
@@ -360,10 +431,114 @@ who: dan
         ]
     }
     manifest = sample_manifest.Manifest('greetings')
-    manifest.read_sources([('erroring manifest', manifest_content)])
+    manifest.read_sources([('erroring manifest', manifest_content, {})])
     self.assertRaises(sample_manifest.CycleError, manifest.index)
 
+  def test_extend_all_with(self):
+    manifest = [
+      {
+          "H": "hydrogen",
+          "He": "helium",
+      },
+      {
+          "Li": "lithium",
+          "Be": "Beryllium",
+      }
+    ]
 
+    add = {
+      "Pb": "lead"
+    }
+
+    expected = [
+        {
+            "H": "hydrogen",
+            "He": "helium",
+            "Pb": "lead"
+        },
+        {
+            "Li": "lithium",
+            "Be": "Beryllium",
+            "Pb": "lead"
+        }
+    ]
+    self.assertEquals(expected, sample_manifest.extend_all_with(add, manifest))
+    self.assertEquals(manifest, sample_manifest.extend_all_with(None, manifest))
+    self.assertEquals(None, sample_manifest.extend_all_with(add, None))
+
+  def test_check_tag_names(self):
+    invalid_manifest = [
+      {
+          "H": "hydrogen",
+          "@He": "helium",
+      },
+      {
+          "Li": "lithium",
+          "Be": "Beryllium",
+      }
+    ]
+    with self.assertRaises(sample_manifest.SyntaxError):
+      sample_manifest.check_tag_names(invalid_manifest)
+
+    correct_manifest = [
+      {
+          "H": "hydrogen",
+          "He": "he@lium",
+      },
+      {
+          "Li": "@lithium",
+          "Be@": "Beryllium",
+      }
+    ]
+    self.assertEquals(correct_manifest,
+                      sample_manifest.check_tag_names(correct_manifest))
+
+  def test_read_files_with_implicit_tags(self):
+    manifest_dir = os.path.abspath(os.path.join(_ABS_DIR,
+                                                'testdata',
+                                                'sample_manifest'))
+    manifest_h_he_path = os.path.join(manifest_dir,
+                                      'h_he',
+                                      '12.manifest.yaml')
+    manifest_li_be_path = os.path.join(manifest_dir,
+                                       'li_be',
+                                       '34.manifest.yaml')
+    manifest_h_he_dir = os.path.dirname(manifest_h_he_path)
+    manifest_li_be_dir = os.path.dirname(manifest_li_be_path)
+
+
+    manifest = sample_manifest.Manifest('model', 'sample')
+    manifest.read_files(manifest_h_he_path, manifest_li_be_path)
+    manifest.index()
+
+    expect_hydrogen = {
+        'model': 'periodic',
+        'sample': 'hydrogen',
+        sample_manifest.IMPLICIT_TAG_SOURCE: manifest_h_he_path,
+        sample_manifest.IMPLICIT_TAG_DIR: manifest_h_he_dir,
+    }
+    expect_helium = {
+        'model': 'periodic',
+        'sample': 'helium',
+        sample_manifest.IMPLICIT_TAG_SOURCE: manifest_h_he_path,
+        sample_manifest.IMPLICIT_TAG_DIR: manifest_h_he_dir,
+    }
+    expect_lithium = {
+        'model': 'periodic',
+        'sample': 'lithium',
+        sample_manifest.IMPLICIT_TAG_SOURCE: manifest_li_be_path,
+        sample_manifest.IMPLICIT_TAG_DIR: manifest_li_be_dir,
+    }
+    expect_beryllium = {
+        'model': 'periodic',
+        'sample': 'beryllium',
+        sample_manifest.IMPLICIT_TAG_SOURCE: manifest_li_be_path,
+        sample_manifest.IMPLICIT_TAG_DIR: manifest_li_be_dir,
+    }
+    self.assertEqual([expect_hydrogen], manifest.get('periodic', 'hydrogen'))
+    self.assertEqual([expect_helium], manifest.get('periodic', 'helium'))
+    self.assertEqual([expect_lithium], manifest.get('periodic', 'lithium'))
+    self.assertEqual([expect_beryllium], manifest.get('periodic', 'beryllium'))
 
 if __name__ == '__main__':
   unittest.main()
