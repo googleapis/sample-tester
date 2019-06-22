@@ -14,4 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Exit correctly depending on whether this file is being sourced or executed.
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] && EXIT=return || EXIT=exit
+
+pushd "$(dirname ${BASH_SOURCE})/.." >& /dev/null
+
 python3 -m unittest discover --start-directory . --pattern '*_test.py' --verbose
+code=$?
+
+popd >& /dev/null
+${EXIT} $code

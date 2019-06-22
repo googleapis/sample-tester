@@ -14,6 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Exit correctly depending on whether this file is being sourced or executed.
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] && EXIT=return || EXIT=exit
+
+pushd "$(dirname ${BASH_SOURCE})/../.." >& /dev/null
+
 echo "Test sample-tester --xunit=file output"
 
 xunit_file="$(mktemp /tmp/sample-tester.XXXXXXXXX )"
@@ -21,6 +26,7 @@ xunit_file="$(mktemp /tmp/sample-tester.XXXXXXXXX )"
 sample-tester --xunit="$xunit_file" --convention=tag:sample examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml
 
 xunit_xml="$( cat "$xunit_file" )"
+code=0
 
 for expected_text in                        \
   '<testsuite name="Language samples test'  \
@@ -35,8 +41,14 @@ do
     echo "Assertion failed"
     echo "Expected $expected_text in:"
     echo "$xunit_xml"
-    exit 1
+    code=1
+    break
   fi
 done
 
-echo "Tests passed"
+popd >& /dev/null
+
+if [[ $code -eq 0 ]] ; then
+  echo "Tests passed"
+fi
+${EXIT} $code
