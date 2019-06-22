@@ -96,7 +96,9 @@ sample-tester:
   .. code-block:: yaml
 
      invocation: "java {jar} -D{class_name} -Dexec.arguments='@args'"
-     
+
+* ``chdir``: The working directory to be in before invoking the
+  sample.
 * (deprecated) ``bin``: The executable used to run the sample. The
   sample ``path`` and arguments are appended to the value of this tag
   to form the command line that the tester runs.
@@ -108,7 +110,9 @@ files. Implicit tag names all begin with the symbol ``@``:
 * ``@manifest_source``: The full path, including filename, to the
   manifest file from which this particular element was read.
 * ``@manifest_dir``: The directory part of ``@manifest_source``,
-  without the trailing filename.
+  without the trailing filename. For example, depending on your
+  particular set-up, you may wish to reference ``{@manifest_dir}`` as
+  part of the value of your ``chdir`` tag.
   
 
 **Advanced usage**: you can tell sample-tester to use different key names than the ones above. For example, to use keys ``some_name``,  ``how_to_call``, and ``switch_path`` instead of ``sample``,  ``invocation``, and ``chdir``, respectively, you would simply specify  this flag when calling sample-tester:
