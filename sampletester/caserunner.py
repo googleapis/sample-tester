@@ -124,68 +124,69 @@ class TestCase:
         (status, message.format(*args)) for status, message, args in self.errors
     ]
 
-  # Records a single failure in this TestCase.
   def record_failure(self, status, message, *args):
+    """Records a single failure in this TestCase."""
     self.failures.append((status, message, args))
 
-  # Records a single error in this TestCase.
   def record_error(self, status, message, *args):
+    """Records a single error in this TestCase."""
     self.errors.append((status, message, args))
 
-  # Expects condition or records failure.
   def expect(self, condition, message, *args):
+    """Expects condition or records failure."""
     if not condition:
       self.record_failure("FAILED EXPECTATION", message, *args)
       self.print_out("# FAILED EXPECTATION", message, *args)
 
-  # Explicitly fails the test.
   def fail(self):
+    """Explicitly fails the test."""
     self.expect(False, "failure")
 
-  # Asserts condition or records failure, soft-aborting the test.
   def assert_that(self, condition, message, *args):
+    """Asserts condition or records failure, soft-aborting the test."""
     if not condition:
       self.record_failure("FAILED ASSERTION", message, *args)
       self.print_out("# FAILED ASSERTION: " + message, *args)
       raise TestFailure
 
-  # Explicitly fails and soft-aborts the test.
   def abort(self):
+    """Explicitly fails and soft-aborts the test."""
     self.assert_that(False, "abort called")
 
-  # Formats `msg` according to `args` and records it in the TestCase output.
   def print_out(self, msg, *args):
+    """Formats `msg` according to `args` and records it in the TestCase output."""
     try:
       self.output += self.format_string(str(msg), *args) + "\n"
     except Exception as e:
       raise
 
-  # Executes YAML directive "code".
   def execute(self, code):
+    """Executes YAML directive "code"."""
     exec(code, None, self.local_symbols)
 
-  # Gets a UUID via code.
   def get_uuid(self):
+    """Gets a UUID via code."""
     return str(uuid.uuid4())
 
-  # Gets a UUID via YAML.
   def yaml_get_uuid(self, var_name):
+    """Gets a UUID via YAML."""
     self.local_symbols[var_name] = self.get_uuid()
     return None, None
 
-  # Gets an environment variable via code.
   def get_env(self, env_var):
+    """Gets an environment variable via code."""
     # TODO: Catch key error
     return os.environ[env_var]
 
-  # Gets an environment variable via YAML.
   def yaml_get_env(self, parts):
+    """Gets an environment variable via YAML."""
     var_name, env_var = self.params_for_set(parts)
     self.local_symbols[var_name] = self.get_env(env_var)
     return None, None
 
-  # Extracts regular expression captures from output via code.
   def extract_match(self, pattern, variable=None, group_variables=None):
+    """Extracts regular expression captures from output via code."""
+
     if not pattern:
       raise ConfigError("extract_match requires pattern to match")
     if not variable and not group_variables:
@@ -211,16 +212,16 @@ class TestCase:
             self.local_symbols[variable_name] = captures[idx]
     return None, None
 
-  # Extracts regular expression captures from output via code.
   def yaml_extract_match(self, parts):
+    """Extracts regular expression captures from output via code."""
     key_pattern = 'pattern'
     key_variable = 'variable'
     key_groups = 'groups'
     return [parts.get(key_pattern), parts.get(key_variable),
       parts.get(key_groups)], None
 
-  # Invokes `cmd` (formatted with `params`). Does not fail in case of error.
   def call_allow_error(self, *args, **kwargs):
+    """Invokes `cmd` (formatted with `params`). Does not fail in case of error."""
     try:
       call, chdir = self.environment.get_call(*args, **kwargs)
     except Exception as e:
@@ -256,8 +257,8 @@ class TestCase:
     self.output += new_output
     return return_code, new_output
 
-  # Invokes `cmd` (formatted with `args`), failing and soft-aborting in case of error.
   def call_no_error(self, *args, **kwargs):
+    """Invokes `cmd` (formatted with `args`), failing/soft-aborting if error."""
     return_code, out = self.call_allow_error(*args, **kwargs)
     self.assert_that(return_code == 0, 'call failed: "{}"', args)
     return out
