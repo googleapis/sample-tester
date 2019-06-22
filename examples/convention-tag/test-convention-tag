@@ -14,4 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Exit correctly depending on whether this file is being sourced or executed.
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] && EXIT=return || EXIT=exit
+
+pushd "$(dirname ${BASH_SOURCE})/../.." >& /dev/null
 sample-tester -v detailed ${FLAGS:---xunit=/tmp/xunit.tag.xml} examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml
+code=$?
+
+popd >& /dev/null
+${EXIT} $code
