@@ -16,6 +16,7 @@
 import unittest
 import os
 
+from sampletester import caserunner
 from sampletester import convention
 from sampletester import environment_registry
 from sampletester import runner
@@ -183,6 +184,21 @@ class TestChdir(unittest.TestCase):
       self.assertTrue(self.results.cases[suite_name + ':code'].success(),
                       'expected suite to pass: {}'.format(suite_name))
 
+class TestSymbolInterpolation(unittest.TestCase):
+  def test_symbol_interpolation(self):
+    resolver_dict = {
+        "H": "hydrogen",
+        "He": "helium",
+        "Li": "lithium"
+    }
+    resolver = lambda name: resolver_dict.get(name, '')
+    self.assertEqual('Start with hydrogen, helium, and lithium',
+                     caserunner.interpolate_symbols(
+                         'Start with {H}, {He}, and {Li}',
+                         resolver))
+    self.assertEqual('Want hydrogen or ?',
+                     caserunner.interpolate_symbols('Want {H} or {Ur}?',
+                                                    resolver))
 
 def full_path(leaf_path):
   return os.path.join(_ABS_DIR, leaf_path)

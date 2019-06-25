@@ -26,6 +26,8 @@ test:
       
     - name: "A test defined via yaml directives"
       spec:
+      - log:
+          - 'Reading from manifest at {language_analyze_sentiment_text:@manifest_source}'
       - call:
           sample: "language_analyze_sentiment_text"
           params:
@@ -54,6 +56,8 @@ test:
     - name: "A test defined via 'code'"
       spec:
       - code: |
+          log('Reading from manifest at {language_analyze_sentiment_text:@manifest_source}')
+          
           out = call("language_analyze_sentiment_text", content="happy happy smile hope")
           assert_success("that should have worked", "well")
 
