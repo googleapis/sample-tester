@@ -434,13 +434,19 @@ class TestCase:
     return substr.lower() in self.last_call_output.lower()
 
   def format_string(self, msg, *args):
-    """Formats `msg` formatted with `*args`.
+    """Returns `msg` formatted with `*args`.
 
-    This automatically adds any `{}` placeholders needed to match
-    `len(args)`.
+    This interpolates any environment symbols named by `{symbol_name}` with
+    `msg`, interpolates arguments into `{}` sequences within `msg. It
+    automatically adds any `{}` placeholders needed to match `len(args)`.
     """
+
+    msg = interpolate_symbols(msg, self.environment.get_symbol)
+
     if len(args) == 0:
       return msg
+
+    # TODO: Allow for escaping braces.
     count = msg.count("{}")
 
     # Add any missing placeholders
@@ -568,6 +574,19 @@ class TestCase:
     """
     return [self.local_symbols.get(p, '"{}"'.format(str(p))) for p in strings]
 
+### Helpers for substituting symbol values
+
+_interpolated_symbol_re = re.compile('{([^}]+)}')
+def interpolate_symbols(msg, resolver):
+  """Interpolates symbols in `msg`.
+
+  Replaces any substring of the form "{sname}" in `msg` with the value returned
+  by `resolver(sname)`. This one-liner is broken out into a separate function
+  for easier testing.
+  """
+  return _interpolated_symbol_re.sub(lambda match: resolver(match.group(1)), msg)
+
+### General helpers
 
 class TestFailure(Exception):
   """Exception raised when a test fails (typically via an assertion)."""

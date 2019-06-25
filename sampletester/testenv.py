@@ -38,6 +38,14 @@ class Base:
     logging.fatal(
         'get_call() invoked on Base (should be overridden)')
 
+  def get_symbol(self, symbol):
+    """Returns a symbol defined in this environment.
+
+    It is up to each environment to define the exact semantics of this.
+    """
+    logging.fatal(
+        'get_symbol() invoked on Base (should be overridden)')
+
   def get_testcase_settings(self):
     """Returns testenv parameters to be used by the test runner"""
     return {}

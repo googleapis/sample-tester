@@ -103,12 +103,40 @@ class ManifestEnvironment(testenv.Base):
     self.manifest_options = (manifest_options
                              if manifest_options is not None else {})
 
+  def get_symbol(self, symbol):
+    """Returns the artifact manifest tag specified in `symbol`.
+
+    `symbol` is interpreted as having the format `artifact:key`, and this method
+    returns the value of the tag with key `key` listed for `artifact`. If `key`
+    does not match any tag key for `artifact`, this returns the empty string.
+
+    If `artifact` does not resolve to an artifact in the manifest, this raises
+    an exception.
+
+    If `key` is not specified, this method returns a serialized representation
+    of all the tag key/value pairs for `artifact`.
+    """
+    parts = symbol.split(':')
+    artifact, key = parts[0], parts[1] if len(parts) > 1 else None
+
+    indices = self.const_indices.copy()
+    indices.append(artifact)
+    artifact = self.manifest.get_one(*indices)
+    if not artifact:
+      raise Exception('object "{}" not defined'.format(indices))
+
+    if key:
+      return artifact.get(key, '')
+
+    # no key specified, so return all tags
+    return str(artifact)
+
   def get_call(self, *args, **kwargs):
     full_call, cli_args = testenv.process_args(*args, **kwargs)
 
     indices = self.const_indices.copy()
     indices.extend(full_call.split(' '))
-    artifact = self.manifest.get_one(*indices)  # wrap exception?
+    artifact = self.manifest.get_one(*indices)
     if not artifact:
       raise Exception('object "{}" not defined'.format(indices))
 

@@ -150,6 +150,31 @@ class TestChangingChdirKey(unittest.TestCase):
   def test_chdir(self):
     self.assertEqual('/the/correct/dir', self.get_dir_only('with-alternate-chdir'))
 
+
+class TestGetSymbol(unittest.TestCase):
+  def setUp(self):
+    self.manifest_file_name = full_path('testdata/tag_test.manifest.yaml')
+    manifest = sample_manifest.Manifest('situation')
+    manifest.read_files(self.manifest_file_name)
+    manifest.index()
+    self.env = tag.ManifestEnvironment(self.manifest_file_name, '', manifest, [])
+
+  def test_get_symbol(self):
+    self.assertEqual('Ecuador @args is a @@country',
+                     self.env.get_symbol('invocation-with-placeholder:invocation'))
+
+    expected_full = {'situation': 'invocation-with-placeholder',
+                     'invocation': 'Ecuador @args is a @@country',
+                     'environment': 'Valid call',
+                     '@manifest_source': self.manifest_file_name,
+                     '@manifest_dir': os.path.dirname(self.manifest_file_name)
+                     }
+    self.assertEqual(str(expected_full),
+                     self.env.get_symbol('invocation-with-placeholder'))
+    self.assertEqual(str(expected_full),
+                     self.env.get_symbol('invocation-with-placeholder:'))
+
+
 def full_path(leaf_path):
   return os.path.join(_ABS_DIR, leaf_path)
 

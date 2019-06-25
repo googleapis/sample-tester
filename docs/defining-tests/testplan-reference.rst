@@ -18,7 +18,20 @@ how to run the samples and what checks to perform.
    directives and arguments. The directives can be any of the
    following YAML directives:
    
-   - ``log``: print the arguments, printf style
+   - ``log``: print the arguments, printf style.
+      - Substrings of the form ``{}`` are interpolated with the corresponding positional arguments specified
+      - Substrings of the form ``{id:name}`` are substituted with the
+        value of the manifest tag corresponding to the key ``name``
+        for the sample identified by ``id``. This can be useful when
+        debugging your test to make sure that all the tags are as you
+        expect.
+         - ``id`` must resolve to a sample ID specified in the
+           manifest file
+         - if ``name`` does not match any tag key for the sample
+           ``id``, the substring is substituted with the empty string
+         - if ``name`` is not specified, the substring is substituted
+           with a serialized representation of all the tags specified
+           for the sample ``id``
    - ``uuid``: return a uuid (if called from yaml, assign it to the
      variable names as an argument)
    - ``shell``: run in the shell the command specified in the argument
