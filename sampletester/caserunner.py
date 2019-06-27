@@ -349,35 +349,57 @@ class TestCase:
     log_entry_prefix = "---- Test case {:d}: \"{:s}\"".format(
         self.idx, self.label)
 
-    for stage_name, stage_spec in [("SETUP", self.setup), ("TEST", self.case),
-                                   ("TEARDOWN", self.teardown)]:
-      self.print_out("\n### Test case {0}".format(stage_name))
+    def run_segments_of(stage_spec):
       for spec_segment in stage_spec:
-        try:
-          self.run_segment(spec_segment)  # this is a list of maps!
+        self.run_segment(spec_segment)
 
-        except TestFailure:
-          break
+    try:
+      for stage_name, stage_spec in [("SETUP", self.setup), ("TEST", self.case)]:
+        self.print_out("\n### Test case {0}".format(stage_name))
+        run_segments_of(stage_spec)
+    except TestFailure:
+      pass
+    except CallError as e:
+      status = "CALL ERROR in stage {} ".format(stage_name)
+      self.record_error(status, e.msg)
+      self.print_out(status + ": " + e.msg)
 
-        except CallError as e:
-          status = "CALL ERROR in stage {} ".format(stage_name)
-          self.record_error(status, e.msg)
-          self.print_out(status + ": " + e.msg)
-          break
+    except KeyboardInterrupt:
+      status = "KEYBOARD INTERRUPT in stage {} ".format(stage_name)
+      self.record_error(status, "keyboard interrupt detected")
+      self.print_out(status)
+      raise
 
-        except KeyboardInterrupt:
-          status = "KEYBOARD INTERRUPT in stage {} ".format(stage_name)
-          self.record_error(status, "keyboard interrupt detected")
-          self.print_out(status)
-          raise
+    except Exception as e:
+      status = "UNHANDLED EXCEPTION in stage {} ".format(stage_name)
+      short_description = repr(e)
+      description = short_description + "\n" + "".join( traceback.format_tb(e.__traceback__))
+      self.record_error(status, description)
+      self.print_out("# EXCEPTION!! " + short_description)
 
-        except Exception as e:
-          status = "UNHANDLED EXCEPTION in stage {} ".format(stage_name)
-          short_description = repr(e)
-          description = short_description + "\n" + "".join( traceback.format_tb(e.__traceback__))
-          self.record_error(status, description)
-          self.print_out("# EXCEPTION!! " + short_description)
-          break
+    finally:
+      try:
+        self.print_out("\n### Test case TEARDOWN")
+        run_segments_of(self.teardown)
+      except TestFailure:
+        status = "unexpected TEST FAILURE in stage TEARDOWN"
+        self.record_error(status, "test failure in stage TEARDOWN")
+        self.print_out(status)
+      except CallError as e:
+        status = "CALL ERROR in stage TEARDOWN "
+        self.record_error(status, e.msg)
+        self.print_out(status + ": " + e.msg)
+      except KeyboardInterrupt:
+        status = "KEYBOARD INTERRUPT in stage TEARDOWN"
+        self.record_error(status, "keyboard interrupt detected")
+        self.print_out(status)
+        raise
+      except Exception as e:
+        status = "UNHANDLED EXCEPTION in stage TEARDOWN"
+        short_description = repr(e)
+        description = short_description + "\n" + "".join( traceback.format_tb(e.__traceback__))
+        self.record_error(status, description)
+        self.print_out("# EXCEPTION!! " + short_description)
 
     print_output = True
     if len(self.failures) > 0:
