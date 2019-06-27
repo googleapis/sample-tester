@@ -25,6 +25,11 @@ from yaml.representer import SafeRepresenter
 
 ALL_LANGS = ["python", "java", "csharp", "nodejs", "ruby", "php", "go"]
 
+# If not provided, BASEPATH_DEFAULT is the default value of BASEPATH_KEY for
+# both factored and flat manifests.
+BASEPATH_KEY = 'basepath'
+BASEPATH_DEFAULT = '.'
+
 def parse_args():
   parser = argparse.ArgumentParser(
       formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -34,7 +39,13 @@ def parse_args():
       corresponds to a specific sample file on disk and lists the path to that
       file and the region tag occurring within that file. Any number of
       arbitrary key/value pairs can be specified (see the usage line) and will
-      be applied to all samples listed in the manifest.""",
+      be applied to all samples listed in the manifest.
+
+      All samples have "path" tags relative to the directory whence this is run,
+      prepended with the value/inclusion of the "basepath" tag. The value of
+      "basepath" in turn comes from whatever value is specified via
+      "--basepath=xxx", or defaults to "." otherwise. To provide absolute
+      directories in the manifest, pass "--basepath=$(pwd)" to this tool. """,
       usage=('%(prog)s [-h] [--schema_version SCHEMA_VERSION] ' +
              '[--output OUTPUT] [--flat] [--KEY=VALUE ...] files [files ...]'))
   parser.add_argument('--schema_version', default='2',
@@ -73,19 +84,22 @@ def create_factored_manifest_v3(tags, sample_globs):
   lines = ['type: manifest/samples',
            'schema_version: 3',
            'base: &common']
-  forbid_names(tags, 'basepath', 'sample', 'path')
+  forbid_names(tags, 'sample', 'path')
+
+  have_basepath = False
   for name, value in tags:
+    if name == BASEPATH_KEY:
+      have_basepath = True
     lines.append("  {}: '{}'".format(name, value))
-  lines.extend([
-      "  basepath: '{}'".format(os.getcwd()),
-      "samples:"
-  ])
+  if not have_basepath:
+    lines.append("  {}: '{}'".format(BASEPATH_KEY, BASEPATH_DEFAULT))
+  lines.append("samples:")
   for s in sample_globs:
     for sample_relative_path in glob(s, recursive=True):
       sample_absolute_path = os.path.join(os.getcwd(), sample_relative_path)
       lines.extend([
           "- <<: *common",
-	  "  path: '{{basepath}}/{}'".format(sample_relative_path),
+	  "  path: '{{{}}}/{}'".format(BASEPATH_KEY, sample_relative_path),
 	  "  sample: '{}'".format(get_region_tag(sample_absolute_path))
           ])
   return '\n'.join(lines) + '\n'
@@ -100,15 +114,26 @@ def create_flat_manifest_v3(tags, sample_globs):
   """
   forbid_names(tags, 'sample', 'path')
   items = []
+
   for s in sample_globs:
     for sample in glob(s, recursive=True):
+      basepath = None
+      entry_content = {}
+      for name, value in tags:
+        if name == BASEPATH_KEY:
+          basepath = value
+          continue
+        entry_content[name] = value
+
+      if not basepath:
+        basepath = BASEPATH_DEFAULT
       sample_path = os.path.join(os.getcwd(), sample)
+
       entry = {
-	  'path': sample_path,
+	  'path': os.path.join(basepath, sample),
 	  'sample': get_region_tag(sample_path)
       }
-      for name, value in tags:
-        entry[name] = value
+      entry.update(entry_content)
       items.append(entry)
 
   manifest = OrderedDict()
@@ -134,9 +159,13 @@ def create_manifest_v2(tags, sample_globs):
   manifest = OrderedDict()
   manifest['version'] = 2
   manifest['sets'] = []
+  basepath = None
 
   environment = OrderedDict()
   for name, value in tags:
+    if name == BASEPATH_KEY:
+      basepath = value
+      continue
     # adjust for backward compatibility
     if name == 'env':
       if value not in ALL_LANGS:
@@ -144,7 +173,10 @@ def create_manifest_v2(tags, sample_globs):
                  .format(value, ALL_LANGS))
       name = 'environment'
     environment[name] = value
-  environment['path'] = os.getcwd() + "/"
+
+  if not basepath:
+    basepath = BASEPATH_DEFAULT
+  environment['path'] = "{}/".format(basepath)
   environment['__items__'] = path_sample_pairs_v2(sample_globs)
   manifest['sets'].append(environment)
   return manifest
