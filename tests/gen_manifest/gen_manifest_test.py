@@ -28,7 +28,7 @@ class TestGenManifest(unittest.TestCase):
     self.maxDiff = None
     BIN = '/my/bin/'
     INVOCATION = 'call this way'
-    CHDIR = '/this/working/path/'
+    CHDIR = '@/this/working/path/'
     ENV = 'python'
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
@@ -45,18 +45,18 @@ class TestGenManifest(unittest.TestCase):
     expected_string = """type: manifest/samples
 schema_version: 3
 base: &common
-  env: {env}
-  bin: {bin}
-  invocation: {invocation}
-  chdir: {chdir}
-  basepath: {cwd}
+  env: '{env}'
+  bin: '{bin}'
+  invocation: '{invocation}'
+  chdir: '{chdir}'
+  basepath: '{cwd}'
 samples:
 - <<: *common
-  path: {{basepath}}/{sample_path}/readbook.py
-  sample: readbook_sample
+  path: '{{basepath}}/{sample_path}/readbook.py'
+  sample: 'readbook_sample'
 - <<: *common
-  path: {{basepath}}/{sample_path}/getbook.py
-  sample: getbook_sample
+  path: '{{basepath}}/{sample_path}/getbook.py'
+  sample: 'getbook_sample'
 """.format(env=ENV, bin=BIN, invocation=INVOCATION,
            chdir=CHDIR, sample_path=sample_path, cwd=gen_manifest_cwd)
     self.assertEqual(expected_string, manifest_string)
@@ -77,7 +77,7 @@ samples:
     self.maxDiff = None
     BIN = '/my/bin/'
     INVOCATION = 'call this way'
-    CHDIR = '/this/working/path/'
+    CHDIR = '@/this/working/path/'
     ENV = 'python'
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
@@ -97,14 +97,14 @@ schema_version: 3
 samples:
 - basepath: should not be forbidden when flat
   bin: {bin}
-  chdir: {chdir}
+  chdir: '{chdir}'
   env: {env}
   invocation: {invocation}
   path: {sample_path}/readbook.py
   sample: readbook_sample
 - basepath: should not be forbidden when flat
   bin: {bin}
-  chdir: {chdir}
+  chdir: '{chdir}'
   env: {env}
   invocation: {invocation}
   path: {sample_path}/getbook.py

@@ -75,18 +75,18 @@ def create_factored_manifest_v3(tags, sample_globs):
            'base: &common']
   forbid_names(tags, 'basepath', 'sample', 'path')
   for name, value in tags:
-    lines.append('  {}: {}'.format(name, value))
+    lines.append("  {}: '{}'".format(name, value))
   lines.extend([
-      '  basepath: {}'.format(os.getcwd()),
-      'samples:'
+      "  basepath: '{}'".format(os.getcwd()),
+      "samples:"
   ])
   for s in sample_globs:
     for sample_relative_path in glob(s, recursive=True):
       sample_absolute_path = os.path.join(os.getcwd(), sample_relative_path)
       lines.extend([
-          '- <<: *common',
-	  '  path: {{basepath}}/{}'.format(sample_relative_path),
-	  '  sample: {}'.format(get_region_tag(sample_absolute_path))
+          "- <<: *common",
+	  "  path: '{{basepath}}/{}'".format(sample_relative_path),
+	  "  sample: '{}'".format(get_region_tag(sample_absolute_path))
           ])
   return '\n'.join(lines) + '\n'
 
