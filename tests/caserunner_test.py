@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 import os
+import re
+import unittest
 
 from sampletester import caserunner
 from sampletester import convention
@@ -108,6 +109,45 @@ class TestCaseRunner(unittest.TestCase):
                      '{}: {}:yaml'.format(message, suite_name))
     assertion(self.results.suites[suite_name].num_errors == 0,
                     '{}: {}'.format(message, suite_name))
+
+
+class TestCaseRunnerSkipsCasesWhenSetupFails(unittest.TestCase):
+  def setUp(self):
+    self.environment_registry = environment_registry.new(convention.DEFAULT, [])
+    self.manager = testplan.Manager(
+        self.environment_registry,
+        testplan.suites_from([full_path('testdata/caserunner_test_setup_failures.yaml')]))
+    self.results = Visitor()
+    self.manager.accept(testplan.MultiVisitor(runner.Visitor(fail_fast=False),
+                                              summary.SummaryVisitor(verbosity=summary.Detail.FULL,
+                                                                     show_errors=True)))
+    if self.manager.accept(self.results) is not None:
+      self.fail('error running test plan: {}'.format(self.results.error))
+
+    self.fname_re = re.compile('^filename: (.+)$', re.MULTILINE)
+
+  def do_test_case(self, suite_name, case_variant):
+      case_name = suite_name + case_variant
+      self.assertFalse(self.results.suites[suite_name].success(),
+                       'expected test suite to fail: {}'.format(suite_name))
+      self.assertFalse(self.results.cases[case_name].success(),
+                       'expected test case to fail: {}'.format(case_name))
+      case_output = self.results.cases[case_name].runner.output
+      fname_match = self.fname_re.search(case_output)
+      self.assertFalse(fname_match is None, 'could not extract filename in output:>>>\n{}\n<<<'.format(case_output))
+      fname = fname_match.group(1)
+      with open(fname) as f:
+        processed = f.read()
+      context = 'processed("{}", case {}):>>>\n{}\n<<<'.format(fname, case_name, processed)
+      self.assertTrue('setup-before' in processed, 'expected "setup-before" in {}'.format(context))
+      self.assertFalse('setup-after' in processed, 'expected "setup-after" to not be in {}'.format(context))
+      self.assertFalse(case_variant in processed, 'expected "{}" to not be in {}'.format(case_variant, context))
+      self.assertTrue('teardown' in processed, 'expected "teardown" in {}'.format(context))
+
+  def test_setup_assertion_fails_suite(self):
+    for suite_name in list(self.results.suites.keys()):
+      self.do_test_case(suite_name, ':code')
+      self.do_test_case(suite_name, ':yaml')
 
 
 class TestCaseRunnerCatchExceptions(unittest.TestCase):
