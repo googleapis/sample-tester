@@ -48,7 +48,7 @@ def parse_args():
       directories in the manifest, pass "--basepath=$(pwd)" to this tool. """,
       usage=('%(prog)s [-h] [--schema_version SCHEMA_VERSION] ' +
              '[--output OUTPUT] [--flat] [--KEY=VALUE ...] files [files ...]'))
-  parser.add_argument('--schema_version', default='2',
+  parser.add_argument('--schema_version', default='3',
                       help='schema version to use in the generated manifest')
   parser.add_argument('--output',
                       help="""the name of the output file, which should include
