@@ -49,13 +49,12 @@ base: &common
   bin: {bin}
   invocation: {invocation}
   chdir: {chdir}
-  basepath: {cwd}
 samples:
 - <<: *common
-  path: {{basepath}}/{sample_path}/readbook.py
+  path: {sample_path}/readbook.py
   sample: readbook_sample
 - <<: *common
-  path: {{basepath}}/{sample_path}/getbook.py
+  path: {sample_path}/getbook.py
   sample: getbook_sample
 """.format(env=ENV, bin=BIN, invocation=INVOCATION,
            chdir=CHDIR, sample_path=sample_path, cwd=gen_manifest_cwd)
@@ -65,7 +64,7 @@ samples:
     self.maxDiff = None
 
     sample_path = os.path.abspath(os.path.join(_ABS_DIR, '..','testdata','gen_manifest'))
-    for forbidden_name in ['basepath', 'path', 'sample']:
+    for forbidden_name in ['path', 'sample']:
       with self.assertRaises(gen_manifest.TagNameError):
         manifest_string = gen_manifest.emit_manifest_v3(
             tags = [(forbidden_name, 'foo')],
@@ -87,7 +86,6 @@ samples:
                 ('bin', BIN),
                 ('invocation', INVOCATION),
                 ('chdir', CHDIR),
-                ('basepath', 'should not be forbidden when flat')],
         sample_globs = [os.path.join(sample_path, 'readbook.py'),
                         os.path.join(sample_path, 'getbook.py')],
         flat = True)
@@ -95,15 +93,13 @@ samples:
     expected_string = """type: manifest/samples
 schema_version: 3
 samples:
-- basepath: should not be forbidden when flat
-  bin: {bin}
+- bin: {bin}
   chdir: {chdir}
   env: {env}
   invocation: {invocation}
   path: {sample_path}/readbook.py
   sample: readbook_sample
-- basepath: should not be forbidden when flat
-  bin: {bin}
+- bin: {bin}
   chdir: {chdir}
   env: {env}
   invocation: {invocation}

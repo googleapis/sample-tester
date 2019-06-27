@@ -65,27 +65,22 @@ def emit_manifest_v3(tags, sample_globs, flat):
 def create_factored_manifest_v3(tags, sample_globs):
   """Creates a factored v3 manifest with the given top-level tags
 
-  The `basepath` at the top level is the current working directory, and the
-  `path` for each individual item is a reference to `basepath` followed by the
-  glob resolution for that sample. The `sample` (ID) for each item is the value
-  of the single region tag inside that sample file.
+  The `sample` (ID) for each item is the value of the single region tag
+  inside that sample file.
   """
   lines = ['type: manifest/samples',
            'schema_version: 3',
            'base: &common']
-  forbid_names(tags, 'basepath', 'sample', 'path')
+  forbid_names(tags, 'sample', 'path')
   for name, value in tags:
     lines.append('  {}: {}'.format(name, value))
-  lines.extend([
-      '  basepath: {}'.format(os.getcwd()),
-      'samples:'
-  ])
+  lines.extend(['samples:'])
   for s in sample_globs:
     for sample_relative_path in glob(s, recursive=True):
       sample_absolute_path = os.path.join(os.getcwd(), sample_relative_path)
       lines.extend([
           '- <<: *common',
-	  '  path: {{basepath}}/{}'.format(sample_relative_path),
+	  '  path: {}'.format(sample_relative_path),
 	  '  sample: {}'.format(get_region_tag(sample_absolute_path))
           ])
   return '\n'.join(lines) + '\n'
