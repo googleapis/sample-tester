@@ -88,6 +88,10 @@ class TestCase:
         # does not contain any of a list (all list elements absent)
         "assert_excludes": (self.contain_checker(self.assert_that, all, False),
                                 self.params_for_contains),
+        # alias for "assert_excludes"
+        "assert_not_contains": (self.contain_checker(self.assert_that, all, False),
+                                self.params_for_contains),
+
         # contains all of a list
         "assert_contains": (self.contain_checker(self.assert_that, all, True),
                                 self.params_for_contains),

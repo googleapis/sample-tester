@@ -35,6 +35,8 @@ test:
           sample: "examples/testdata/samples/vision/product-search/list_products.py"
       - assert_excludes:
           - variable: product_id
+      - assert_not_contains:
+          - variable: product_id
       - call:
           sample: "examples/testdata/samples/vision/product-search/create_product.py"
           args:
@@ -53,6 +55,8 @@ test:
       - call:
           sample: "examples/testdata/samples/vision/product-search/list_products.py"
       - assert_excludes:
+          - variable: product_id
+      - assert_not_contains:
           - variable: product_id
 
 
