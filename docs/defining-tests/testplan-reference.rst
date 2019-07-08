@@ -42,9 +42,10 @@ how to run the samples and what checks to perform.
    - ``assert_contains``: require the output of the last ``call*`` to
      contain all of the strings provided (case-insensitively); abort
      the test case otherwise
-   - ``assert_excludes_all``: require the output of the last ``call*``
-     to not contain any of the strings provided (case-insensitively);
-     abort the test case otherwise
+   - ``assert_excludes_all`` (and the previous deprecated form
+     ``assert_not_contains``): require the output of the last
+     ``call*`` to not contain any of the strings provided
+     (case-insensitively); abort the test case otherwise
    - ``assert_contains_any``: require the output of the last ``call*``
      to contain at least one of the strings provided
      (case-insensitively); abort the test case otherwise

@@ -27,6 +27,7 @@ test:
           assert_success("echo should have succeeded")
           assert_contains("BeSt")
           assert_excludes("wOrSt")
+          assert_not_contains("wOrSt")
           assert_contains_any('commonest', 'best', 'worst')
           assert_excludes_any('best', 'worst')
           assert_that('ime' in out, 'expected "ime" in the preceding output')
@@ -37,6 +38,7 @@ test:
           assert_success("call should have succeeded")
           assert_contains("ree")
           assert_excludes("farewell")
+          assert_not_contains("farewell")
           assert_that('eti' in _last_call_output, 'expected "eti" in the preceding output')
 
           shell('/nonexistent/dir/foobar')
@@ -62,6 +64,9 @@ test:
       - assert_excludes:
         - message: "Expected no 'worst'"            
         - literal: "wOrSt"
+      - assert_not_contains:
+        - message: "Expected no 'worst'"            
+        - literal: "wOrSt"
       - assert_contains_any:
         - literal: 'commonest'
         - literal: 'best'
@@ -79,6 +84,9 @@ test:
           - message: "should contain ree"
           - literal: "ree"
       - assert_excludes:
+          - message: "should not contain farewell"
+          - literal: "farewell"
+      - assert_not_contains:
           - message: "should not contain farewell"
           - literal: "farewell"
 
