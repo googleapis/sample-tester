@@ -19,7 +19,9 @@ sets:
   - situation: simple
     invocation: "Zimbabwe is a country"
   - situation: invocation-with-placeholder
-    invocation: "Ecuador @args is a @@country"
+    invocation: "Ecuador @args is @@a @country"
+  - situation: invocation-with-escaped-placeholder
+    invocation: "Japan @@args is @@a @country"
   - situation: invocation-via-bin-no-path
     bin: "France is a country"
   - situation: invocation-via-bin-with-path
@@ -31,8 +33,6 @@ sets:
   __items__:
   - situation: no-invocation-bin-path
     foo: bar
-  - situation: invocation-with-unescaped-@
-    invocation: "Cambodia is a @country"
 - environment: Changing invocation key
   __items__:
   - situation: alternate-invocation

@@ -24,10 +24,17 @@ _ABS_DIR = os.path.dirname(_ABS_FILE)
 
 class TestSubstitution(unittest.TestCase):
   def test_substitution(self):
-    self.assertEqual('hi there',        tag.insert_into('hi there',       '@here', 'foo'))
-    self.assertEqual('hi foo there',    tag.insert_into('hi @here there', '@here', 'foo'))
-    self.assertEqual('hi @@here there', tag.insert_into('hi @@here there', '@here', 'foo'))
-    self.assertEqual('hi @@foo there',  tag.insert_into('hi @@@here there', '@here', 'foo'))
+    self.assertEqual('hi there',        tag.insert_into('hi there',         ('@here', 'foo')))
+    self.assertEqual('hi @there',       tag.insert_into('hi @there',        ('@here', 'foo')))
+    self.assertEqual('hi @there',       tag.insert_into('hi @@there',       ('@here', 'foo')))
+    self.assertEqual('hi foo there',    tag.insert_into('hi @here there',   ('@here', 'foo')))
+    self.assertEqual('hi @here there', tag.insert_into('hi @@here there',   ('@here', 'foo')))
+    self.assertEqual('hi @foo there',  tag.insert_into('hi @@@here there',  ('@here', 'foo')))
+
+    self.assertEqual('hi @foo there foo @greetings @@all',
+                     tag.insert_into('hi @@@here there @here @@greetings @@@all', ('@here', 'foo')))
+    self.assertRaises(tag.InternalInvalidPlaceholderDefinition,
+                      tag.insert_into, 'hi @here', ('$here', 'foo'))
 
 class TestArgSubstitution(unittest.TestCase):
   def setUp(self):
@@ -49,12 +56,27 @@ class TestArgSubstitution(unittest.TestCase):
                      self.get_call_only('simple', continent='Africa'))
 
   def test_invocation_with_placeholder(self):
-    self.assertEqual(r'Ecuador "--continent=\"South America\"" is a @country',
+    self.assertEqual(r'Ecuador "--continent=\"South America\"" is @a @country',
                      self.get_call_only('invocation-with-placeholder',
                                         '--continent="South America"'))
-    self.assertEqual(r'Ecuador --continent="South America" is a @country',
+    self.assertEqual(r'Ecuador --continent="South America" is @a @country',
                      self.get_call_only('invocation-with-placeholder',
                                         continent='South America'))
+
+    self.assertEqual(r'Ecuador "--continent=\"South @@America\"" is @a @country',
+                     self.get_call_only('invocation-with-placeholder',
+                                        '--continent="South @@@America"'))
+    self.assertEqual(r'Ecuador --continent="South @@America" is @a @country',
+                     self.get_call_only('invocation-with-placeholder',
+                                        continent='South @@@America'))
+
+  def test_invocation_with_placeholder(self):
+    self.assertEqual(r'Japan @args is @a @country',
+                     self.get_call_only('invocation-with-escaped-placeholder',
+                                        '--continent="Asia"'))
+    self.assertEqual(r'Japan @args is @a @country',
+                     self.get_call_only('invocation-with-escaped-placeholder',
+                                        continent='Asia'))
 
   def test_invocation_via_bin_no_path(self):
     self.assertEqual('France is a country "--continent=Europe"',
@@ -91,10 +113,6 @@ class TestArgSubstitution(unittest.TestCase):
     self.assertRaises(Exception,
                       self.get_call_only, 'no-object-with-this-value',
                       person='Bob')
-
-  def test_invocation_with_unescaped_at(self):
-    self.assertRaises(Exception, self.get_call_only,
-                      'invocation-with-unescaped-@', 'Asia')
 
 class TestChangingInvocationKey(unittest.TestCase):
   def setUp(self):
@@ -160,11 +178,11 @@ class TestGetSymbol(unittest.TestCase):
     self.env = tag.ManifestEnvironment(self.manifest_file_name, '', manifest, [])
 
   def test_get_symbol(self):
-    self.assertEqual('Ecuador @args is a @@country',
+    self.assertEqual('Ecuador @args is @@a @country',
                      self.env.get_symbol('invocation-with-placeholder:invocation'))
 
     expected_full = {'situation': 'invocation-with-placeholder',
-                     'invocation': 'Ecuador @args is a @@country',
+                     'invocation': 'Ecuador @args is @@a @country',
                      'environment': 'Valid call',
                      '@manifest_source': self.manifest_file_name,
                      '@manifest_dir': os.path.dirname(self.manifest_file_name)
