@@ -32,7 +32,7 @@ test:
           sample: "language_analyze_sentiment_text"
           params:
             content:
-              literal: "happy happy smile hope"
+              literal: "happy happy smile @hope"
       - assert_success: [] # try assert_failure to see how failure looks
       - assert_contains:
           - message: "Have score and magnitude"

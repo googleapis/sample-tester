@@ -154,8 +154,7 @@ class ManifestEnvironment(testenv.Base):
 
     chdir_key = self.manifest_options.get(CHDIR_KEY, CHDIR_KEY)
     chdir = artifact.get(chdir_key, None)
-    return escape_placeholder(insert_into(invocation,
-                                          PLACEHOLDER_ARGS, cli_args)), chdir
+    return insert_into(invocation, (PLACEHOLDER_ARGS, cli_args)), chdir
 
   def adjust_suite_name(self, name):
     return self.adjust_name(name)
@@ -169,31 +168,27 @@ class ManifestEnvironment(testenv.Base):
   def get_testcase_settings(self):
     return self._testcase_settings
 
-def insert_into(host: str, placeholder: str, guest: str):
-  """Returns a copy of host with all instances of placeholder replaced by guest
+def insert_into(host: str, *replacements): #  placeholder: str, guest: str):
+  """Returns a copy of host with all the specified replacements applied.
 
-  This respects escaped instances of PLACEHOLDER_CHAR.
+  Each element of `replacements` is a pair of a `placeholder` string (which must
+  begin with PLACEHOLDER_CHAR) and a `subst` string to replace it. After
+  freezing escaped instances of PLACEHOLDER_CHAR in `host`, each `placeholder`
+  is then substituted by its `subst`. The previously frozen escaped instances of
+  PLACEHOLDER_CHAR are then substituted with a literal PLACEHOLDER_CHAR, and the
+  resulting string is then returned.
   """
   escaped_token = '\x10'  # arbitrary non-printable char to mark escaped spots
   escaped_inclusion = PLACEHOLDER_CHAR*2
   escaped = host.replace(escaped_inclusion, escaped_token)
-  inserted = escaped.replace(placeholder, guest)
-  return inserted.replace(escaped_token, escaped_inclusion)
+  for placeholder, subst in replacements:
+    if placeholder[0] != PLACEHOLDER_CHAR:
+      raise InternalInvalidPlaceholderDefinition(
+          'placeholder "{}" does not begin with PLACEHOLDER_CHAR "{}"'
+          .format(placeholder, PLACEHOLDER_CHAR))
+    escaped = escaped.replace(placeholder, subst)
+  return escaped.replace(escaped_token, PLACEHOLDER_CHAR)
 
-def escape_placeholder(value: str):
-  """Processes instances of escaped PLACEHOLDER_CHAR"""
-  idx = 0
-  while idx != -1:
-    idx = value.find(PLACEHOLDER_CHAR, idx)
-    if idx == -1:
-      break
-    if idx < len(value) - 1 and value[idx+1] == PLACEHOLDER_CHAR:
-      idx = idx + 2
-      continue
-    raise Exception(
-        'unknown reference in unescaped inclusion character "{}" in  "{}""'
-        .format(PLACEHOLDER_CHAR, value))
-  return value.replace(PLACEHOLDER_CHAR*2, PLACEHOLDER_CHAR)
 
 # A global record of all the manifest and environments created via all the calls to test_environments()
 all_manifests = []
@@ -240,3 +235,7 @@ def test_environments(manifest_paths, convention_parameters, manifest_options):
   all_environments.extend(environments)
   all_manifests.extend(manifest_files)
   return environments
+
+
+class InternalInvalidPlaceholderDefinition(Exception):
+  pass
