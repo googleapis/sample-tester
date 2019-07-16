@@ -38,12 +38,20 @@ import string
 import sys
 import traceback
 
+from typing import Dict
+from typing import List
+from typing import Tuple
+
 from sampletester import convention
 from sampletester import environment_registry
+from sampletester import parser
 from sampletester import runner
 from sampletester import summary
 from sampletester import testplan
 from sampletester import xunit
+
+from sampletester.sample_manifest import SCHEMA_TYPE_VALUE as MANIFEST_TYPE
+from sampletester.testplan import SCHEMA_TYPE_VALUE as TESTPLAN_TYPE
 
 VERSION = '0.15.3'
 EXITCODE_SUCCESS = 0
@@ -55,7 +63,7 @@ EXITCODE_USER_ABORT = 4
 DEFAULT_LOG_LEVEL = 100
 
 # Set this to True to get a backtrace for debugging
-DEBUGME=False
+DEBUGME=True
 
 def main():
   args, usage = parse_cli()
@@ -70,7 +78,14 @@ def main():
   logging.info("argv: {}".format(sys.argv))
 
   try:
-    test_files, user_paths = get_files(args.files)
+    test_docs, manifest_docs = sort_docs(parser.from_files(*args.files))
+    # TODO: Remove the following temporary lines once we pass the parsed
+    # objects to the other modules, instead of the filenames
+    # >>>>
+    test_files =  [doc.path for doc in test_docs]
+    user_paths =  [doc.path for doc in manifest_docs]
+    # <<<<
+
 
     registry = environment_registry.new(args.convention, user_paths)
 
@@ -207,33 +222,9 @@ def parse_cli():
   if len(sys.argv) == 1:
     parser.print_help()
     return None, None
+
   parser.add_argument("files", metavar="CONFIGS", nargs=argparse.REMAINDER)
   return parser.parse_args(), parser.format_usage()
-
-
-# cf https://docs.python.org/3/library/argparse.html
-def get_files(files):
-  test_files = []
-  user_paths = []
-  for filename in files:
-    filepath = os.path.abspath(filename)
-    if os.path.isdir(filepath):
-      user_paths.append(filepath)
-      continue
-
-    ext_split = os.path.splitext(filename)
-    ext = ext_split[-1]
-    if ext == ".yaml":
-      prev_ext = os.path.splitext(ext_split[0])[-1]
-      if prev_ext == ".manifest":
-        user_paths.append(filepath)
-      else:
-        test_files.append(filepath)
-    else:
-      msg = 'unknown file type: "{}"'.format(filename)
-      logging.critical(msg)
-      raise ValueError(msg)
-  return test_files, user_paths
 
 
 # from https://stackoverflow.com/a/17603000
@@ -249,6 +240,46 @@ def smart_open(filename=None):
   finally:
     if fh is not sys.stdout:
       fh.close()
+
+def sort_docs(docs: Dict[str,
+                         List[parser.Document]]) -> Tuple[List[parser.Document],
+                                                          List[parser.Document]]:
+  """Returns separate lists of testplan and manifest YAML docs.
+
+  This function separates the manifest and testplan documents into two separate
+  lists. For documents of unknown type (parser.SCHEMA_TYPE_ABSENT), it employs
+  the filename to assign to one of those two lists: documents with paths ending
+  in "manifest.yaml" are considered manifests, and any remaining documents iwth
+  paths ending in ".yaml" are considered testplans.
+
+  Args:
+    docs: A dictionary of YAML type values to a list of parser.Document. Each
+      such Document describes a YAML document.
+
+  Returns: A list with testplan documents, and a list with manifest
+    documents. Each of these documents is represented by a parser.Document, so it
+    includes the parsed content and either the filepath or a description.
+  """
+  manifest_docs = docs.get(MANIFEST_TYPE,[])
+  testplan_docs = docs.get(TESTPLAN_TYPE,[])
+
+  for unknown_doc in docs.get(parser.SCHEMA_TYPE_ABSENT):
+    ext_split = os.path.splitext(unknown_doc.path)
+    ext = ext_split[-1]
+    if ext == ".yaml":
+      prev_ext = os.path.splitext(ext_split[0])[-1]
+      if prev_ext == ".manifest":
+        manifest_docs.append(unknown_doc)
+      else:
+        testplan_docs.append(unknown_doc)
+    else:
+      msg = 'unknown file type: "{}"'.format(unknown_doc.path)
+      logging.critical(msg)
+      raise ValueError(msg)
+
+  return testplan_docs, manifest_docs
+
+
 
 
 if __name__ == "__main__":

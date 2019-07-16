@@ -263,6 +263,9 @@ class Manager:
     return visitor.end_visit()
 
 
+SCHEMA_TYPE_VALUE = 'test'
+SCHEMA_SUBTYPE_VALUE = 'samples'
+
 def suite_configs_from(test_files):
   """Returns the suite configs (key/value pairs) from all the `test_files`.
 

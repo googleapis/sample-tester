@@ -18,6 +18,8 @@ import os.path
 from typing import Iterable
 import yaml
 
+SCHEMA_TYPE_VALUE = 'manifest'
+
 
 # This prefix marks symbols that have special semantics for the purposes of
 # sample-tester, but that are not defined in the manifest schema itself.
@@ -56,9 +58,9 @@ class Manifest:
 
   # TODO: Change key to index in the doc above and usages below
 
-  SCHEMA_TYPE_KEY = 'type'
+  SCHEMA_TYPE_KEY = 'type'     # TODO defer to parser.py's def
   SCHEMA_TYPE_VALUE = 'manifest'
-  SCHEMA_TYPE_SEPARATOR = '/'
+  SCHEMA_TYPE_SEPARATOR = '/'  # TODO defer to parser.py's def
   SCHEMA_VERSION_KEY = 'schema_version'
 
   # These values are deprecated and will go away once sampler tester stops
