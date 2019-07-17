@@ -78,31 +78,19 @@ def main():
   logging.info("argv: {}".format(sys.argv))
 
   try:
+    indexed_docs = parser.IndexedDocs(resolver=untyped_yaml_resolver)
+    indexed_docs.from_files(*args.files)
 
-    all_docs = parser.from_files(*args.files)
-    # TODO NEXT:
-    # - make from_files, from_string be methods on IndexedDocs
-    # - then call that directly instead of the above (with the resolver I put at the bottom of this file to pick up old-style files)
-    # - then get rid of sort_docs in favor of passing the whole IndexedDocs to testplan, and it can get the files of the type it needs
-
-
-    test_docs, manifest_docs = sort_docs(parser.from_files(*args.files))
-
-    # TODO: Remove the following temporary lines once we pass the parsed
-    # objects to the other modules, instead of the filenames
-    # >>>>
-    #  DONE  test_files =  [doc.path for doc in test_docs]
-    user_paths =  [doc.path for doc in manifest_docs]
-    # user_paths =  [doc.path for doc in all_docs.of_type()]
-    # <<<<
-
+    # TODO: Remove the following in favor of passing indexed_docs below.
+    user_paths =  [doc.path for doc in indexed_docs.of_type(MANIFEST_TYPE)]
 
     registry = environment_registry.new(args.convention, user_paths)
+    test_suites = testplan.suites_from(indexed_docs, args.suites, args.cases)
 
-    test_suites = testplan.suites_from_doc_list(test_docs, args.suites, args.cases)  ###
     if len(test_suites) == 0:
       exit(EXITCODE_SUCCESS)
     manager = testplan.Manager(registry, test_suites, args.envs)
+
   except Exception as e:
     logging.error("fatal error: {}".format(repr(e)))
     print("\nERROR: could not run tests because {}\n".format(e))
@@ -239,7 +227,7 @@ def parse_cli():
 
 # from https://stackoverflow.com/a/17603000
 @contextlib.contextmanager
-def smart_open(filename=None):
+def smart_open(filename: str=None):
   if filename and filename != "-":
     fh = open(filename, "w")
   else:
@@ -251,45 +239,15 @@ def smart_open(filename=None):
     if fh is not sys.stdout:
       fh.close()
 
-def sort_docs(docs: Dict[str,
-                         List[parser.Document]]) -> Tuple[List[parser.Document],
-                                                          List[parser.Document]]:
-  """Returns separate lists of testplan and manifest YAML docs.
+def untyped_yaml_resolver(unknown_doc: parser.Document) -> str :
+  """Determines how `parser.IndexedDocs` should classify `unknown_doc`
 
-  This function separates the manifest and testplan documents into two separate
-  lists. For documents of unknown type (parser.SCHEMA_TYPE_ABSENT), it employs
-  the filename to assign to one of those two lists: documents with paths ending
-  in "manifest.yaml" are considered manifests, and any remaining documents iwth
-  paths ending in ".yaml" are considered testplans.
-
-  Args:
-    docs: A dictionary of YAML type values to a list of parser.Document. Each
-      such Document describes a YAML document.
-
-  Returns: A list with testplan documents, and a list with manifest
-    documents. Each of these documents is represented by a parser.Document, so it
-    includes the parsed content and either the filepath or a description.
+  This is a resolver for parser.IndexedDocs, used to resolve YAML docs that did
+  not have a type field and thus could not be automatically classified. This
+  resolver resolves using the filename, for backward compatibility: files ending
+  in `.manifest.yaml` are categorized as manifest files, and remaining YAML
+  files are categorized as testplan files.
   """
-  manifest_docs = docs.get(MANIFEST_TYPE,[])
-  testplan_docs = docs.get(TESTPLAN_TYPE,[])
-
-  for unknown_doc in docs.get(parser.SCHEMA_TYPE_ABSENT):
-    ext_split = os.path.splitext(unknown_doc.path)
-    ext = ext_split[-1]
-    if ext == ".yaml":
-      prev_ext = os.path.splitext(ext_split[0])[-1]
-      if prev_ext == ".manifest":
-        manifest_docs.append(unknown_doc)
-      else:
-        testplan_docs.append(unknown_doc)
-    else:
-      msg = 'unknown file type: "{}"'.format(unknown_doc.path)
-      logging.critical(msg)
-      raise ValueError(msg)
-
-  return testplan_docs, manifest_docs
-
-def resolver(unknown_doc) -> str :
   ext_split = os.path.splitext(unknown_doc.path)
   ext = ext_split[-1]
   if ext == ".yaml":

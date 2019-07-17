@@ -17,6 +17,7 @@ import logging
 import os
 import yaml
 
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Tuple
@@ -27,59 +28,52 @@ SCHEMA_TYPE_SEPARATOR = '/'
 
 Document = collections.namedtuple('Document', ['path', 'obj'])
 
-def from_files(*files: str) -> Dict[str, List[Document]]:
-  docs = {}
-  for file_name in files:
-    file_path = os.path.abspath(file_name) # TODO: Do we want abspath here or in what's passed in?
-    with open(file_path, 'r') as stream:
-      content = stream.read()
-      update_keyed_docs(docs, content, file_path)
-  return docs
-
-def from_strings(*sources: Tuple[str, str]) -> Dict[str, List[Document]]:
-  docs = {}
-  for description, content in sources:
-      update_keyed_docs(docs, content, description)
-  return docs
-
-
-def update_keyed_docs(keyed_docs: Dict[str, List[Document]],
-                      content,
-                      file_name: str,
-                      strict: bool = False)  -> Dict[str, List[Document]]:
-  """Updates `keyed_docs` with all parsed YAML docs in `content`"""
-
-  for doc in yaml.load_all(content):
-    specified_type = doc.get(SCHEMA_TYPE_KEY, None)
-
-    if not specified_type:
-      msg = 'no top-level "{}" field specified'.format(SCHEMA_TYPE_KEY)
-      if strict:
-        raise SyntaxError(msg)
-      logging.warning(msg)
-
-    if not isinstance(specified_type, str):
-      msg = ('top level "{}" field is not a string: {}'
-             .format(SCHEMA_TYPE_KEY, specified_type))
-      if strict:
-        raise SyntaxError(msg)
-      logging.warning(msg)
-      specified_type = SCHEMA_TYPE_ABSENT
-
-    type_name = specified_type.split(SCHEMA_TYPE_SEPARATOR, 1)[0]
-
-    similar_docs = keyed_docs.get(type_name, [])
-    if not similar_docs:
-      keyed_docs[type_name] = similar_docs
-    similar_docs.append(Document(file_name, doc))
-
 class IndexedDocs(object):
-  def __init__(self, strict=False, resolver=None):
+  def __init__(self,
+               strict: bool = False,
+               resolver: Callable[[Document], str] = None):
+    """Initialized IndexedDocs
+
+    Args:
+      strict: If true, raise an Exception if a top-level 'type' field is absent
+      resolver: a function that will be used if `strict` is not set to
+        categorize documents that do not have a top-level 'type' field. The
+        function is passed an uncategorized doc and should return a type string
+        that will be used to categorize the document.
+    """
     self.keyed_docs = {}
     self.strict = strict
     self.resolver = resolver
 
+  def from_files(self, *files: str):
+    """Adds all the documents found in `files`."""
+    for file_name in files:
+      file_path = os.path.abspath(file_name)
+      with open(file_path, 'r') as stream:
+        content = stream.read()
+        self.add(content, file_path)
+
+  def from_strings(self, *sources: Tuple[str, str]):
+    """Adds all the documents found in `sources`.
+
+    Args:
+      sources: a pair of YAML text and a description
+    """
+    for description, content in sources:
+      self.add(content, description)
+
   def add(self, content:str, file_name: str):
+    """Adds each YAML document in content as a Document indexed by its 'type'.
+
+    This function parses `content` and extracts all YAML documents it finds
+    there.  The documents are stored in lists of `Document` objects grouped and
+    indexed by the value of their top-level 'type' field.  If `strict` was set,
+    untyped documents raise an exception. Otherwise, if a resolver was provided,
+    it is called for each untyped document and the document is reclassified
+    according the type value returned by the provider. If no resolved was
+    provided, the untyped documents are put into their own list with type given
+    by `SCHEMA_TYPE_ABSENT`.
+    """
     for doc in yaml.load_all(content):
       specified_type = doc.get(SCHEMA_TYPE_KEY, None)
 
@@ -100,20 +94,21 @@ class IndexedDocs(object):
       type_name = specified_type.split(SCHEMA_TYPE_SEPARATOR, 1)[0]
       self._add_one(type_name, Document(file_name, doc))
 
-      #self.resolve_uncategorized()
+      self.resolve_uncategorized()
 
-  def _add_one(self, type_name, doc):
+  def _add_one(self, type_name: str, doc: Document):
+    """Adds `doc` to the list of documents with the given type."""
     similar_docs = self.keyed_docs.get(type_name, [])
     if not similar_docs:
       self.keyed_docs[type_name] = similar_docs
     similar_docs.append(doc)
 
   def of_type(self, type_name: str) -> List[Document]:
+    """Returns a list of all `Document`s with the given type."""
     return self.keyed_docs.get(type_name, [])
 
   def resolve_uncategorized(self):
-    # resolver should return the name of the type
-
+    """Categorized all documents of unknown type by calling the resolver."""
     if not self.resolver:
       return
 

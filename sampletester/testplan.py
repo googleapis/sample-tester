@@ -17,6 +17,10 @@ import logging
 import re
 import yaml
 
+from sampletester import parser
+
+from typing import List
+
 
 class Wrapper:
 
@@ -266,7 +270,7 @@ class Manager:
 SCHEMA_TYPE_VALUE = 'test'
 SCHEMA_SUBTYPE_VALUE = 'samples'
 
-def suite_configs_from(test_docs):
+def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
   """Returns the suite configs (key/value pairs) from all the `test_docs`.
 
   Helper function for suites_from(), which is what most clients will want to call.
@@ -279,9 +283,14 @@ def suite_configs_from(test_docs):
       all_suites.extend(these_suites)
   return all_suites
 
-def suites_from_doc_list(test_docs, suite_filter = None, case_filter = None):
+def suites_from_doc_list(test_docs: List[parser.Document],
+                         suite_filter: str = None,
+                         case_filter: str = None) -> List[Suite]:
   """Creates Suite objects from the given YAML test_docs"""
   return [Suite(spec, suite_filter, case_filter) for spec in suite_configs_from(test_docs)]
 
-def suites_from_doc(indexed_docs, suite_filter = None, case_filter = None):
+def suites_from(indexed_docs: parser.IndexedDocs,
+                suite_filter: str = None,
+                case_filter: str = None) -> List[Suite]:
+  """Creates and returns Suite objects from a `indexed_docs`"""
   return suites_from_doc_list(indexed_docs.of_type(SCHEMA_TYPE_VALUE))
