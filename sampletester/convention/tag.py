@@ -16,8 +16,12 @@ import glob
 import logging
 from typing import Iterable
 
+from sampletester import parser
 from sampletester import sample_manifest
 from sampletester import testenv
+
+from sampletester.sample_manifest import SCHEMA_TYPE_VALUE as MANIFEST_TYPE
+
 
 # The value of ENVIRONMENT_KEY in the manifest is a human convenience used to
 # group test suites for easier reporting. Its presence, absence, or value does
@@ -195,7 +199,9 @@ all_manifests = []
 all_env_names = []
 all_environments = []
 
-def test_environments(manifest_paths, convention_parameters, manifest_options):
+def test_environments(indexed_docs: parser.IndexedDocs,
+                      convention_parameters,
+                      manifest_options):
   if convention_parameters is None:
     convention_parameters = []
   num_params = len(convention_parameters)
@@ -203,12 +209,8 @@ def test_environments(manifest_paths, convention_parameters, manifest_options):
     raise Exception('expected at least 1 parameter to convention "tag", got %d: %s'
                     .format(num_params, convention_parameters))
 
-  manifest_files = []
-  for path in manifest_paths:
-    manifest_files.extend(
-        glob.glob(path)
-    )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
   manifest = sample_manifest.Manifest(ENVIRONMENT_KEY, *convention_parameters) # read only, so don't need a copy
+  manifest_files = [doc.path for doc in indexed_docs.of_type(MANIFEST_TYPE)]
   manifest.read_files(*manifest_files)
   manifest.index()
 

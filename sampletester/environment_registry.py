@@ -37,7 +37,7 @@ def new(convention_spec: str,
   manifest_options = parts[2].split(",") if len(parts) > 2 else None
 
   registry = Registry()
-  registry.add(*convention.generate_environments_NEW([convention_name],
+  registry.add(*convention.generate_environments([convention_name],
                                                  testcase_args, manifest_options,
                                                  indexed_docs))
   return registry

@@ -13,8 +13,12 @@
 # limitations under the License.
 
 from .cloud import CloudRepos
+from sampletester import parser
 
-def test_environments(files, convention_parameters, _unused):
+def test_environments(indexed_docs: parser.IndexedDocs,
+                      convention_parameters,
+                      _unused):
+  files = [doc.path for doc in indexed_docs.of_type(parser.SCHEMA_TYPE_ABSENT)]
   num_params = 0 if convention_parameters is None else len(convention_parameters)
   if num_params != 0:
     raise Exception('expected no parameters to convention "cloud", got %d: %s'
