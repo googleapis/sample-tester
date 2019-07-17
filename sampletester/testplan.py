@@ -279,6 +279,9 @@ def suite_configs_from(test_docs):
       all_suites.extend(these_suites)
   return all_suites
 
-def suites_from(test_docs, suite_filter = None, case_filter = None):
+def suites_from_doc_list(test_docs, suite_filter = None, case_filter = None):
   """Creates Suite objects from the given YAML test_docs"""
   return [Suite(spec, suite_filter, case_filter) for spec in suite_configs_from(test_docs)]
+
+def suites_from_doc(indexed_docs, suite_filter = None, case_filter = None):
+  return suites_from_doc_list(indexed_docs.of_type(SCHEMA_TYPE_VALUE))

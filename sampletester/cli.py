@@ -78,18 +78,28 @@ def main():
   logging.info("argv: {}".format(sys.argv))
 
   try:
+
+    all_docs = parser.from_files(*args.files)
+    # TODO NEXT:
+    # - make from_files, from_string be methods on IndexedDocs
+    # - then call that directly instead of the above (with the resolver I put at the bottom of this file to pick up old-style files)
+    # - then get rid of sort_docs in favor of passing the whole IndexedDocs to testplan, and it can get the files of the type it needs
+
+
     test_docs, manifest_docs = sort_docs(parser.from_files(*args.files))
+
     # TODO: Remove the following temporary lines once we pass the parsed
     # objects to the other modules, instead of the filenames
     # >>>>
     #  DONE  test_files =  [doc.path for doc in test_docs]
     user_paths =  [doc.path for doc in manifest_docs]
+    # user_paths =  [doc.path for doc in all_docs.of_type()]
     # <<<<
 
 
     registry = environment_registry.new(args.convention, user_paths)
 
-    test_suites = testplan.suites_from(test_docs, args.suites, args.cases)
+    test_suites = testplan.suites_from_doc_list(test_docs, args.suites, args.cases)  ###
     if len(test_suites) == 0:
       exit(EXITCODE_SUCCESS)
     manager = testplan.Manager(registry, test_suites, args.envs)
@@ -278,6 +288,21 @@ def sort_docs(docs: Dict[str,
       raise ValueError(msg)
 
   return testplan_docs, manifest_docs
+
+def resolver(unknown_doc) -> str :
+  ext_split = os.path.splitext(unknown_doc.path)
+  ext = ext_split[-1]
+  if ext == ".yaml":
+    prev_ext = os.path.splitext(ext_split[0])[-1]
+    if prev_ext == ".manifest":
+      return MANIFEST_TYPE
+    else:
+      return TESTPLAN_TYPE
+  else:
+    msg = 'unknown file type: "{}"'.format(unknown_doc.path)
+    logging.critical(msg)
+    raise ValueError(msg)
+
 
 
 

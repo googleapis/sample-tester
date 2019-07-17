@@ -68,7 +68,7 @@ class TestCaseRunner(unittest.TestCase):
     self.environment_registry = environment_registry.new(convention.DEFAULT, full_paths('testdata/caserunner_test.manifest.yaml'))
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from(create_docs(full_paths('testdata/caserunner_test.yaml'))))
+        testplan.suites_from_doc_list(create_docs(full_paths('testdata/caserunner_test.yaml'))))
     self.results = Visitor()
     self.manager.accept(testplan.MultiVisitor(runner.Visitor(),
                                               summary.SummaryVisitor(verbosity=summary.Detail.FULL,
@@ -118,7 +118,7 @@ class TestCaseRunnerSkipsCasesWhenSetupFails(unittest.TestCase):
     self.environment_registry = environment_registry.new(convention.DEFAULT, [])
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from(create_docs(full_paths('testdata/caserunner_test_setup_failures.yaml'))))
+        testplan.suites_from_doc_list(create_docs(full_paths('testdata/caserunner_test_setup_failures.yaml'))))
     self.results = Visitor()
     self.manager.accept(testplan.MultiVisitor(runner.Visitor(fail_fast=False),
                                               summary.SummaryVisitor(verbosity=summary.Detail.FULL,
@@ -157,7 +157,7 @@ class TestCaseRunnerCatchExceptions(unittest.TestCase):
     self.environment_registry = environment_registry.new(convention.DEFAULT, [])
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from(create_docs(full_paths('testdata/caserunner_test_exception.yaml'))))
+        testplan.suites_from_doc_list(create_docs(full_paths('testdata/caserunner_test_exception.yaml'))))
     self.results = Visitor()
 
   def test_keyboard_interrupt(self):
@@ -176,7 +176,7 @@ class TestCaseRunnerNoMatchForCallTarget(unittest.TestCase):
     self.environment_registry = environment_registry.new(convention.DEFAULT,  full_paths('testdata/caserunner_test_target.manifest.yaml'))
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from(create_docs(full_paths('testdata/caserunner_test_target.yaml'))))
+        testplan.suites_from_doc_list(create_docs(full_paths('testdata/caserunner_test_target.yaml'))))
     self.results = Visitor()
 
   def test_did_not_call(self):
@@ -193,7 +193,7 @@ class TestCaseRunnerMatchesForCallTarget(unittest.TestCase):
     self.environment_registry = environment_registry.new('tag:alpine',  full_paths('testdata/caserunner_test_target.manifest.yaml'))
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from(create_docs(full_paths('testdata/caserunner_test_target.yaml'))))
+        testplan.suites_from_doc_list(create_docs(full_paths('testdata/caserunner_test_target.yaml'))))
     self.results = Visitor()
 
   def test_did_call(self):
@@ -213,7 +213,7 @@ class TestChdir(unittest.TestCase):
         full_paths('testdata/caserunner_test.chdir.manifest.yaml'))
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from(create_docs(full_paths('testdata/caserunner_chdir_test.yaml'))))
+        testplan.suites_from_doc_list(create_docs(full_paths('testdata/caserunner_chdir_test.yaml'))))
     self.results = Visitor()
     self.manager.accept(testplan.MultiVisitor(runner.Visitor(),
                                               summary.SummaryVisitor(verbosity=summary.Detail.FULL,

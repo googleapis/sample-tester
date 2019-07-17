@@ -73,5 +73,59 @@ def update_keyed_docs(keyed_docs: Dict[str, List[Document]],
       keyed_docs[type_name] = similar_docs
     similar_docs.append(Document(file_name, doc))
 
+class IndexedDocs(object):
+  def __init__(self, strict=False, resolver=None):
+    self.keyed_docs = {}
+    self.strict = strict
+    self.resolver = resolver
+
+  def add(self, content:str, file_name: str):
+    for doc in yaml.load_all(content):
+      specified_type = doc.get(SCHEMA_TYPE_KEY, None)
+
+      if not specified_type:
+        msg = 'no top-level "{}" field specified'.format(SCHEMA_TYPE_KEY)
+        if self.strict:
+          raise SyntaxError(msg)
+        logging.warning(msg)
+
+      if not isinstance(specified_type, str):
+        msg = ('top level "{}" field is not a string: {}'
+               .format(SCHEMA_TYPE_KEY, specified_type))
+        if self.strict:
+          raise SyntaxError(msg)
+        logging.warning(msg)
+        specified_type = SCHEMA_TYPE_ABSENT
+
+      type_name = specified_type.split(SCHEMA_TYPE_SEPARATOR, 1)[0]
+      self._add_one(type_name, Document(file_name, doc))
+
+      #self.resolve_uncategorized()
+
+  def _add_one(self, type_name, doc):
+    similar_docs = self.keyed_docs.get(type_name, [])
+    if not similar_docs:
+      self.keyed_docs[type_name] = similar_docs
+    similar_docs.append(doc)
+
+  def of_type(self, type_name: str) -> List[Document]:
+    return self.keyed_docs.get(type_name, [])
+
+  def resolve_uncategorized(self):
+    # resolver should return the name of the type
+
+    if not self.resolver:
+      return
+
+    unknowns = self.of_type(SCHEMA_TYPE_ABSENT)
+    for idx, unknown_doc in enumerate(unknowns):
+      new_type = self.resolver(unknown_doc)
+      if not new_type or new_type == SCHEMA_TYPE_ABSENT:
+        continue
+      self._add_one(new_type, unknown_doc)
+      unknowns[idx]=None
+    self.keyed_docs[SCHEMA_TYPE_ABSENT] = [doc for doc in unknowns if doc]
+
+
 class SyntaxError(Exception):
   pass
