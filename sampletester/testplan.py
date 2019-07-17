@@ -266,34 +266,19 @@ class Manager:
 SCHEMA_TYPE_VALUE = 'test'
 SCHEMA_SUBTYPE_VALUE = 'samples'
 
-def suite_configs_from(test_files):
-  """Returns the suite configs (key/value pairs) from all the `test_files`.
+def suite_configs_from(test_docs):
+  """Returns the suite configs (key/value pairs) from all the `test_docs`.
 
   Helper function for suites_from(), which is what most clients will want to call.
   """
-
-  # TODO(vchudnov): Append line number info to aid in error messages
-  # cf: https://stackoverflow.com/a/13319530
   all_suites = []
-  for filename in test_files:
-    logging.info('Reading test file "{}"'.format(filename))
-    with open(filename, "r") as stream:
-      spec = yaml.load(stream, Loader=yaml.SafeLoader)
-      these_suites = spec["test"]["suites"]
+  for doc in test_docs:
+      these_suites = doc.obj["test"]["suites"]
       for suite in these_suites:
-        suite["source"] = filename
+        suite[SUITE_SOURCE] = doc.path
       all_suites.extend(these_suites)
   return all_suites
 
-
-def suite_objects_from(all_suites, suite_filter = None, case_filter = None):
-  """Creates Suite objects from the given suite config key/value specs.
-
-  Helper function for suites_from(), which is what most clients will want to call.
-  """
-  return [Suite(spec, suite_filter, case_filter) for spec in all_suites]
-
-
-def suites_from(test_files, suite_filter = None, case_filter = None):
-  """Creates Suite objects from the given YAML test_files"""
-  return suite_objects_from(suite_configs_from(test_files), suite_filter, case_filter)
+def suites_from(test_docs, suite_filter = None, case_filter = None):
+  """Creates Suite objects from the given YAML test_docs"""
+  return [Suite(spec, suite_filter, case_filter) for spec in suite_configs_from(test_docs)]

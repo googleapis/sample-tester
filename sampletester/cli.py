@@ -82,14 +82,14 @@ def main():
     # TODO: Remove the following temporary lines once we pass the parsed
     # objects to the other modules, instead of the filenames
     # >>>>
-    test_files =  [doc.path for doc in test_docs]
+    #  DONE  test_files =  [doc.path for doc in test_docs]
     user_paths =  [doc.path for doc in manifest_docs]
     # <<<<
 
 
     registry = environment_registry.new(args.convention, user_paths)
 
-    test_suites = testplan.suites_from(test_files, args.suites, args.cases)
+    test_suites = testplan.suites_from(test_docs, args.suites, args.cases)
     if len(test_suites) == 0:
       exit(EXITCODE_SUCCESS)
     manager = testplan.Manager(registry, test_suites, args.envs)
