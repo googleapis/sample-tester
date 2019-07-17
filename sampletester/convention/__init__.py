@@ -16,6 +16,8 @@ import importlib
 import logging
 import os
 
+from sampletester.sample_manifest import SCHEMA_TYPE_VALUE as MANIFEST_TYPE
+
 DEFAULT="tag:sample:invocation,chdir"
 
 __abs_file__ = os.path.abspath(__file__)
@@ -68,3 +70,8 @@ def generate_environments(requested_conventions, testcase_args, manifest_options
           'could not create test environments for convention "{}": {}'
           .format(convention, repr(ex)))
   return all_environments
+
+# TODO: remove this shim once the conventions can deal directly with the indexed docs
+def generate_environments_NEW(requested_conventions, testcase_args, manifest_options, indexed_docs):
+  return generate_environments(requested_conventions, testcase_args, manifest_options,
+                               [doc.path for doc in indexed_docs.of_type(MANIFEST_TYPE)])

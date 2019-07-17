@@ -44,14 +44,12 @@ from typing import Tuple
 
 from sampletester import convention
 from sampletester import environment_registry
+from sampletester import inputs
 from sampletester import parser
 from sampletester import runner
 from sampletester import summary
 from sampletester import testplan
 from sampletester import xunit
-
-from sampletester.sample_manifest import SCHEMA_TYPE_VALUE as MANIFEST_TYPE
-from sampletester.testplan import SCHEMA_TYPE_VALUE as TESTPLAN_TYPE
 
 VERSION = '0.15.3'
 EXITCODE_SUCCESS = 0
@@ -78,13 +76,10 @@ def main():
   logging.info("argv: {}".format(sys.argv))
 
   try:
-    indexed_docs = parser.IndexedDocs(resolver=untyped_yaml_resolver)
+    indexed_docs = parser.IndexedDocs(resolver=inputs.untyped_yaml_resolver)
     indexed_docs.from_files(*args.files)
 
-    # TODO: Remove the following in favor of passing indexed_docs below.
-    user_paths =  [doc.path for doc in indexed_docs.of_type(MANIFEST_TYPE)]
-
-    registry = environment_registry.new(args.convention, user_paths)
+    registry = environment_registry.new(args.convention, indexed_docs)
     test_suites = testplan.suites_from(indexed_docs, args.suites, args.cases)
 
     if len(test_suites) == 0:
@@ -238,31 +233,6 @@ def smart_open(filename: str=None):
   finally:
     if fh is not sys.stdout:
       fh.close()
-
-def untyped_yaml_resolver(unknown_doc: parser.Document) -> str :
-  """Determines how `parser.IndexedDocs` should classify `unknown_doc`
-
-  This is a resolver for parser.IndexedDocs, used to resolve YAML docs that did
-  not have a type field and thus could not be automatically classified. This
-  resolver resolves using the filename, for backward compatibility: files ending
-  in `.manifest.yaml` are categorized as manifest files, and remaining YAML
-  files are categorized as testplan files.
-  """
-  ext_split = os.path.splitext(unknown_doc.path)
-  ext = ext_split[-1]
-  if ext == ".yaml":
-    prev_ext = os.path.splitext(ext_split[0])[-1]
-    if prev_ext == ".manifest":
-      return MANIFEST_TYPE
-    else:
-      return TESTPLAN_TYPE
-  else:
-    msg = 'unknown file type: "{}"'.format(unknown_doc.path)
-    logging.critical(msg)
-    raise ValueError(msg)
-
-
-
 
 
 if __name__ == "__main__":
