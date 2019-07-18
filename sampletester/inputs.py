@@ -20,6 +20,8 @@ from sampletester import parser
 from sampletester.sample_manifest import SCHEMA_TYPE_VALUE as MANIFEST_TYPE
 from sampletester.testplan import SCHEMA_TYPE_VALUE as TESTPLAN_TYPE
 
+from typing import List
+
 def untyped_yaml_resolver(unknown_doc: parser.Document) -> str :
   """Determines how `parser.IndexedDocs` should classify `unknown_doc`
 
@@ -41,3 +43,11 @@ def untyped_yaml_resolver(unknown_doc: parser.Document) -> str :
     msg = 'unknown file type: "{}"'.format(unknown_doc.path)
     logging.critical(msg)
     raise ValueError(msg)
+
+def create_indexed_docs(*all_paths: List[str]) -> parser.IndexedDocs:
+  """Returns a parser.IndexedDocs that contains all documents in `all_paths`.
+  """
+  indexed_docs = parser.IndexedDocs(resolver=untyped_yaml_resolver)
+  indexed_docs.from_files(*all_paths)
+  return indexed_docs
+  

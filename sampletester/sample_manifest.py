@@ -15,8 +15,11 @@
 import io
 import logging
 import os.path
-from typing import Iterable
 import yaml
+
+from sampletester import parser
+
+from typing import Iterable
 
 SCHEMA_TYPE_VALUE = 'manifest'
 
@@ -96,30 +99,19 @@ class Manifest:
   def set_indices(self, *indices: str):
     self.indices = indices or [None]
 
-  def read_files(self, *files: str):
-    """Interprets files as YAML streams, each possibly containing multiple documents
-
-    Args:
-       files: any number of filenames to be parsed as YAML files
-    """
-    self.read_sources(files_to_yaml(*files))
-
-  def read_strings(self, *sources: str):
-    """Interprets strings as YAML streams, each possibly with multiple documents
-
-    Args:
-       str: any number of (label, yaml-string) pairs
-    """
-    self.read_sources(strings_to_yaml(*sources))
+  def from_docs(self, indexed_docs: parser.IndexedDocs):
+    """Ingests the manifests in `indexed_docs`"""
+    self.read_sources(from_indexed_docs(indexed_docs))
 
   def read_sources(self, sources):
     """Reads a sample manifest from a single YAML document.
 
     Args:
-      sources: An iterable of (name, manifest) pairs. Here, `manifest` is a dict
-        with a version key (`SCHEMA_VERSION_KEY` or `VERSION_KEY_v1v2`)
-        and with the other keys structured as expected by the interpreter for
-        the version specified as the value of the version key.
+      sources: An iterable of (name, manifest, implicit_tags) tuples. Here,
+        `manifest` is a dict with a version key (`SCHEMA_VERSION_KEY` or
+        `VERSION_KEY_v1v2`) and with the other keys structured as expected by
+        the interpreter for the version specified as the value of the version
+        key.
 
     Returns:
       the list of sources successfully read
@@ -513,38 +505,11 @@ def get_or_create(d, key, empty_value):
   return value
 
 
-def files_to_yaml(*files: str):
-  """Reads sample manifests from files.
+def from_indexed_docs(indexed_docs: parser.IndexedDocs):
+  """Reads sample manifests from indexed_docs.
 
   Args:
-    sources: Any number of names of files, each containing one or more YAML
-      documents.
-
-  Yields:
-    a tuple per YAML document in each file, each tuple containing the filename
-    of its source file, the parsed YAML as a Python object, and the implicit
-    tags (which have not yet been applied to the object). The implicit tags
-    contain the filename itself and the directory of filename.  Note that none
-    of YAML documents are guaranteed to be of the manifest type yet.
-  """
-  for file_name in files:
-    # we delegate to strings_to_yaml below to have single code path for easier
-    # testing and bug avoidance
-    with open(file_name, 'r') as stream:
-      content = stream.read()
-      yield from strings_to_yaml(
-          (file_name,
-           content,
-           create_implicit_tags(source=file_name, dir=os.path.dirname(file_name))))
-
-def strings_to_yaml(*sources: str):
-  """Reads sample manifests from strings.
-
-  Args:
-    sources: Any number of tuples, each containing the name of YAML source and
-      the actual string representation of the YAML. An optional third element
-      of each tuple is the set of implicit tags to add to the YAML; if not
-      provided, just the name in the tuple is made into an implicit tag.
+    indexed_docs: A set of indexed YAML docs.
 
   Yields:
     a tuple per YAML document in each source, each tuple containing the name of
@@ -552,12 +517,11 @@ def strings_to_yaml(*sources: str):
     have not yet been applied to the object). Note that none of YAML documents
     are guaranteed to be of the manifest type yet.
   """
-  for one_source in sources:
-    name, data = one_source[0], one_source[1]
-    implicit_tags = (one_source[2] if len(one_source) > 2
-                     else create_implicit_tags(source=name))
-    for manifest in yaml.load_all(data):
-      yield (name, manifest, implicit_tags)
+  for doc in indexed_docs.of_type(SCHEMA_TYPE_VALUE):
+    yield(doc.path,
+          doc.obj,
+          create_implicit_tags(source=doc.path, dir=os.path.dirname(doc.path)))
+
 
 def check_tag_names(src):
   """Checks that all explicit tag names are valid."""

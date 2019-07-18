@@ -16,6 +16,8 @@
 import os
 import unittest
 
+from sampletester import inputs
+from sampletester import parser
 from sampletester import sample_manifest
 
 _ABS_FILE = os.path.abspath(__file__)
@@ -24,9 +26,11 @@ _ABS_DIR = os.path.dirname(_ABS_FILE)
 
 class TestManifestV3(unittest.TestCase):
   def test_multiple_yaml_docs_in_stream(self):
-    all_parsed = sample_manifest.strings_to_yaml(
-        ('january',
-         """---
+    # all_parsed = sample_manifest.strings_to_yaml(
+    indexed_docs = parser.IndexedDocs(resolver=lambda _unused: sample_manifest.SCHEMA_TYPE_VALUE,
+                                      strict=False)
+    indexed_docs.from_strings(('january',
+                               """---
 who: alice
 ---
 who: bob
@@ -36,8 +40,8 @@ who: bob
 who: carol
 ---
 who: dan
-""")
-    )
+"""))
+    all_parsed = sample_manifest.from_indexed_docs(indexed_docs)
     found = {}
     for _, doc, _ in all_parsed:
       found[doc["who"]] = True
@@ -528,7 +532,8 @@ who: dan
 
 
     manifest = sample_manifest.Manifest('model', 'sample')
-    manifest.read_files(manifest_h_he_path, manifest_li_be_path)
+    manifest.from_docs(inputs.create_indexed_docs(manifest_h_he_path,
+                                                  manifest_li_be_path))
     manifest.index()
 
     expect_hydrogen = {

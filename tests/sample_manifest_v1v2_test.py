@@ -16,6 +16,7 @@
 import os
 import unittest
 
+from sampletester import inputs
 from sampletester import sample_manifest
 
 _ABS_FILE = os.path.abspath(__file__)
@@ -412,7 +413,8 @@ class TestManifestV1V2(unittest.TestCase):
 
 
     manifest = sample_manifest.Manifest('model', 'sample')
-    manifest.read_files(manifest_h_he_path, manifest_li_be_path)
+    manifest.from_docs(inputs.create_indexed_docs(manifest_h_he_path,
+                                                  manifest_li_be_path))
     manifest.index()
 
     expect_hydrogen = {
