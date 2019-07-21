@@ -3,13 +3,14 @@ jobs:
   build:
     working_directory: ~/sample-tester
     docker:
-      - image: circleci/python:3.7.2
+      - image: circleci/python:3.7.4
     steps:
       - checkout
       - run:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install --upgrade pip setuptools
+            pip install --upgrade flake8 pip setuptools
+            flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
             pipenv install .
             . devcheck
