@@ -94,7 +94,7 @@ class NoLangSamples:
 
   def get_call_mapper(self):
 
-    def call_mapper(call: Call):
+    def call_mapper(call):
       raise ValueError('this should not have been reached')
 
     return call_mapper
