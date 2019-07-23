@@ -113,6 +113,26 @@ who: dan
       math.remove(x)
     self.assertEqual(0, len(math))
 
+
+  def test_get_keys(self):
+    manifest_source, (expect_alice, expect_bob, expect_carol,
+                      expect_dan) = self.get_manifest_source()
+
+    manifest = sample_manifest.Manifest('language', 'sample')
+    manifest.read_sources([manifest_source])
+    manifest.index()
+    self.assertEqual(['python', ''], manifest.get_keys())
+    self.assertEqual(['alice', 'robert'], manifest.get_keys('python'))
+    self.assertEqual([], manifest.get_keys('python', 'alice'))
+    self.assertEqual([], manifest.get_keys('python', 'robert'))
+    self.assertEqual(['math'], manifest.get_keys(''))
+    self.assertEqual([], manifest.get_keys('', 'math'))
+
+    self.assertEqual([], manifest.get_keys('python', 'alice','zoe'))
+    self.assertEqual([], manifest.get_keys('zoe'))
+    self.assertEqual([], manifest.get_keys('python', 'zoe'))
+
+
   def test_get_one(self):
     manifest_source, (expect_alice, expect_bob, expect_carol,
                       expect_dan) = self.get_manifest_source()

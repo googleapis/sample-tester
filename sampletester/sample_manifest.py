@@ -231,12 +231,14 @@ class Manifest:
     """Returns the keys at the next level after specified_keys have been resolved"""
 
     if self.indices == [None]:  # no indices
-      return None
-    if len(specified_keys) >= len(self.indices) - 1:
-      return None
+      return []
+    if len(specified_keys) >= len(self.indices):
+      return []
     tags = self.tags
-    for idx in range(0, len(specified_keys)):
-      tags = tags[keys[idx]]
+    for key in specified_keys:
+      tags = tags.get(key, None)
+      if not tags:
+        return []
     return list(tags.keys())
 
   def get(self, *keys, **filters):
@@ -286,8 +288,8 @@ def get_elements_v3(input):
   if len(type_parts) > 1:
     list_item = type_parts[1]
   if not list_item:
-    raise SyntaxEror('missing item list name in "{}" field: "{}"'
-                    .format(Manifest.SCHEMA_TYPE_KEY, specified_type))
+    raise SyntaxError('missing item list name in "{}" field: "{}"'
+                      .format(Manifest.SCHEMA_TYPE_KEY, specified_type))
 
   return input.get(list_item, [])
 
@@ -322,12 +324,10 @@ def get_flattened_elements_v1_v2(input):
 ### Helpers for inclusions
 
 class SyntaxError(Exception):
-  def __init__(self, message):
-    self.message = message
+  pass
 
 class CycleError(Exception):
-  def __init__(self, message):
-    self.message = message
+  pass
 
 
 def resolve_inclusions(all_elements):
