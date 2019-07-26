@@ -32,14 +32,12 @@
 
 import argparse
 import contextlib
-import glob
 import logging
 import os
 import string
 import sys
 import traceback
 
-from functools import reduce
 from typing import Dict
 from typing import List
 from typing import Tuple
@@ -47,7 +45,6 @@ from typing import Tuple
 from sampletester import convention
 from sampletester import environment_registry
 from sampletester import inputs
-from sampletester import parser
 from sampletester import runner
 from sampletester import summary
 from sampletester import testplan
@@ -78,15 +75,7 @@ def main():
   logging.info("argv: {}".format(sys.argv))
 
   try:
-    def return_extended(so_far: List[str], to_add: str) -> List[str]:
-      so_far.extend(to_add)
-      return so_far
-
-    indexed_docs = parser.IndexedDocs(resolver=inputs.untyped_yaml_resolver)
-    globbed_files = reduce(return_extended,
-                           map(glob.glob, args.files))
-
-    indexed_docs.from_files(*globbed_files)
+    indexed_docs = inputs.index_docs(args.files)
 
     registry = environment_registry.new(args.convention, indexed_docs)
     test_suites = testplan.suites_from(indexed_docs, args.suites, args.cases)

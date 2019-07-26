@@ -20,6 +20,7 @@ import yaml
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Set
 from typing import Tuple
 
 SCHEMA_TYPE_KEY = 'type'
@@ -45,9 +46,13 @@ class IndexedDocs(object):
     self.strict = strict
     self.resolver = resolver
 
-  def from_files(self, *files: str):
-    """Adds all the documents found in `files`."""
-    for file_name in files:
+  def contains(self, *type_names: str) -> bool:
+    """Returns True iff 1+ docs exist for each schema type in`type_names`"""
+    return all([name in self.keyed_docs for name in type_names])
+
+  def from_files(self, *paths: str):
+    """Adds all the documents found in `paths`."""
+    for file_name in only_files_in(paths):
       file_path = os.path.abspath(file_name)
       with open(file_path, 'r') as stream:
         content = stream.read()
@@ -75,7 +80,15 @@ class IndexedDocs(object):
     by `SCHEMA_TYPE_ABSENT`.
     """
     for doc in yaml.load_all(content):
-      specified_type = doc.get(SCHEMA_TYPE_KEY, None)
+      self.add_documents(Document(file_name, doc))
+    self.resolve_uncategorized()
+
+  def add_documents(self, *documents: Document):
+    """Adds each doc in `documents` under the right schema type key."""
+    for doc in documents:
+      specified_type = (doc.obj.get(SCHEMA_TYPE_KEY, None)
+                        if isinstance(doc.obj,  dict)
+                        else None)
 
       if not specified_type:
         msg = 'no top-level "{}" field specified'.format(SCHEMA_TYPE_KEY)
@@ -92,9 +105,7 @@ class IndexedDocs(object):
         specified_type = SCHEMA_TYPE_ABSENT
 
       type_name = specified_type.split(SCHEMA_TYPE_SEPARATOR, 1)[0]
-      self._add_one(type_name, Document(file_name, doc))
-
-      self.resolve_uncategorized()
+      self._add_one(type_name, doc)
 
   def _add_one(self, type_name: str, doc: Document):
     """Adds `doc` to the list of documents with the given type."""
@@ -108,7 +119,7 @@ class IndexedDocs(object):
     return self.keyed_docs.get(type_name, [])
 
   def resolve_uncategorized(self):
-    """Categorized all documents of unknown type by calling the resolver."""
+    """Categorizes all documents of unknown type by calling the resolver."""
     if not self.resolver:
       return
 
@@ -117,9 +128,18 @@ class IndexedDocs(object):
       new_type = self.resolver(unknown_doc)
       if not new_type or new_type == SCHEMA_TYPE_ABSENT:
         continue
+
+      # mark the doc as now being of the new type, and no longer of unknown type
       self._add_one(new_type, unknown_doc)
       unknowns[idx]=None
+
+    # remove `None`s from the list of unknown docs
     self.keyed_docs[SCHEMA_TYPE_ABSENT] = [doc for doc in unknowns if doc]
+
+
+def only_files_in(paths: Set[str]) -> Set[str]:
+  """Returns only those elements of `paths` that are files"""
+  return {fname for fname in paths if os.path.isfile(fname)}
 
 
 class SyntaxError(Exception):
