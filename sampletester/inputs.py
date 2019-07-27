@@ -45,24 +45,47 @@ def untyped_yaml_resolver(unknown_doc: parser.Document) -> str :
   return UNKNOWN_TYPE
 
 
-def index_docs(file_patterns: Set[str]) -> parser.IndexedDocs:
+def index_docs(*file_patterns: str) -> parser.IndexedDocs:
   """Obtains manifests and testplans by indexing the specified paths or cwd.
 
-  This function attempts to obtain all the manifests and testplans contained in
-  the globs in `file_patterns`. If either no manifest or no testplan is obtained
-  this way, it searches in all the paths under the cwd and registers the
-  `file_patterns` matching the types not found in the previous step. In other
-  words, if no manifests are found via the globs in `file_patterns`, it attempts
-  to get manifests under the cwd, and similarly for testplans.
+  This function works in the following sequence:
+
+  1. It attempts to obtain all the manifests and testplans contained in
+  the globs in `file_patterns`.
+
+  2. If either no manifest or no testplan is obtained this way:
+
+    2.1 if any of the globs in `file_patterns` resolved to a directory, it does
+        not search for any more files.
+
+    2.2 if none of the globs in `file_patterns` resolved to a directory, it
+        searches in all the paths under the cwd and registers the
+        `file_patterns` matching the types not found in the previous step. In
+        other words, if no manifests are found via the globs in `file_patterns`,
+        it attempts to get manifests under the cwd, and similarly for testplans.
+
+  Returns: the indexed docs of the files that were searched for.
   """
-  explicit_files = get_globbed(file_patterns)
+  explicit_paths = get_globbed(*file_patterns)
+  explicit_directories = {path for path in explicit_paths if os.path.isdir(path)}
+  files_in_directories = get_globbed(*{f'{path}/**/*.yaml' for path in explicit_directories})
+  explicit_files = explicit_paths.union(files_in_directories)
+
   indexed_explicit = create_indexed_docs(*explicit_files)
   has_manifests = indexed_explicit.contains(MANIFEST_TYPE)
   has_testplans = indexed_explicit.contains(TESTPLAN_TYPE)
-  if has_manifests and has_testplans:
+
+  if (has_manifests and has_testplans):
+    # We have successfully found needed inputs already.
     return indexed_explicit
 
-  implicit_files = get_globbed(['**/*.yaml'])
+  if files_in_directories:
+    # Because directories were specified, we use this as a signal to *not*
+    # recurse into the cwd. The caller is responsible for reporting that one or
+    # both of the needed file types is missing.
+    return indexed_explicit
+
+  implicit_files = get_globbed('**/*.yaml')
   indexed_implicit = create_indexed_docs(*implicit_files)
   if not has_testplans:
     indexed_explicit.add_documents(*indexed_implicit.of_type(TESTPLAN_TYPE))
@@ -80,6 +103,6 @@ def create_indexed_docs(*all_paths: Set[str]) -> parser.IndexedDocs:
   return indexed_docs
 
 
-def get_globbed(file_patterns: Set[str]) -> Set[str]:
+def get_globbed(*file_patterns: str) -> Set[str]:
   """Returns the set of files returned from globbing `file_patterns`"""
   return set(itertools.chain(*map(glob.glob, file_patterns)))

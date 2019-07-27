@@ -75,7 +75,7 @@ def main():
   logging.info("argv: {}".format(sys.argv))
 
   try:
-    indexed_docs = inputs.index_docs(args.files)
+    indexed_docs = inputs.index_docs(*args.files)
 
     registry = environment_registry.new(args.convention, indexed_docs)
     test_suites = testplan.suites_from(indexed_docs, args.suites, args.cases)

@@ -37,10 +37,10 @@ class TestInputs(unittest.TestCase):
 
   def test_get_globbed(self):
     with pushd(os.path.join(_ABS_DIR, 'testdata', 'inputs')):
-      self.assertEquals(set(), inputs.get_globbed([]))
-      self.assertEquals(set(), inputs.get_globbed(['']))
-      self.assertEquals({'configs', 'data'}, inputs.get_globbed(['*']))
-      self.assertEquals({'configs', 'data'}, inputs.get_globbed(['**']))
+      self.assertEquals(set(), inputs.get_globbed())
+      self.assertEquals(set(), inputs.get_globbed(''))
+      self.assertEquals({'configs', 'data'}, inputs.get_globbed('*'))
+      self.assertEquals({'configs', 'data'}, inputs.get_globbed('**'))
       self.assertEquals({'configs/zebra_m.yaml',
                          'configs/yak_m.yaml',
                          'configs/woodchuck_t.yaml',
@@ -49,14 +49,14 @@ class TestInputs(unittest.TestCase):
                          'configs/other.yaml',
                          'configs/some.txt',
                          'data/datafile.txt'},
-                        set(inputs.get_globbed(['**/*'])))
+                        set(inputs.get_globbed('**/*')))
       self.assertEquals({'configs/zebra_m.yaml',
                          'configs/yak_m.yaml'},
-                        set(inputs.get_globbed(['**/*_m*'])))
+                        set(inputs.get_globbed('**/*_m*')))
 
   def test_index_docs_configs(self):
     with pushd(os.path.join(_ABS_DIR, 'testdata', 'inputs')):
-      indexed = inputs.index_docs(['configs/*.yaml'])
+      indexed = inputs.index_docs('configs/*.yaml')
       self.assertEquals(set(map(os.path.abspath, {'configs/zebra_m.yaml',
                                                   'configs/yak_m.yaml'})),
                         set([doc.path
@@ -73,7 +73,7 @@ class TestInputs(unittest.TestCase):
   def test_index_docs_implicit(self):
     with pushd(os.path.join(_ABS_DIR, 'testdata', 'inputs')):
       # All files are configs.
-      indexed = inputs.index_docs([])
+      indexed = inputs.index_docs()
       self.assertEquals(set(map(os.path.abspath, {'configs/zebra_m.yaml',
                                                   'configs/yak_m.yaml'})),
                         set([doc.path
@@ -88,7 +88,7 @@ class TestInputs(unittest.TestCase):
 
       # Explicitly specify a manifest file (only 1):
       #  only testplans are implicit (get 2)
-      indexed = inputs.index_docs(['**/*yak*'])
+      indexed = inputs.index_docs('**/*yak*')
       self.assertEquals(set(map(os.path.abspath, {'configs/yak_m.yaml'})),
                         set([doc.path
                              for doc in indexed.of_type(inputs.MANIFEST_TYPE)]))
@@ -102,7 +102,7 @@ class TestInputs(unittest.TestCase):
 
       # Explicitly specify a testplan file (only 1):
       #  only manifests are implicit (get 2)
-      indexed = inputs.index_docs(['**/*woodchuck*'])
+      indexed = inputs.index_docs('**/*woodchuck*')
       self.assertEquals(set(map(os.path.abspath, {'configs/zebra_m.yaml',
                                                   'configs/yak_m.yaml'})),
                         set([doc.path
