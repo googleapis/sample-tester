@@ -105,4 +105,4 @@ def create_indexed_docs(*all_paths: Set[str]) -> parser.IndexedDocs:
 
 def get_globbed(*file_patterns: str) -> Set[str]:
   """Returns the set of files returned from globbing `file_patterns`"""
-  return set(itertools.chain(*map(glob.glob, file_patterns)))
+  return set(itertools.chain(*map(lambda p: glob.glob(p, recursive=True), file_patterns)))
