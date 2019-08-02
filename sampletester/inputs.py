@@ -67,8 +67,10 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
   Returns: the indexed docs of the files that were searched for.
   """
   explicit_paths = get_globbed(*file_patterns)
-  explicit_directories = {path for path in explicit_paths if os.path.isdir(path)}
-  files_in_directories = get_globbed(*{f'{path}/**/*.yaml' for path in explicit_directories})
+  explicit_directories = {path for path in explicit_paths
+                          if os.path.isdir(path)}
+  files_in_directories = get_globbed(*{f'{path}/**/*.yaml'
+                                       for path in explicit_directories})
   explicit_files = explicit_paths.union(files_in_directories)
 
   indexed_explicit = create_indexed_docs(*explicit_files)
@@ -105,4 +107,5 @@ def create_indexed_docs(*all_paths: Set[str]) -> parser.IndexedDocs:
 
 def get_globbed(*file_patterns: str) -> Set[str]:
   """Returns the set of files returned from globbing `file_patterns`"""
-  return set(itertools.chain(*map(lambda p: glob.glob(p, recursive=True), file_patterns)))
+  return set(itertools.chain(*map(lambda p: glob.glob(p, recursive=True),
+                                  file_patterns)))
