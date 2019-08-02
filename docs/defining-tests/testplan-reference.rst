@@ -6,9 +6,18 @@ Testplan
 One of the inputs to sample-tester is the “testplan”, which outlines
 how to run the samples and what checks to perform.
 
-#. The testplan can be spread over any number of ``TESTPLAN.yaml``
-   files.
-#. You can have any number of test suites.
+#. The testplan is specified in any number of YAML documents that live
+   inside any number of YAML files. Each YAML file may contain
+   multiple YAML documents, separate with the standard ``---`` YAML document
+   separator. Each testplan document self-identifies as such
+   via the use of the `type: test/samples` top-level field.
+
+   - For backwards compatibility, any document that does not have a
+     `type:` top-level field will be treated as a testplan if the file
+     in which it was specified ends in ``.yaml`` but not
+     ``.manifest.yaml``
+     
+#. The testplan can have any number of test suites.
 #. Each test suite can have ``setup``, ``teardown``, and ``cases``
    sections.
 #. The ``cases`` section is a list of test cases. For _each_ test
@@ -18,7 +27,7 @@ how to run the samples and what checks to perform.
    directives and arguments. The directives can be any of the
    following YAML directives:
    
-   - ``log``: print the arguments, printf style.
+   - ``log``: print the arguments, printf style
       - Substrings of the form ``{}`` are interpolated with the corresponding positional arguments specified
       - Substrings of the form ``{id:name}`` are substituted with the
         value of the manifest tag corresponding to the key ``name``

@@ -1,0 +1,6 @@
+# both a manifest and a testplan
+---
+type: test/samples
+---
+type: manifest/samples
+schema_version: 3

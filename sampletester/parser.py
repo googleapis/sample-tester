@@ -79,9 +79,7 @@ class IndexedDocs(object):
     provided, the untyped documents are put into their own list with type given
     by `SCHEMA_TYPE_ABSENT`.
     """
-    for doc in yaml.load_all(content):
-      self.add_documents(Document(file_name, doc))
-    self.resolve_uncategorized()
+    self.add_documents(*[Document(file_name, doc) for doc in yaml.load_all(content)])
 
   def add_documents(self, *documents: Document):
     """Adds each doc in `documents` under the right schema type key."""
@@ -106,6 +104,8 @@ class IndexedDocs(object):
 
       type_name = specified_type.split(SCHEMA_TYPE_SEPARATOR, 1)[0]
       self._add_one(type_name, doc)
+    self.resolve_uncategorized()
+
 
   def _add_one(self, type_name: str, doc: Document):
     """Adds `doc` to the list of documents with the given type."""

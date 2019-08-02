@@ -39,7 +39,8 @@ class TestInputs(unittest.TestCase):
     with pushd(os.path.join(_ABS_DIR, 'testdata', 'inputs')):
       self.assertEquals(set(), inputs.get_globbed())
       self.assertEquals(set(), inputs.get_globbed(''))
-      self.assertEquals({'alternate-configs', 'configs', 'data'}, inputs.get_globbed('*'))
+      self.assertEquals({'alternate-configs', 'configs', 'data', 'multidocs'},
+                        inputs.get_globbed('*'))
       self.assertEquals({'configs/vicuna_t.yaml',
                          'configs/some.yaml',
                          'configs/some.txt',
@@ -64,7 +65,12 @@ class TestInputs(unittest.TestCase):
                          'alternate-configs/other.yaml',
                          'alternate-configs/some.txt',
                          'data',
-                         'data/datafile.txt'},
+                         'data/datafile.txt',
+                         'multidocs',
+                         'multidocs/mosquito.yaml',
+                         'multidocs/bee.yaml',
+                         'multidocs/ant.yaml',
+                         'multidocs/ant.manifest.yaml' },
                         set(inputs.get_globbed('**/*')))
       self.assertEquals({'configs/zebra_m.yaml',
                          'configs/yak_m.yaml',
@@ -75,120 +81,142 @@ class TestInputs(unittest.TestCase):
   def test_index_docs_configs(self):
     with pushd(os.path.join(_ABS_DIR, 'testdata', 'inputs')):
       indexed = inputs.index_docs('configs/*.yaml')
-      self.assertEquals(set(map(os.path.abspath, {'configs/zebra_m.yaml',
-                                                  'configs/yak_m.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.MANIFEST_TYPE)]))
-      self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml',
-                                                  'configs/vicuna_t.yaml',
-                                                  'configs/some.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.TESTPLAN_TYPE)]))
+      self.assertEquals(set(map(os.path.abspath,
+                                {'configs/zebra_m.yaml',
+                                 'configs/yak_m.yaml'})),
+                        {doc.path
+                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+      self.assertEquals(set(map(os.path.abspath,
+                                {'configs/woodchuck_t.yaml',
+                                 'configs/vicuna_t.yaml',
+                                 'configs/some.yaml'})),
+                        {doc.path
+                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
       self.assertEquals(set(),
-                        set([doc.path
-                             for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)]))
+                        {doc.path
+                         for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
 
   def test_index_docs_implicit(self):
     with pushd(os.path.join(_ABS_DIR, 'testdata', 'inputs')):
       # All files are configs.
       indexed = inputs.index_docs()
-      self.assertEquals(set(map(os.path.abspath, {'configs/zebra_m.yaml',
-                                                  'configs/yak_m.yaml',
-                                                  'alternate-configs/zebra_m.yaml',
-                                                  'alternate-configs/yak_m.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.MANIFEST_TYPE)]))
-      self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml',
-                                                  'configs/vicuna_t.yaml',
-                                                  'alternate-configs/woodchuck_t.yaml',
-                                                  'alternate-configs/vicuna_t.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.TESTPLAN_TYPE)]))
-      self.assertEquals(set(map(os.path.abspath, {'configs/some.yaml',
-                                                  'alternate-configs/some.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)]))
+      self.assertEquals(set(map(os.path.abspath,
+                                {'configs/zebra_m.yaml',
+                                 'configs/yak_m.yaml',
+                                 'alternate-configs/zebra_m.yaml',
+                                 'alternate-configs/yak_m.yaml',
+                                 'multidocs/bee.yaml',
+                                 'multidocs/mosquito.yaml',
+                                 'multidocs/ant.manifest.yaml'})),
+                        {doc.path
+                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+      self.assertEquals(set(map(os.path.abspath,
+                                {'configs/woodchuck_t.yaml',
+                                 'configs/vicuna_t.yaml',
+                                 'configs/some.yaml',
+                                 'alternate-configs/woodchuck_t.yaml',
+                                 'alternate-configs/vicuna_t.yaml',
+                                 'alternate-configs/some.yaml',
+                                 'multidocs/bee.yaml',
+                                 'multidocs/mosquito.yaml',
+                                 'multidocs/ant.yaml'})),
+                        {doc.path
+                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+      self.assertEquals(set(),
+                        {doc.path
+                         for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
 
       # Explicitly specify a manifest file (only 1):
       #  only testplans are implicit (get multiple)
       indexed = inputs.index_docs('configs/*yak*')
       self.assertEquals(set(map(os.path.abspath, {'configs/yak_m.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.MANIFEST_TYPE)]))
-      self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml',
-                                                  'configs/vicuna_t.yaml',
-                                                  'alternate-configs/woodchuck_t.yaml',
-                                                  'alternate-configs/vicuna_t.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.TESTPLAN_TYPE)]))
-      self.assertEquals(set(map(os.path.abspath, {'configs/some.yaml',
-                                                  'alternate-configs/some.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)]))
+                        {doc.path
+                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+      self.assertEquals(set(map(os.path.abspath,
+                                {'configs/woodchuck_t.yaml',
+                                 'configs/vicuna_t.yaml',
+                                 'configs/some.yaml',
+                                 'alternate-configs/woodchuck_t.yaml',
+                                 'alternate-configs/vicuna_t.yaml',
+                                 'alternate-configs/some.yaml',
+                                 'multidocs/bee.yaml',
+                                 'multidocs/mosquito.yaml',
+                                 'multidocs/ant.yaml'})),
+                        {doc.path
+                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+      self.assertEquals(set(),
+                        {doc.path
+                         for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
 
       # Explicitly specify a testplan file (only 1):
       #  only manifests are implicit (get multiple)
       indexed = inputs.index_docs('configs/woodchuck*')
-      self.assertEquals(set(map(os.path.abspath, {'configs/zebra_m.yaml',
-                                                  'configs/yak_m.yaml',
-                                                  'alternate-configs/zebra_m.yaml',
-                                                  'alternate-configs/yak_m.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.MANIFEST_TYPE)]))
+      self.assertEquals(set(map(os.path.abspath,
+                                {'configs/zebra_m.yaml',
+                                 'configs/yak_m.yaml',
+                                 'alternate-configs/zebra_m.yaml',
+                                 'alternate-configs/yak_m.yaml',
+                                 'multidocs/bee.yaml',
+                                 'multidocs/mosquito.yaml',
+                                 'multidocs/ant.manifest.yaml'})),
+                        {doc.path
+                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
       self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.TESTPLAN_TYPE)]))
+                        {doc.path
+                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
       self.assertEquals(set(),
-                        set([doc.path
-                             for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)]))
+                        {doc.path
+                         for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
 
 
       # Specific directory, all files are configs.
       indexed = inputs.index_docs('configs')
-      self.assertEquals(set(map(os.path.abspath, {'configs/zebra_m.yaml',
-                                                  'configs/yak_m.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.MANIFEST_TYPE)]))
-      self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml',
-                                                  'configs/vicuna_t.yaml',
-                                                  'configs/some.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.TESTPLAN_TYPE)]))
-      self.assertEquals(set(map(os.path.abspath, {})),
-                        set([doc.path
-                             for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)]))
+      self.assertEquals(set(map(os.path.abspath,
+                                {'configs/zebra_m.yaml',
+                                 'configs/yak_m.yaml'})),
+                        {doc.path
+                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+      self.assertEquals(set(map(os.path.abspath,
+                                {'configs/woodchuck_t.yaml',
+                                 'configs/vicuna_t.yaml',
+                                 'configs/some.yaml'})),
+                        {doc.path
+                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+      self.assertEquals(set(),
+                        {doc.path
+                         for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
 
-      # Match multiple manifest files, restrict to a directory
+      # Match multiple manifest files explicitly, restrict additional files to a directory
       indexed = inputs.index_docs('**/*yak*', 'configs')
       self.assertEquals(set(map(os.path.abspath, {'configs/yak_m.yaml',
                                                   'configs/zebra_m.yaml',
                                                   'alternate-configs/yak_m.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.MANIFEST_TYPE)]))
+                        {doc.path
+                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
       self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml',
                                                   'configs/vicuna_t.yaml',
                                                   'configs/some.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.TESTPLAN_TYPE)]))
-      self.assertEquals(set(map(os.path.abspath, {})),
-                        set([doc.path
-                             for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)]))
+                        {doc.path
+                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+      self.assertEquals(set(),
+                        {doc.path
+                         for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
 
-      # Match muliple testplan files, restrict to a directory
+      # Match muliple testplan files explicitly, restrict additional files to a directory
       indexed = inputs.index_docs('**/*woodchuck*', 'configs')
       self.assertEquals(set(map(os.path.abspath, {'configs/zebra_m.yaml',
                                                   'configs/yak_m.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.MANIFEST_TYPE)]))
+                        {doc.path
+                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
       self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml',
                                                   'configs/some.yaml',
                                                   'configs/vicuna_t.yaml',
                                                   'alternate-configs/woodchuck_t.yaml'})),
-                        set([doc.path
-                             for doc in indexed.of_type(inputs.TESTPLAN_TYPE)]))
+                        {doc.path
+                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
       self.assertEquals(set(),
-                        set([doc.path
-                             for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)]))
+                        {doc.path
+                         for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
 
 
 

@@ -11,9 +11,8 @@ To run the tests you have :ref:`defined <defining-tests>`, do the following:
       export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/creds.json
    
 
-#. Run the tester, specifying your manifest (any number of
-   ``*.manifest.yaml`` files) and test plan (any number of other
-   ``*.yaml`` files):
+#. Run the tester, specifying any number of ``*.yaml`` files which, in
+   aggregate, contain at least one :ref:`testplan <defining-tests/testplan-reference>` YAML document and at least one :ref:`manifest <defining-tests/manifest-reference>` YAML document:
 
    .. code-block:: bash
                    
