@@ -61,9 +61,9 @@ class Manifest:
 
   # TODO: Change key to index in the doc above and usages below
 
-  SCHEMA_TYPE_KEY = 'type'     # TODO defer to parser.py's def
+  SCHEMA_TYPE_KEY = parser.SCHEMA_TYPE_KEY
+  SCHEMA_TYPE_SEPARATOR = parser.SCHEMA_TYPE_SEPARATOR
   SCHEMA_TYPE_VALUE = 'manifest'
-  SCHEMA_TYPE_SEPARATOR = '/'  # TODO defer to parser.py's def
   SCHEMA_VERSION_KEY = 'schema_version'
 
   # These values are deprecated and will go away once sampler tester stops
