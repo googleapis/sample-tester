@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # The most typical use pattern is the following:
+type: test/samples
 test:
   suites:
   - name:  "Language samples test"
