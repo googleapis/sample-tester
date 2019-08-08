@@ -64,7 +64,7 @@ samples:
 
   def test_generation_v3_factored_basepath(self):
     self.maxDiff = None
-    BIN = '/my/bin/'
+    BIN = '/my/bin/exe --flag'
     INVOCATION = 'call this way'
     CHDIR = '@/this/working/path/'
     ENV = 'python'
