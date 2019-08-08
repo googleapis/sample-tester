@@ -29,6 +29,10 @@ SCHEMA_TYPE_SEPARATOR = '/'
 
 Document = collections.namedtuple('Document', ['path', 'obj'])
 
+def full_schema_value(type_value: str, subtype_value: str) -> str:
+  """Returns a full schema value string from the type and subtype parts."""
+  return f'{type_value}{SCHEMA_TYPE_SEPARATOR}{subtype_value}'
+
 class IndexedDocs(object):
   def __init__(self,
                strict: bool = False,
@@ -89,14 +93,14 @@ class IndexedDocs(object):
                         else None)
 
       if not specified_type:
-        msg = 'no top-level "{}" field specified'.format(SCHEMA_TYPE_KEY)
+        msg = f'no top-level "{SCHEMA_TYPE_KEY}" field specified'
         if self.strict:
           raise SyntaxError(msg)
         logging.warning(msg)
 
       if not isinstance(specified_type, str):
-        msg = ('top level "{}" field is not a string: {}'
-               .format(SCHEMA_TYPE_KEY, specified_type))
+        msg = (f'top level "{SCHEMA_TYPE_KEY}" field is not '
+               f'a string: {specified_type}')
         if self.strict:
           raise SyntaxError(msg)
         logging.warning(msg)

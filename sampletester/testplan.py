@@ -269,6 +269,8 @@ class Manager:
 
 SCHEMA_TYPE_VALUE = 'test'
 SCHEMA_SUBTYPE_VALUE = 'samples'
+SCHEMA_TYPE_FULL= parser.full_schema_value(SCHEMA_TYPE_VALUE,
+                                           SCHEMA_SUBTYPE_VALUE)
 
 def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
   """Returns the suite configs (key/value pairs) from all the `test_docs`.
@@ -277,6 +279,8 @@ def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
   """
   all_suites = []
   for doc in test_docs:
+      if doc.obj.get(parser.SCHEMA_TYPE_KEY) != SCHEMA_TYPE_FULL:
+        pass
       these_suites = doc.obj["test"]["suites"]
       for suite in these_suites:
         suite[SUITE_SOURCE] = doc.path

@@ -60,7 +60,7 @@ EXITCODE_USER_ABORT = 4
 DEFAULT_LOG_LEVEL = 100
 
 # Set this to True to get a backtrace for debugging
-DEBUGME=True
+DEBUGME=False
 
 def main():
   args, usage = parse_cli()
