@@ -24,6 +24,15 @@ _ABS_DIR = os.path.dirname(_ABS_FILE)
 
 class TestGenManifest(unittest.TestCase):
 
+  def test_parse_files_and_tags(self):
+    files, tags = gen_manifest.parse_files_and_tags(['--principal=alice',
+                                                     'crypto/path/scenario',
+                                                     '--respondent=bob',
+                                                     '/doc/sample'])
+    self.assertEqual(['crypto/path/scenario', '/doc/sample'], files)
+    self.assertEqual([('principal', 'alice'), ('respondent', 'bob')], tags)
+
+
   def test_generation_v3_factored(self):
     self.maxDiff = None
     BIN = '/my/bin/'
