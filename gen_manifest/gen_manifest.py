@@ -243,7 +243,7 @@ def parse_files_and_tags(params: List[str]) -> (List[str], List[str]):
 # Emitter functions indexed by schema version
 registered_emitters= {
     '2': emit_manifest_v2,
-    '3': emit_manifest_v2
+    '3': emit_manifest_v3
 }
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
