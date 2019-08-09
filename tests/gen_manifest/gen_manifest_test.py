@@ -19,6 +19,7 @@ import os
 from click.testing import CliRunner
 from collections import OrderedDict
 from gen_manifest import gen_manifest
+from textwrap import dedent
 
 _ABS_FILE = os.path.abspath(__file__)
 _ABS_DIR = os.path.dirname(_ABS_FILE)
@@ -52,23 +53,23 @@ class TestGenManifest(unittest.TestCase):
                         os.path.join(sample_relative_path, 'getbook.py')],
         flat = False)
 
-    expected_string = """type: manifest/samples
-schema_version: 3
-base: &common
-  env: '{env}'
-  bin: '{bin}'
-  invocation: '{invocation}'
-  chdir: '{chdir}'
-  basepath: '.'
-samples:
-- <<: *common
-  path: '{{basepath}}/{sample_relative_path}/readbook.py'
-  sample: 'readbook_sample'
-- <<: *common
-  path: '{{basepath}}/{sample_relative_path}/getbook.py'
-  sample: 'getbook_sample'
-""".format(env=ENV, bin=BIN, invocation=INVOCATION,
-           chdir=CHDIR, sample_relative_path=sample_relative_path, cwd=gen_manifest_cwd)
+    expected_string = dedent(f"""\
+      type: manifest/samples
+      schema_version: 3
+      base: &common
+        env: '{ENV}'
+        bin: '{BIN}'
+        invocation: '{INVOCATION}'
+        chdir: '{CHDIR}'
+        basepath: '.'
+      samples:
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/getbook.py'
+        sample: 'getbook_sample'
+      """)
     self.assertEqual(expected_string, manifest_string)
 
   def test_generation_v3_factored_cli(self):
@@ -92,23 +93,25 @@ samples:
          f'--chdir={CHDIR}',
          f'{os.path.join(sample_relative_path, "readbook.py")}',
          f'{os.path.join(sample_relative_path, "getbook.py")}'])
-    expected_string = """type: manifest/samples
-schema_version: 3
-base: &common
-  env: '{env}'
-  bin: '{bin}'
-  invocation: '{invocation}'
-  chdir: '{chdir}'
-  basepath: '.'
-samples:
-- <<: *common
-  path: '{{basepath}}/{sample_relative_path}/readbook.py'
-  sample: 'readbook_sample'
-- <<: *common
-  path: '{{basepath}}/{sample_relative_path}/getbook.py'
-  sample: 'getbook_sample'
-""".format(env=ENV, bin=BIN, invocation=INVOCATION,
-           chdir=CHDIR, sample_relative_path=sample_relative_path, cwd=gen_manifest_cwd)
+
+    expected_string = dedent(f"""\
+      type: manifest/samples
+      schema_version: 3
+      base: &common
+        env: '{ENV}'
+        bin: '{BIN}'
+        invocation: '{INVOCATION}'
+        chdir: '{CHDIR}'
+        basepath: '.'
+      samples:
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/getbook.py'
+        sample: 'getbook_sample'
+      """)
+
     self.assertEqual(0, result.exit_code)
     self.assertEqual(expected_string, result.output)
 
@@ -134,24 +137,23 @@ samples:
                         os.path.join(sample_relative_path, 'getbook.py')],
         flat = False)
 
-    expected_string = """type: manifest/samples
-schema_version: 3
-base: &common
-  env: '{env}'
-  bin: '{bin}'
-  invocation: '{invocation}'
-  chdir: '{chdir}'
-  basepath: '{basepath}'
-samples:
-- <<: *common
-  path: '{{basepath}}/{sample_relative_path}/readbook.py'
-  sample: 'readbook_sample'
-- <<: *common
-  path: '{{basepath}}/{sample_relative_path}/getbook.py'
-  sample: 'getbook_sample'
-""".format(env=ENV, bin=BIN, invocation=INVOCATION,
-           chdir=CHDIR, sample_relative_path=sample_relative_path, cwd=gen_manifest_cwd,
-           basepath=BASEPATH)
+    expected_string = dedent(f"""\
+      type: manifest/samples
+      schema_version: 3
+      base: &common
+        env: '{ENV}'
+        bin: '{BIN}'
+        invocation: '{INVOCATION}'
+        chdir: '{CHDIR}'
+        basepath: '{BASEPATH}'
+      samples:
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/getbook.py'
+        sample: 'getbook_sample'
+      """)
     self.assertEqual(expected_string, manifest_string)
 
   def test_generation_v3_factored_forbidden_tag(self):
@@ -187,22 +189,23 @@ samples:
                         os.path.join(sample_relative_path, 'getbook.py')],
         flat = True)
 
-    expected_string = """type: manifest/samples
-schema_version: 3
-samples:
-- bin: {bin}
-  chdir: '{chdir}'
-  env: {env}
-  invocation: {invocation}
-  path: ./{sample_relative_path}/readbook.py
-  sample: readbook_sample
-- bin: {bin}
-  chdir: '{chdir}'
-  env: {env}
-  invocation: {invocation}
-  path: ./{sample_relative_path}/getbook.py
-  sample: getbook_sample
-""".format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, sample_relative_path=sample_relative_path)
+    expected_string = dedent(f"""\
+      type: manifest/samples
+      schema_version: 3
+      samples:
+      - bin: {BIN}
+        chdir: '{CHDIR}'
+        env: {ENV}
+        invocation: {INVOCATION}
+        path: ./{sample_relative_path}/readbook.py
+        sample: readbook_sample
+      - bin: {BIN}
+        chdir: '{CHDIR}'
+        env: {ENV}
+        invocation: {INVOCATION}
+        path: ./{sample_relative_path}/getbook.py
+        sample: getbook_sample
+      """)
     self.assertEqual(expected_string, manifest_string)
 
   def test_generation_v3_flat_basepath(self):
@@ -226,23 +229,23 @@ samples:
                         os.path.join(sample_relative_path, 'getbook.py')],
         flat = True)
 
-    expected_string = """type: manifest/samples
-schema_version: 3
-samples:
-- bin: {bin}
-  chdir: '{chdir}'
-  env: {env}
-  invocation: {invocation}
-  path: {basepath}/{sample_relative_path}/readbook.py
-  sample: readbook_sample
-- bin: {bin}
-  chdir: '{chdir}'
-  env: {env}
-  invocation: {invocation}
-  path: {basepath}/{sample_relative_path}/getbook.py
-  sample: getbook_sample
-""".format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, sample_relative_path=sample_relative_path,
-           basepath=BASEPATH)
+    expected_string = dedent(f"""\
+      type: manifest/samples
+      schema_version: 3
+      samples:
+      - bin: {BIN}
+        chdir: '{CHDIR}'
+        env: {ENV}
+        invocation: {INVOCATION}
+        path: {BASEPATH}/{sample_relative_path}/readbook.py
+        sample: readbook_sample
+      - bin: {BIN}
+        chdir: '{CHDIR}'
+        env: {ENV}
+        invocation: {INVOCATION}
+        path: {BASEPATH}/{sample_relative_path}/getbook.py
+        sample: getbook_sample
+      """)
     self.assertEqual(expected_string, manifest_string)
 
   def test_generation_v3_flat_forbidden_tag(self):
@@ -276,20 +279,20 @@ samples:
                         os.path.join(sample_relative_path, 'getbook.py')],
         flat = False)
 
-    expected_string = """version: 2
-sets:
-- environment: {env}
-  bin: {bin}
-  invocation: {invocation}
-  chdir: {chdir}
-  path: ./
-  __items__:
-  - path: {sample_relative_path}/readbook.py
-    sample: readbook_sample
-  - path: {sample_relative_path}/getbook.py
-    sample: getbook_sample
-""".format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, cwd=gen_manifest_cwd,
-           sample_relative_path=sample_relative_path)
+    expected_string = dedent(f"""\
+      version: 2
+      sets:
+      - environment: {ENV}
+        bin: {BIN}
+        invocation: {INVOCATION}
+        chdir: {CHDIR}
+        path: ./
+        __items__:
+        - path: {sample_relative_path}/readbook.py
+          sample: readbook_sample
+        - path: {sample_relative_path}/getbook.py
+          sample: getbook_sample
+      """)
     self.assertEqual(expected_string, manifest_string)
 
   def test_generation_v2_basepath(self):
@@ -314,21 +317,20 @@ sets:
                         os.path.join(sample_relative_path, 'getbook.py')],
         flat = False)
 
-    expected_string = """version: 2
-sets:
-- environment: {env}
-  bin: {bin}
-  invocation: {invocation}
-  chdir: {chdir}
-  path: {basepath}/
-  __items__:
-  - path: {sample_relative_path}/readbook.py
-    sample: readbook_sample
-  - path: {sample_relative_path}/getbook.py
-    sample: getbook_sample
-""".format(env=ENV, bin=BIN, invocation=INVOCATION, chdir=CHDIR, cwd=gen_manifest_cwd,
-           sample_relative_path=sample_relative_path,
-           basepath=BASEPATH)
+    expected_string = dedent(f"""\
+      version: 2
+      sets:
+      - environment: {ENV}
+        bin: {BIN}
+        invocation: {INVOCATION}
+        chdir: {CHDIR}
+        path: {BASEPATH}/
+        __items__:
+        - path: {sample_relative_path}/readbook.py
+          sample: readbook_sample
+        - path: {sample_relative_path}/getbook.py
+          sample: getbook_sample
+      """)
     self.assertEqual(expected_string, manifest_string)
 
   def test_generation_v2_factored_forbidden_tag(self):
