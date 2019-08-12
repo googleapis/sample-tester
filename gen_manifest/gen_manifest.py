@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import argparse
+import click
 import io
 import os
 import re
@@ -20,6 +20,8 @@ import yaml
 
 from collections import OrderedDict
 from glob import glob
+from textwrap import dedent
+from typing import List
 from yaml import Dumper
 from yaml.representer import SafeRepresenter
 
@@ -29,42 +31,6 @@ ALL_LANGS = ["python", "java", "csharp", "nodejs", "ruby", "php", "go"]
 # both factored and flat manifests.
 BASEPATH_KEY = 'basepath'
 BASEPATH_DEFAULT = '.'
-
-def parse_args():
-  parser = argparse.ArgumentParser(
-      formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-      description=
-      """A tool to generate manifest files (for use in sample-tester) purely from
-      existing sample artifacts on disk. Each entry within the manifest file
-      corresponds to a specific sample file on disk and lists the path to that
-      file and the region tag occurring within that file. Any number of
-      arbitrary key/value pairs can be specified (see the usage line) and will
-      be applied to all samples listed in the manifest.
-
-      All samples have "path" tags relative to the directory whence this is run,
-      prepended with the value/inclusion of the "basepath" tag. The value of
-      "basepath" in turn comes from whatever value is specified via
-      "--basepath=xxx", or defaults to "." otherwise. To provide absolute
-      directories in the manifest, pass "--basepath=$(pwd)" to this tool. """,
-      usage=('%(prog)s [-h] [--schema_version SCHEMA_VERSION] ' +
-             '[--output OUTPUT] [--flat] [--KEY=VALUE ...] files [files ...]'))
-  parser.add_argument('--schema_version', default='3',
-                      help='schema version to use in the generated manifest')
-  parser.add_argument('--output',
-                      help="""the name of the output file, which should include
-                      the manifest.yaml` extension; if not provided, will
-                      output to stdout.""")
-  parser.add_argument('--flat', action='store_true',
-                      help="""whether to list all tags for each item, even if
-                      this leads to duplicate YAML structures""")
-  parser.add_argument('files', nargs='+',
-                      help="""path glob to one or more sample files, relative to the
-                      current working directory""")
-  (args, tags) = parser.parse_known_args()
-  tags = [(parts[0][2:], (parts[1] if len(parts) > 1 else ''))
-          for parts in
-          [tag.split('=', 1) for tag in tags]]
-  return args, tags
 
 ### For manifest schema version 3
 
@@ -253,24 +219,79 @@ def dump(manifest):
                          SafeRepresenter.represent_str)
   return yaml.dump(manifest, Dumper=Dumper, default_flow_style=False)
 
+def parse_files_and_tags(params: List[str]) -> (List[str], List[str]):
+  '''Obtains a list of files and a list of tag key/value pairs CLI args.
 
-def main():
-  try:
-    args, tags = parse_args()
-    if args.schema_version == '2':
-      serialized_manifest = emit_manifest_v2(tags, args.files, args.flat)
-    elif args.schema_version == '3':
-      serialized_manifest = emit_manifest_v3(tags, args.files, args.flat)
+  This is a helper function for main to process the files_and_tags argument.
+  '''
+  files = []
+  tags = []
+  tag_prefix='--'
+  tag_prefix_len=len(tag_prefix)
+
+  for current in params:
+    if current.startswith(tag_prefix):
+      tag_parts = current[tag_prefix_len:].split('=', 1)
+      tag_key = tag_parts[0]
+      tag_value = tag_parts[1] if len(tag_parts) > 1 else ''
+      tags.append((tag_key, tag_value))
     else:
-      raise Exception('manifest version "{}" is not supported'.format(args.schema_version))
-    if args.output:
-      with open(args.output, 'w') as output_file:
+      files.append(current)
+  return (files, tags)
+
+
+# Emitter functions indexed by schema version
+registered_emitters= {
+    '2': emit_manifest_v2,
+    '3': emit_manifest_v3
+}
+
+@click.command(context_settings=dict(ignore_unknown_options=True))
+@click.option('--schema_version',
+              type=click.Choice(list(registered_emitters.keys())),
+              default='3',
+              help='schema version to use in the generated manifest')
+@click.option('--output',
+              type=click.Path(exists=False, allow_dash=True, writable=True),
+              default='-',
+              help='the name of the output file; `-` will output to stdout.')
+@click.option('--flat', default=False,
+              help=dedent('''\
+                          whether to list all tags for each item, even if
+                          this leads to duplicate YAML structures'''))
+@click.argument('files_and_tags', nargs=-1, type=click.UNPROCESSED)
+def main(schema_version: str, output: str, flat: bool, files_and_tags: List[str]):
+  '''Generate manifest files for samples already on disk.
+
+  This tool generates manifest files (for use in sample-tester) purely from
+  existing sample artifacts already on disk. Each entry within the manifest file
+  corresponds to a specific sample file on disk and lists the path to that file
+  and the region tag occurring within that file. Any number of arbitrary
+  key/value pairs can be specified and will be applied to all samples listed in
+  the manifest.
+
+  All samples have "path" tags relative to the directory whence this is run,
+  prepended with the value/inclusion of the "basepath" tag. The value of
+  "basepath" in turn comes from whatever value is specified via
+  "--basepath=xxx", or defaults to "." otherwise. To provide absolute
+  directories in the manifest, pass "--basepath=$(pwd)" to this tool.
+
+  FILES_AND_TAGS is a sequence of double-dash-prefixed key-value pairs,
+  representing tags to include in the manifest, and undashed filenames; order is
+  not relevant. For example:
+
+    --name=basic_sample --bin=python /my/dir/sample.py --status=beta
+  '''
+  try:
+    sample_files, tags = parse_files_and_tags(list(files_and_tags))
+
+    serialized_manifest = registered_emitters[schema_version](tags, sample_files, flat)
+
+    if output != '-':
+      with open(output, 'w') as output_file:
         output_file.write(serialized_manifest)
     else:
       sys.stdout.write(serialized_manifest)
   except TagNameError as e:
-    print("ERROR: {}".format(e))
+    print(f"ERROR: {e}")
     sys.exit(2)
-
-if __name__ == '__main__':
-  main()
