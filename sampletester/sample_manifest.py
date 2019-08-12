@@ -21,7 +21,7 @@ from sampletester import parser
 
 from typing import Iterable
 
-SCHEMA_TYPE_VALUE = 'manifest'
+SCHEMA = parser.SchemaDescriptor('manifest')
 
 
 # This prefix marks symbols that have special semantics for the purposes of
@@ -60,11 +60,6 @@ class Manifest:
   """
 
   # TODO: Change key to index in the doc above and usages below
-
-  SCHEMA_TYPE_KEY = parser.SCHEMA_TYPE_KEY
-  SCHEMA_TYPE_SEPARATOR = parser.SCHEMA_TYPE_SEPARATOR
-  SCHEMA_TYPE_VALUE = 'manifest'
-  SCHEMA_VERSION_KEY = 'schema_version'
 
   # These values are deprecated and will go away once sampler tester stops
   # supporting manifest schema versions v1 and v2
@@ -125,7 +120,7 @@ class Manifest:
         continue
       sources_read.append(name)
 
-      version = manifest.get(self.SCHEMA_VERSION_KEY)
+      version = manifest.get(SCHEMA.version_key)
       if version is None:
         version = manifest.get(self.VERSION_KEY_v1v2)
       if version is None:
@@ -267,23 +262,22 @@ def get_elements_v3(input):
   Args:
     input: the hierarchical manifest structure, typically as parsed from YAML
   """
-  specified_type = input.get(Manifest.SCHEMA_TYPE_KEY, None)
+  specified_type = input.get(SCHEMA.type_key, None)
   if not specified_type:
-    raise SyntaxError('no top-level "{}" field specified'
-                      .format(Manifest.SCHEMA_TYPE_KEY))
+    raise SyntaxError(f'no top-level "{SCHEMA.type_key}" field specified')
   if not isinstance(specified_type, str):
-    raise SyntaxError('top level "{}" field is not a string: {}'
-                      .format(Manifest.SCHEMA_TYPE_KEY, specified_type))
+    raise SyntaxError(f'top level "{SCHEMA.type_key}" field is not a string: '
+                      f'"{specified_type}"')
 
-  type_parts = specified_type.split(Manifest.SCHEMA_TYPE_SEPARATOR)
+  type_parts = specified_type.split(SCHEMA.type_separator)
   type_name = type_parts[0]
-  if type_name != Manifest.SCHEMA_TYPE_VALUE:
+  if type_name != SCHEMA.primary_type:
     return None
   if len(type_parts) > 1:
     list_item = type_parts[1]
   if not list_item:
-    raise SyntaxError('missing item list name in "{}" field: "{}"'
-                      .format(Manifest.SCHEMA_TYPE_KEY, specified_type))
+    raise SyntaxError(f'missing item list name in "{SCHEMA.type_key}" field: '
+                      f'"{specified_type}"')
 
   return input.get(list_item, [])
 
@@ -517,7 +511,7 @@ def from_indexed_docs(indexed_docs: parser.IndexedDocs):
     have not yet been applied to the object). Note that none of YAML documents
     are guaranteed to be of the manifest type yet.
   """
-  for doc in indexed_docs.of_type(SCHEMA_TYPE_VALUE):
+  for doc in indexed_docs.of_type(SCHEMA.primary_type):
     yield(doc.path,
           doc.obj,
           create_implicit_tags(source=doc.path, dir=os.path.dirname(doc.path)))

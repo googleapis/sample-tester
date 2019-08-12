@@ -21,8 +21,8 @@ from typing import Set
 
 from sampletester import parser
 from sampletester.parser import SCHEMA_TYPE_ABSENT as UNKNOWN_TYPE
-from sampletester.sample_manifest import SCHEMA_TYPE_VALUE as MANIFEST_TYPE
-from sampletester.testplan import SCHEMA_TYPE_VALUE as TESTPLAN_TYPE
+from sampletester.sample_manifest import SCHEMA as MANIFEST_SCHEMA
+from sampletester.testplan import SCHEMA as TESTPLAN_SCHEMA
 
 
 def untyped_yaml_resolver(unknown_doc: parser.Document) -> str :
@@ -39,9 +39,9 @@ def untyped_yaml_resolver(unknown_doc: parser.Document) -> str :
   if ext == ".yaml":
     prev_ext = os.path.splitext(ext_split[0])[-1]
     if prev_ext == ".manifest":
-      return MANIFEST_TYPE
+      return MANIFEST_SCHEMA.primary_type
     else:
-      return TESTPLAN_TYPE
+      return TESTPLAN_SCHEMA.primary_type
   return UNKNOWN_TYPE
 
 
@@ -74,8 +74,8 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
   explicit_files = explicit_paths.union(files_in_directories)
 
   indexed_explicit = create_indexed_docs(*explicit_files)
-  has_manifests = indexed_explicit.contains(MANIFEST_TYPE)
-  has_testplans = indexed_explicit.contains(TESTPLAN_TYPE)
+  has_manifests = indexed_explicit.contains(MANIFEST_SCHEMA.primary_type)
+  has_testplans = indexed_explicit.contains(TESTPLAN_SCHEMA.primary_type)
 
   if (has_manifests and has_testplans):
     # We have successfully found needed inputs already.
@@ -90,9 +90,9 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
   implicit_files = get_globbed('**/*.yaml')
   indexed_implicit = create_indexed_docs(*implicit_files)
   if not has_testplans:
-    indexed_explicit.add_documents(*indexed_implicit.of_type(TESTPLAN_TYPE))
+    indexed_explicit.add_documents(*indexed_implicit.of_type(TESTPLAN_SCHEMA.primary_type))
   if not has_manifests:
-    indexed_explicit.add_documents(*indexed_implicit.of_type(MANIFEST_TYPE))
+    indexed_explicit.add_documents(*indexed_implicit.of_type(MANIFEST_SCHEMA.primary_type))
   return indexed_explicit
 
 def create_indexed_docs(*all_paths: Set[str]) -> parser.IndexedDocs:

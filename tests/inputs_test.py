@@ -25,10 +25,10 @@ _ABS_DIR = os.path.dirname(_ABS_FILE)
 
 class TestInputs(unittest.TestCase):
   def test_untyped_yaml_resolver(self):
-    self.assertEquals(inputs.MANIFEST_TYPE,
+    self.assertEquals(inputs.MANIFEST_SCHEMA.primary_type,
                       inputs.untyped_yaml_resolver(
                           parser.Document('/my/path/to/some.manifest.yaml', None)))
-    self.assertEquals(inputs.TESTPLAN_TYPE,
+    self.assertEquals(inputs.TESTPLAN_SCHEMA.primary_type,
                       inputs.untyped_yaml_resolver(
                           parser.Document('path/to/some.yaml', None)))
     self.assertEquals(inputs.UNKNOWN_TYPE,
@@ -85,13 +85,13 @@ class TestInputs(unittest.TestCase):
                                 {'configs/zebra_m.yaml',
                                  'configs/yak_m.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+                         for doc in indexed.of_type(inputs.MANIFEST_SCHEMA.primary_type)})
       self.assertEquals(set(map(os.path.abspath,
                                 {'configs/woodchuck_t.yaml',
                                  'configs/vicuna_t.yaml',
                                  'configs/some.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+                         for doc in indexed.of_type(inputs.TESTPLAN_SCHEMA.primary_type)})
       self.assertEquals(set(),
                         {doc.path
                          for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
@@ -109,7 +109,7 @@ class TestInputs(unittest.TestCase):
                                  'multidocs/mosquito.yaml',
                                  'multidocs/ant.manifest.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+                         for doc in indexed.of_type(inputs.MANIFEST_SCHEMA.primary_type)})
       self.assertEquals(set(map(os.path.abspath,
                                 {'configs/woodchuck_t.yaml',
                                  'configs/vicuna_t.yaml',
@@ -121,7 +121,7 @@ class TestInputs(unittest.TestCase):
                                  'multidocs/mosquito.yaml',
                                  'multidocs/ant.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+                         for doc in indexed.of_type(inputs.TESTPLAN_SCHEMA.primary_type)})
       self.assertEquals(set(),
                         {doc.path
                          for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
@@ -131,7 +131,7 @@ class TestInputs(unittest.TestCase):
       indexed = inputs.index_docs('configs/*yak*')
       self.assertEquals(set(map(os.path.abspath, {'configs/yak_m.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+                         for doc in indexed.of_type(inputs.MANIFEST_SCHEMA.primary_type)})
       self.assertEquals(set(map(os.path.abspath,
                                 {'configs/woodchuck_t.yaml',
                                  'configs/vicuna_t.yaml',
@@ -143,7 +143,7 @@ class TestInputs(unittest.TestCase):
                                  'multidocs/mosquito.yaml',
                                  'multidocs/ant.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+                         for doc in indexed.of_type(inputs.TESTPLAN_SCHEMA.primary_type)})
       self.assertEquals(set(),
                         {doc.path
                          for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
@@ -160,10 +160,10 @@ class TestInputs(unittest.TestCase):
                                  'multidocs/mosquito.yaml',
                                  'multidocs/ant.manifest.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+                         for doc in indexed.of_type(inputs.MANIFEST_SCHEMA.primary_type)})
       self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+                         for doc in indexed.of_type(inputs.TESTPLAN_SCHEMA.primary_type)})
       self.assertEquals(set(),
                         {doc.path
                          for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
@@ -175,13 +175,13 @@ class TestInputs(unittest.TestCase):
                                 {'configs/zebra_m.yaml',
                                  'configs/yak_m.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+                         for doc in indexed.of_type(inputs.MANIFEST_SCHEMA.primary_type)})
       self.assertEquals(set(map(os.path.abspath,
                                 {'configs/woodchuck_t.yaml',
                                  'configs/vicuna_t.yaml',
                                  'configs/some.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+                         for doc in indexed.of_type(inputs.TESTPLAN_SCHEMA.primary_type)})
       self.assertEquals(set(),
                         {doc.path
                          for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
@@ -192,12 +192,12 @@ class TestInputs(unittest.TestCase):
                                                   'configs/zebra_m.yaml',
                                                   'alternate-configs/yak_m.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+                         for doc in indexed.of_type(inputs.MANIFEST_SCHEMA.primary_type)})
       self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml',
                                                   'configs/vicuna_t.yaml',
                                                   'configs/some.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+                         for doc in indexed.of_type(inputs.TESTPLAN_SCHEMA.primary_type)})
       self.assertEquals(set(),
                         {doc.path
                          for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})
@@ -207,13 +207,13 @@ class TestInputs(unittest.TestCase):
       self.assertEquals(set(map(os.path.abspath, {'configs/zebra_m.yaml',
                                                   'configs/yak_m.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.MANIFEST_TYPE)})
+                         for doc in indexed.of_type(inputs.MANIFEST_SCHEMA.primary_type)})
       self.assertEquals(set(map(os.path.abspath, {'configs/woodchuck_t.yaml',
                                                   'configs/some.yaml',
                                                   'configs/vicuna_t.yaml',
                                                   'alternate-configs/woodchuck_t.yaml'})),
                         {doc.path
-                         for doc in indexed.of_type(inputs.TESTPLAN_TYPE)})
+                         for doc in indexed.of_type(inputs.TESTPLAN_SCHEMA.primary_type)})
       self.assertEquals(set(),
                         {doc.path
                          for doc in indexed.of_type(parser.SCHEMA_TYPE_ABSENT)})

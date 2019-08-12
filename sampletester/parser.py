@@ -17,6 +17,8 @@ import logging
 import os
 import yaml
 
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -26,12 +28,27 @@ from typing import Tuple
 SCHEMA_TYPE_KEY = 'type'
 SCHEMA_TYPE_ABSENT = '(no type)' # for indexing docs with no SCHEMA_TYPE_KEY
 SCHEMA_TYPE_SEPARATOR = '/'
+SCHEMA_VERSION_KEY = 'schema_version'
 
 Document = collections.namedtuple('Document', ['path', 'obj'])
 
-def full_schema_value(type_value: str, subtype_value: str) -> str:
-  """Returns a full schema value string from the type and subtype parts."""
-  return f'{type_value}{SCHEMA_TYPE_SEPARATOR}{subtype_value}'
+@dataclass
+class SchemaDescriptor:
+  '''Class for storing the parts of the schema type describing YAML files'''
+  primary_type: str
+  secondary_type: str = None
+  version: str = None
+  type_separator: str = field(default=SCHEMA_TYPE_SEPARATOR, init=False)
+  full_type: str = field(init=False)
+  type_key: str = field(default=SCHEMA_TYPE_KEY, init=False)
+  version_key: str = field(default=SCHEMA_VERSION_KEY, init=False)
+
+  def __post_init__(self) -> str:
+    self.full_type = f'{self.primary_type}{self.type_separator}{self.secondary_type}'
+
+  def has_version(self) -> bool:
+    return self.version is not None
+
 
 class IndexedDocs(object):
   def __init__(self,

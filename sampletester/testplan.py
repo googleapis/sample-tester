@@ -17,9 +17,9 @@ import logging
 import re
 import yaml
 
-from sampletester import parser
-
 from typing import List
+
+from sampletester import parser
 
 
 class Wrapper:
@@ -267,10 +267,7 @@ class Manager:
     return visitor.end_visit()
 
 
-SCHEMA_TYPE_VALUE = 'test'
-SCHEMA_SUBTYPE_VALUE = 'samples'
-SCHEMA_TYPE_FULL= parser.full_schema_value(SCHEMA_TYPE_VALUE,
-                                           SCHEMA_SUBTYPE_VALUE)
+SCHEMA = parser.SchemaDescriptor('test','samples')
 
 def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
   """Returns the suite configs (key/value pairs) from all the `test_docs`.
@@ -279,7 +276,7 @@ def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
   """
   all_suites = []
   for doc in test_docs:
-      if doc.obj.get(parser.SCHEMA_TYPE_KEY) != SCHEMA_TYPE_FULL:
+      if doc.obj.get(SCHEMA.type_key) != SCHEMA.full_type:
         pass
       these_suites = doc.obj["test"]["suites"]
       for suite in these_suites:
@@ -297,4 +294,4 @@ def suites_from(indexed_docs: parser.IndexedDocs,
                 suite_filter: str = None,
                 case_filter: str = None) -> List[Suite]:
   """Creates and returns Suite objects from a `indexed_docs`"""
-  return suites_from_doc_list(indexed_docs.of_type(SCHEMA_TYPE_VALUE))
+  return suites_from_doc_list(indexed_docs.of_type(SCHEMA.primary_type))
