@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from dataclasses import field
 from typing import Callable
 from typing import Dict
+from typing import Iterable
 from typing import List
 from typing import Set
 from typing import Tuple
@@ -63,13 +64,13 @@ class IndexedDocs(object):
         function is passed an uncategorized doc and should return a type string
         that will be used to categorize the document.
     """
-    self.keyed_docs = {}
+    self.keyed_docs = collections.defaultdict(list)
     self.strict = strict
     self.resolver = resolver
 
   def contains(self, *type_names: str) -> bool:
     """Returns True iff 1+ docs exist for each schema type in`type_names`"""
-    return all([name in self.keyed_docs for name in type_names])
+    return all(name in self.keyed_docs for name in type_names)
 
   def from_files(self, *paths: str):
     """Adds all the documents found in `paths`."""
@@ -124,16 +125,9 @@ class IndexedDocs(object):
         specified_type = SCHEMA_TYPE_ABSENT
 
       type_name = specified_type.split(SCHEMA_TYPE_SEPARATOR, 1)[0]
-      self._add_one(type_name, doc)
+      self.keyed_docs[type_name].append(doc)
     self.resolve_uncategorized()
 
-
-  def _add_one(self, type_name: str, doc: Document):
-    """Adds `doc` to the list of documents with the given type."""
-    similar_docs = self.keyed_docs.get(type_name, [])
-    if not similar_docs:
-      self.keyed_docs[type_name] = similar_docs
-    similar_docs.append(doc)
 
   def of_type(self, type_name: str) -> List[Document]:
     """Returns a list of all `Document`s with the given type."""
@@ -151,14 +145,14 @@ class IndexedDocs(object):
         continue
 
       # mark the doc as now being of the new type, and no longer of unknown type
-      self._add_one(new_type, unknown_doc)
+      self.keyed_docs[new_type].append(unknown_doc)
       unknowns[idx]=None
 
     # remove `None`s from the list of unknown docs
     self.keyed_docs[SCHEMA_TYPE_ABSENT] = [doc for doc in unknowns if doc]
 
 
-def only_files_in(paths: Set[str]) -> Set[str]:
+def only_files_in(paths: Iterable[str]) -> Set[str]:
   """Returns only those elements of `paths` that are files"""
   return {fname for fname in paths if os.path.isfile(fname)}
 

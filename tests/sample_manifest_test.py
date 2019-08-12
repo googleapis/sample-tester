@@ -28,7 +28,7 @@ class TestManifestV3(unittest.TestCase):
   def test_multiple_yaml_docs_in_stream(self):
     # all_parsed = sample_manifest.strings_to_yaml(
     indexed_docs = parser.IndexedDocs(
-        resolver=lambda _unused: sample_manifest.SCHEMA.primary_type,
+        resolver=lambda _: sample_manifest.SCHEMA.primary_type,
         strict=False)
     indexed_docs.from_strings(('january',
                                """---

@@ -71,9 +71,9 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
                           if os.path.isdir(path)}
   files_in_directories = get_globbed(*{f'{path}/**/*.yaml'
                                        for path in explicit_directories})
-  explicit_files = explicit_paths.union(files_in_directories)
+  explicit_paths |= files_in_directories
 
-  indexed_explicit = create_indexed_docs(*explicit_files)
+  indexed_explicit = create_indexed_docs(*explicit_paths)
   has_manifests = indexed_explicit.contains(MANIFEST_SCHEMA.primary_type)
   has_testplans = indexed_explicit.contains(TESTPLAN_SCHEMA.primary_type)
 
@@ -107,5 +107,6 @@ def create_indexed_docs(*all_paths: Set[str]) -> parser.IndexedDocs:
 
 def get_globbed(*file_patterns: str) -> Set[str]:
   """Returns the set of files returned from globbing `file_patterns`"""
-  return set(itertools.chain(*map(lambda p: glob.glob(p, recursive=True),
-                                  file_patterns)))
+  return {filename
+          for pattern in file_patterns
+          for filename in glob.glob(pattern, recursive=True)}
