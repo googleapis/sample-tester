@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+type: test/samples
 test:
   # For this test, suite names should contain the strings "Passing" or
   # "Failing" so the text fixture knows what to expect.

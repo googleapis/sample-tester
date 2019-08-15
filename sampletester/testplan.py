@@ -277,7 +277,7 @@ def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
   all_suites = []
   for doc in test_docs:
       if doc.obj.get(SCHEMA.type_key) != SCHEMA.full_type:
-        pass
+        continue
       these_suites = doc.obj["test"]["suites"]
       for suite in these_suites:
         suite[SUITE_SOURCE] = doc.path
