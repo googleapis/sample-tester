@@ -113,14 +113,14 @@ class IndexedDocs(object):
       if not specified_type:
         msg = f'no top-level "{SCHEMA_TYPE_KEY}" field specified'
         if self.strict:
-          raise SyntaxError(msg)
+          raise YamlDocSyntaxError(msg)
         logging.warning(msg)
 
       if not isinstance(specified_type, str):
         msg = (f'top level "{SCHEMA_TYPE_KEY}" field is not '
                f'a string: {specified_type}')
         if self.strict:
-          raise SyntaxError(msg)
+          raise YamlDocSyntaxError(msg)
         logging.warning(msg)
         specified_type = SCHEMA_TYPE_ABSENT
 
@@ -157,5 +157,5 @@ def only_files_in(paths: Iterable[str]) -> Set[str]:
   return {fname for fname in paths if os.path.isfile(fname)}
 
 
-class SyntaxError(Exception):
+class YamlDocSyntaxError(Exception):
   pass

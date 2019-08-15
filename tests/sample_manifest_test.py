@@ -368,7 +368,7 @@ who: dan
     }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_unfinished_at_end(self):
     list_name = 'mysamples'
@@ -390,7 +390,7 @@ who: dan
     }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_empty(self):
     list_name = 'mysamples'
@@ -412,7 +412,7 @@ who: dan
     }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_key_with_braces(self):
     list_name = 'mysamples'
@@ -434,7 +434,7 @@ who: dan
     }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_loop(self):
     list_name = 'mysamples'
@@ -502,7 +502,7 @@ who: dan
           "Be": "Beryllium",
       }
     ]
-    with self.assertRaises(sample_manifest.SyntaxError):
+    with self.assertRaises(sample_manifest.ManifestSyntaxError):
       sample_manifest.check_tag_names(invalid_manifest)
 
     correct_manifest = [

@@ -264,9 +264,9 @@ def get_elements_v3(input):
   """
   specified_type = input.get(SCHEMA.type_key, None)
   if not specified_type:
-    raise SyntaxError(f'no top-level "{SCHEMA.type_key}" field specified')
+    raise ManifestSyntaxError(f'no top-level "{SCHEMA.type_key}" field specified')
   if not isinstance(specified_type, str):
-    raise SyntaxError(f'top level "{SCHEMA.type_key}" field is not a string: '
+    raise ManifestSyntaxError(f'top level "{SCHEMA.type_key}" field is not a string: '
                       f'"{specified_type}"')
 
   type_parts = specified_type.split(SCHEMA.type_separator)
@@ -276,7 +276,7 @@ def get_elements_v3(input):
   if len(type_parts) > 1:
     list_item = type_parts[1]
   if not list_item:
-    raise SyntaxError(f'missing item list name in "{SCHEMA.type_key}" field: '
+    raise ManifestSyntaxError(f'missing item list name in "{SCHEMA.type_key}" field: '
                       f'"{specified_type}"')
 
   return input.get(list_item, [])
@@ -311,7 +311,7 @@ def get_flattened_elements_v1_v2(input):
 
 ### Helpers for inclusions
 
-class SyntaxError(Exception):
+class ManifestSyntaxError(Exception):
   pass
 
 class CycleError(Exception):
@@ -406,7 +406,7 @@ class Inclusions:
       # we found open brace
 
       if open_idx >= len(value) - 1:  # need room for closing brace or escaped open
-        raise SyntaxError(
+        raise ManifestSyntaxError(
             'no inclusion key for tag "{}" at position {} in item {}'
             .format(tag_name, open_idx, element))
       if value[open_idx+1] == '{':
@@ -420,17 +420,17 @@ class Inclusions:
 
       close_idx = value.find('}', open_idx)
       if close_idx == -1:
-        raise SyntaxError(
+        raise ManifestSyntaxError(
             'inclusion key starting at position {} is not terminated in '+
             'tag "{}" in item {}'
             .format(open_idx, tag_name, element))
       inclusion_name = value[open_idx+1:close_idx]
       if len(inclusion_name) == 0:
-        raise SyntaxError(
+        raise ManifestSyntaxError(
             'inclusion key is empty at position {} for tag "{}" in item {}'
             .format(open_idx, tag_name, element))
       if inclusion_name.find('{') != -1:
-        raise SyntaxError(
+        raise ManifestSyntaxError(
             'inclusion key "{}" cannot contain braces'.format(inclusion_name))
       parts.append(inclusion_name)
 
@@ -446,7 +446,7 @@ class Inclusions:
         if pos == -1:
           break
         if (pos == len(part) - 1 or part[pos+1]!='}'):
-          raise SyntaxError('closing brace not escaped')
+          raise ManifestSyntaxError('closing brace not escaped')
         part=part[:pos+1]+part[pos+2:]
       parts[idx]=part.replace('}}','}')
 
@@ -526,7 +526,7 @@ def check_tag_names(src):
              for name in element.keys()
              if name.startswith(RESERVED_SYMBOL_PREFIX)]
   if invalid:
-    raise SyntaxError('tag names may not begin with "{}": {}'
+    raise ManifestSyntaxError('tag names may not begin with "{}": {}'
                       .format(RESERVED_SYMBOL_PREFIX,
                               ' '.join(['"{}"'.format(name) for name in invalid])))
   return src # to allow for composition

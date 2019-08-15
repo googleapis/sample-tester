@@ -5,8 +5,8 @@ Manifest file format
 
 A manifest contains one or more YAML documents that associate each
 artifact (sample) of interest on disk with a series of metadata
-tags. Multiple manifest can be specified by having multiple YAML
-documents within a single configuration YAML file, and/or having
+tags. Multiple manifests can be specified by having multiple YAML
+documents within a single configuration YAML file and/or having
 multiple configuration YAML files. The YAML documents within each YAML
 file are separated by the usual YAML start-document indicator,
 ``---``.

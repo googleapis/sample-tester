@@ -315,7 +315,7 @@ class TestManifestV1V2(unittest.TestCase):
         }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_unfinished_at_end(self):
     manifest_content = {
@@ -335,7 +335,7 @@ class TestManifestV1V2(unittest.TestCase):
         }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_empty(self):
     manifest_content = {
@@ -355,7 +355,7 @@ class TestManifestV1V2(unittest.TestCase):
         }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_key_with_braces(self):
     manifest_content = {
@@ -375,7 +375,7 @@ class TestManifestV1V2(unittest.TestCase):
         }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_loop(self):
     manifest_content = {
