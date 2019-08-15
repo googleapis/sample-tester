@@ -267,7 +267,7 @@ class Manager:
     return visitor.end_visit()
 
 
-SCHEMA = parser.SchemaDescriptor('test','samples')
+SCHEMA = parser.SchemaDescriptor('test','samples', 1)
 
 def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
   """Returns the suite configs (key/value pairs) from all the `test_docs`.
@@ -276,7 +276,8 @@ def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
   """
   all_suites = []
   for doc in test_docs:
-      if doc.obj.get(SCHEMA.type_key) != SCHEMA.full_type:
+      if (doc.obj.get(SCHEMA.type_key) != SCHEMA.full_type or
+          doc.obj.get(SCHEMA.version_key) != SCHEMA.version):
         continue
       these_suites = doc.obj["test"]["suites"]
       for suite in these_suites:

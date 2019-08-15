@@ -14,6 +14,7 @@
 
 # The most typical use pattern is the following:
 type: test/samples
+schema_version: 1
 test:
   suites:
   - name:  "Language samples test"

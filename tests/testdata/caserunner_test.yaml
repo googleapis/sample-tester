@@ -13,6 +13,7 @@
 # limitations under the License.
 
 type: test/samples
+schema_version: 1
 test:
   # For this test, suite names should contain the strings "Passing" or
   # "Failing" so the text fixture knows what to expect.

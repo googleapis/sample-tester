@@ -103,7 +103,7 @@ class Manifest:
 
     Args:
       sources: An iterable of (name, manifest, implicit_tags) tuples. Here,
-        `manifest` is a dict with a version key (`SCHEMA_VERSION_KEY` or
+        `manifest` is a dict with a version key (`parser.SCHEMA_VERSION_KEY` or
         `VERSION_KEY_v1v2`) and with the other keys structured as expected by
         the interpreter for the version specified as the value of the version
         key.
