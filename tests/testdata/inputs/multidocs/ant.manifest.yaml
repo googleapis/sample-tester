@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-type: test/samples
-schema_version: 1
-test:
-  suites:
-  - name: Keyboard interrupt
-    cases:
-    - name: code
-      spec:
-        - code: |
-            raise KeyboardInterrupt
+# no type description in these docs
+---
+name: antebelleum
+---
+name: antecedent

@@ -16,6 +16,7 @@
 import os
 import unittest
 
+from sampletester import inputs
 from sampletester import sample_manifest
 
 _ABS_FILE = os.path.abspath(__file__)
@@ -314,7 +315,7 @@ class TestManifestV1V2(unittest.TestCase):
         }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_unfinished_at_end(self):
     manifest_content = {
@@ -334,7 +335,7 @@ class TestManifestV1V2(unittest.TestCase):
         }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_empty(self):
     manifest_content = {
@@ -354,7 +355,7 @@ class TestManifestV1V2(unittest.TestCase):
         }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_key_with_braces(self):
     manifest_content = {
@@ -374,7 +375,7 @@ class TestManifestV1V2(unittest.TestCase):
         }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_loop(self):
     manifest_content = {
@@ -412,7 +413,8 @@ class TestManifestV1V2(unittest.TestCase):
 
 
     manifest = sample_manifest.Manifest('model', 'sample')
-    manifest.read_files(manifest_h_he_path, manifest_li_be_path)
+    manifest.from_docs(inputs.create_indexed_docs(manifest_h_he_path,
+                                                  manifest_li_be_path))
     manifest.index()
 
     expect_hydrogen = {

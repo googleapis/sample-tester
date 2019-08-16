@@ -17,6 +17,10 @@ import logging
 import re
 import yaml
 
+from typing import List
+
+from sampletester import parser
+
 
 class Wrapper:
 
@@ -263,34 +267,32 @@ class Manager:
     return visitor.end_visit()
 
 
-def suite_configs_from(test_files):
-  """Returns the suite configs (key/value pairs) from all the `test_files`.
+SCHEMA = parser.SchemaDescriptor('test','samples', 1)
+
+def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
+  """Returns the suite configs (key/value pairs) from all the `test_docs`.
 
   Helper function for suites_from(), which is what most clients will want to call.
   """
-
-  # TODO(vchudnov): Append line number info to aid in error messages
-  # cf: https://stackoverflow.com/a/13319530
   all_suites = []
-  for filename in test_files:
-    logging.info('Reading test file "{}"'.format(filename))
-    with open(filename, "r") as stream:
-      spec = yaml.load(stream, Loader=yaml.SafeLoader)
-      these_suites = spec["test"]["suites"]
+  for doc in test_docs:
+      if (doc.obj.get(SCHEMA.type_key) != SCHEMA.full_type or
+          doc.obj.get(SCHEMA.version_key) != SCHEMA.version):
+        continue
+      these_suites = doc.obj["test"]["suites"]
       for suite in these_suites:
-        suite["source"] = filename
+        suite[SUITE_SOURCE] = doc.path
       all_suites.extend(these_suites)
   return all_suites
 
+def suites_from_doc_list(test_docs: List[parser.Document],
+                         suite_filter: str = None,
+                         case_filter: str = None) -> List[Suite]:
+  """Creates Suite objects from the given YAML test_docs"""
+  return [Suite(spec, suite_filter, case_filter) for spec in suite_configs_from(test_docs)]
 
-def suite_objects_from(all_suites, suite_filter = None, case_filter = None):
-  """Creates Suite objects from the given suite config key/value specs.
-
-  Helper function for suites_from(), which is what most clients will want to call.
-  """
-  return [Suite(spec, suite_filter, case_filter) for spec in all_suites]
-
-
-def suites_from(test_files, suite_filter = None, case_filter = None):
-  """Creates Suite objects from the given YAML test_files"""
-  return suite_objects_from(suite_configs_from(test_files), suite_filter, case_filter)
+def suites_from(indexed_docs: parser.IndexedDocs,
+                suite_filter: str = None,
+                case_filter: str = None) -> List[Suite]:
+  """Creates and returns Suite objects from a `indexed_docs`"""
+  return suites_from_doc_list(indexed_docs.of_type(SCHEMA.primary_type))

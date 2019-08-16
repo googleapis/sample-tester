@@ -16,8 +16,10 @@ import glob
 import logging
 from typing import Iterable
 
+from sampletester import parser
 from sampletester import sample_manifest
 from sampletester import testenv
+
 
 # The value of ENVIRONMENT_KEY in the manifest is a human convenience used to
 # group test suites for easier reporting. Its presence, absence, or value does
@@ -190,12 +192,9 @@ def insert_into(host: str, *replacements): #  placeholder: str, guest: str):
   return escaped.replace(escaped_token, PLACEHOLDER_CHAR)
 
 
-# A global record of all the manifest and environments created via all the calls to test_environments()
-all_manifests = []
-all_env_names = []
-all_environments = []
-
-def test_environments(manifest_paths, convention_parameters, manifest_options):
+def test_environments(indexed_docs: parser.IndexedDocs,
+                      convention_parameters,
+                      manifest_options):
   if convention_parameters is None:
     convention_parameters = []
   num_params = len(convention_parameters)
@@ -203,13 +202,8 @@ def test_environments(manifest_paths, convention_parameters, manifest_options):
     raise Exception('expected at least 1 parameter to convention "tag", got %d: %s'
                     .format(num_params, convention_parameters))
 
-  manifest_files = []
-  for path in manifest_paths:
-    manifest_files.extend(
-        glob.glob(path)
-    )  # can do this?: _ = [a_m.extend(g.g(path)) for path in manifest_paths]
   manifest = sample_manifest.Manifest(ENVIRONMENT_KEY, *convention_parameters) # read only, so don't need a copy
-  manifest.read_files(*manifest_files)
+  manifest.from_docs(indexed_docs)
   manifest.index()
 
   env_names = []
@@ -231,9 +225,6 @@ def test_environments(manifest_paths, convention_parameters, manifest_options):
                                manifest_options=manifest_options_dict)
     environments.append(env)
   logging.info('convention "tag" generated environments: {}'.format([env.name() for env in environments]))
-  all_env_names.extend(env_names)
-  all_environments.extend(environments)
-  all_manifests.extend(manifest_files)
   return environments
 
 

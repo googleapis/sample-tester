@@ -8,15 +8,46 @@ Basic usage
 
    .. code-block:: bash
                    
-      sampletester TEST.yaml [TEST.yaml ...] [MANIFEST.manifest.yaml ...]
+      sampletester CONFIG_PATH [CONFIG_PATH ...]
                    [--envs=REGEX] [--suites=REGEX] [--cases=REGEX]
                    [--fail-fast]
 
 
 where:
 
-* there can be any number of ``TEST.yaml`` :ref:`testplan <defining-tests/testplan-reference>` files
-* there can be any number of ``MANIFEST.manifest.yaml`` :ref:`manifest <defining-tests/manifest-reference>` files
+* any number of YAML configuration files can be specified via an
+  arbitrary number of ``CONFIG_PATH`` arguments
+* in aggregate, all the configuration files must:
+
+   * contain at least one :ref:`testplan
+     <defining-tests/testplan-reference>` YAML document specifying
+     tests to be run
+   * contain at least one :ref:`manifest
+     <defining-tests/manifest-reference>` YAML document in order for
+     the tests to be able to call actual samples by ID
+     
+* each ``CONFIG_PATH`` should specify (either fully or via a glob) either these YAML configuration files or directories containing (possibly in arbitrarily nested subdirectories) these YAML configuration files
+  
+  * if any of the ``CONFIG_PATH`` resolve to a directory name, only
+    the specified files and directories are used to look for
+    config files.
+  * if none of ``CONFIG_PATH`` resolve to a directory name,
+    sample-tester will attempt to obtain a testplan document and a
+    manifest document from the files specified.
+
+    * If it finds at least one testplan document and at least one
+      manifest document, it will use all the documents in the
+      specified files as inputs but will not read from any additional
+      files.
+    * If it does not find a testplan document, it will look for
+      additional YAML configuration files under the current working
+      directory and any arbitrarily nested subdirectories, and use any
+      testplan documents it finds in this manner.
+    * If it does not find a manifest document, it will look for
+      additional YAML configuration files under the current working
+      directory and any arbitrarily nested subdirectories, and use any
+      manifest documents it finds in this manner.
+    
 * ``--envs``, ``--suites``, and ``--cases`` are Python-style regular
   expressions (beware shell-escapes!) to select which environments,
   suites, and cases to run, based on their names. All the

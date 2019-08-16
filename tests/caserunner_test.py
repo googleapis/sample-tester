@@ -16,10 +16,13 @@
 import os
 import re
 import unittest
+import yaml
 
 from sampletester import caserunner
 from sampletester import convention
 from sampletester import environment_registry
+from sampletester import inputs
+from sampletester import parser
 from sampletester import runner
 from sampletester import summary
 from sampletester import testplan
@@ -63,10 +66,15 @@ class Visitor(testplan.Visitor):
 class TestCaseRunner(unittest.TestCase):
 
   def setUp(self):
-    self.environment_registry = environment_registry.new(convention.DEFAULT, [full_path('testdata/caserunner_test.manifest.yaml')])
+    self.environment_registry = environment_registry.new(
+        convention.DEFAULT,
+        inputs.create_indexed_docs(
+            *full_paths('testdata/caserunner_test.manifest.yaml')))
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from([full_path('testdata/caserunner_test.yaml')]))
+        testplan.suites_from(
+            inputs.create_indexed_docs(
+                *full_paths('testdata/caserunner_test.yaml'))))
     self.results = Visitor()
     self.manager.accept(testplan.MultiVisitor(runner.Visitor(),
                                               summary.SummaryVisitor(verbosity=summary.Detail.FULL,
@@ -113,10 +121,13 @@ class TestCaseRunner(unittest.TestCase):
 
 class TestCaseRunnerSkipsCasesWhenSetupFails(unittest.TestCase):
   def setUp(self):
-    self.environment_registry = environment_registry.new(convention.DEFAULT, [])
+    self.environment_registry = environment_registry.new(
+        convention.DEFAULT, inputs.create_indexed_docs())
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from([full_path('testdata/caserunner_test_setup_failures.yaml')]))
+        testplan.suites_from(
+            inputs.create_indexed_docs(
+                *full_paths('testdata/caserunner_test_setup_failures.yaml'))))
     self.results = Visitor()
     self.manager.accept(testplan.MultiVisitor(runner.Visitor(fail_fast=False),
                                               summary.SummaryVisitor(verbosity=summary.Detail.FULL,
@@ -152,10 +163,13 @@ class TestCaseRunnerSkipsCasesWhenSetupFails(unittest.TestCase):
 
 class TestCaseRunnerCatchExceptions(unittest.TestCase):
   def setUp(self):
-    self.environment_registry = environment_registry.new(convention.DEFAULT, [])
+    self.environment_registry = environment_registry.new(convention.DEFAULT,
+                                                         inputs.create_indexed_docs())
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from([full_path('testdata/caserunner_test_exception.yaml')]))
+        testplan.suites_from(
+            inputs.create_indexed_docs(
+                *full_paths('testdata/caserunner_test_exception.yaml'))))
     self.results = Visitor()
 
   def test_keyboard_interrupt(self):
@@ -171,10 +185,15 @@ class TestCaseRunnerCatchExceptions(unittest.TestCase):
 
 class TestCaseRunnerNoMatchForCallTarget(unittest.TestCase):
   def setUp(self):
-    self.environment_registry = environment_registry.new(convention.DEFAULT,  [full_path('testdata/caserunner_test_target.manifest.yaml')])
+    self.environment_registry = environment_registry.new(
+        convention.DEFAULT,
+        inputs.create_indexed_docs(
+            *full_paths('testdata/caserunner_test_target.manifest.yaml')))
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from([full_path('testdata/caserunner_test_target.yaml')]))
+        testplan.suites_from(
+            inputs.create_indexed_docs(
+                *full_paths('testdata/caserunner_test_target.yaml'))))
     self.results = Visitor()
 
   def test_did_not_call(self):
@@ -188,10 +207,15 @@ class TestCaseRunnerNoMatchForCallTarget(unittest.TestCase):
 
 class TestCaseRunnerMatchesForCallTarget(unittest.TestCase):
   def setUp(self):
-    self.environment_registry = environment_registry.new('tag:alpine',  [full_path('testdata/caserunner_test_target.manifest.yaml')])
+    self.environment_registry = environment_registry.new(
+        'tag:alpine',
+        inputs.create_indexed_docs(
+            *full_paths('testdata/caserunner_test_target.manifest.yaml')))
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from([full_path('testdata/caserunner_test_target.yaml')]))
+        testplan.suites_from(
+            inputs.create_indexed_docs(
+                *full_paths('testdata/caserunner_test_target.yaml'))))
     self.results = Visitor()
 
   def test_did_call(self):
@@ -208,10 +232,13 @@ class TestChdir(unittest.TestCase):
   def setUp(self):
     self.environment_registry = environment_registry.new(
         convention.DEFAULT,
-        [full_path('testdata/caserunner_test.chdir.manifest.yaml')])
+        inputs.create_indexed_docs(
+            *full_paths('testdata/caserunner_test.chdir.manifest.yaml')))
     self.manager = testplan.Manager(
         self.environment_registry,
-        testplan.suites_from([full_path('testdata/caserunner_chdir_test.yaml')]))
+        testplan.suites_from(
+            inputs.create_indexed_docs(
+                *full_paths('testdata/caserunner_chdir_test.yaml'))))
     self.results = Visitor()
     self.manager.accept(testplan.MultiVisitor(runner.Visitor(),
                                               summary.SummaryVisitor(verbosity=summary.Detail.FULL,
@@ -240,8 +267,9 @@ class TestSymbolInterpolation(unittest.TestCase):
                      caserunner.interpolate_symbols('Want {H} or {Ur}?',
                                                     resolver))
 
-def full_path(leaf_path):
-  return os.path.join(_ABS_DIR, leaf_path)
+
+def full_paths(*leaf_path):
+  return [os.path.join(_ABS_DIR, path) for path in leaf_path]
 
 
 if __name__ == '__main__':

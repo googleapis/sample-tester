@@ -11,14 +11,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-type: test/samples
-schema_version: 1
-test:
-  suites:
-  - name: Keyboard interrupt
-    cases:
-    - name: code
-      spec:
-        - code: |
-            raise KeyboardInterrupt
+A random text file in this directory

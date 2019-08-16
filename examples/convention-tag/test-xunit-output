@@ -39,8 +39,7 @@ for expected_text in                        \
 do
   if ! grep --silent "$expected_text" "$xunit_file"; then
     echo "Assertion failed"
-    echo "Expected $expected_text in:"
-    echo "$xunit_xml"
+    echo "Expected \`$expected_text\` in $xunit_file"
     code=1
     break
   fi

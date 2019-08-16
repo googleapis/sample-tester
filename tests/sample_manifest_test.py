@@ -16,6 +16,8 @@
 import os
 import unittest
 
+from sampletester import inputs
+from sampletester import parser
 from sampletester import sample_manifest
 
 _ABS_FILE = os.path.abspath(__file__)
@@ -24,9 +26,12 @@ _ABS_DIR = os.path.dirname(_ABS_FILE)
 
 class TestManifestV3(unittest.TestCase):
   def test_multiple_yaml_docs_in_stream(self):
-    all_parsed = sample_manifest.strings_to_yaml(
-        ('january',
-         """---
+    # all_parsed = sample_manifest.strings_to_yaml(
+    indexed_docs = parser.IndexedDocs(
+        resolver=lambda _: sample_manifest.SCHEMA.primary_type,
+        strict=False)
+    indexed_docs.from_strings(('january',
+                               """---
 who: alice
 ---
 who: bob
@@ -36,8 +41,8 @@ who: bob
 who: carol
 ---
 who: dan
-""")
-    )
+"""))
+    all_parsed = sample_manifest.from_indexed_docs(indexed_docs)
     found = {}
     for _, doc, _ in all_parsed:
       found[doc["who"]] = True
@@ -46,21 +51,21 @@ who: dan
 
   def test_read_no_version(self):
     manifest_source, _ = self.get_manifest_source()
-    manifest_source[1].pop(sample_manifest.Manifest.SCHEMA_VERSION_KEY)
+    manifest_source[1].pop(sample_manifest.SCHEMA.version_key)
     manifest = sample_manifest.Manifest('language', 'sample')
     with self.assertRaises(Exception):
       manifest.read_sources([manifest_source])
 
   def test_read_invalid_version(self):
     manifest_source, _ = self.get_manifest_source()
-    manifest_source[1][sample_manifest.Manifest.SCHEMA_VERSION_KEY] = 'foo'
+    manifest_source[1][sample_manifest.SCHEMA.version_key] = 'foo'
     manifest = sample_manifest.Manifest('language', 'sample')
     with self.assertRaises(Exception):
       manifest.read_sources([manifest_source])
 
   def test_read_no_type(self):
     manifest_source, _ = self.get_manifest_source()
-    manifest_source[1].pop(sample_manifest.Manifest.SCHEMA_TYPE_KEY)
+    manifest_source[1].pop(sample_manifest.SCHEMA.type_key)
     manifest = sample_manifest.Manifest('language', 'sample')
     manifest.read_sources([manifest_source])
     with self.assertRaises(Exception):
@@ -68,7 +73,7 @@ who: dan
 
   def test_read_nonmanifest_type(self):
     manifest_source, _ = self.get_manifest_source()
-    manifest_source[1][sample_manifest.Manifest.SCHEMA_TYPE_KEY] = "random"
+    manifest_source[1][sample_manifest.SCHEMA.type_key] = "random"
     manifest = sample_manifest.Manifest('language', 'sample')
     manifest.read_sources([manifest_source])
     manifest.index()
@@ -181,10 +186,10 @@ who: dan
   def get_manifest_source(self):
     list_name = 'mysamples'
     manifest = {
-        sample_manifest.Manifest.SCHEMA_TYPE_KEY:
-            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+        sample_manifest.SCHEMA.type_key:
+            '{}/{}'.format(sample_manifest.SCHEMA.primary_type,
                            list_name),
-        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        sample_manifest.SCHEMA.version_key: 3,
         list_name: [
             {
                 'language': 'python',
@@ -228,10 +233,10 @@ who: dan
   def get_manifest_source_with_implicits(self):
     list_name = 'mysamples'
     manifest = {
-        sample_manifest.Manifest.SCHEMA_TYPE_KEY:
-            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+        sample_manifest.SCHEMA.type_key:
+            '{}/{}'.format(sample_manifest.SCHEMA.primary_type,
                            list_name),
-        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        sample_manifest.SCHEMA.version_key: 3,
         list_name: [
             {
                 'language': 'python',
@@ -290,10 +295,10 @@ who: dan
   def get_manifest_source_braces_correct(self, version):
     list_name = 'mysamples'
     manifest = {
-        sample_manifest.Manifest.SCHEMA_TYPE_KEY:
-            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+        sample_manifest.SCHEMA.type_key:
+            '{}/{}'.format(sample_manifest.SCHEMA.primary_type,
                            list_name),
-        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        sample_manifest.SCHEMA.version_key: 3,
         list_name: [
             {
                 'greetings': 'teatime-{name}{{',
@@ -311,10 +316,10 @@ who: dan
   def test_braces(self):   ### combine with above
     list_name = 'mysamples'
     manifest_content = {
-        sample_manifest.Manifest.SCHEMA_TYPE_KEY:
-            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+        sample_manifest.SCHEMA.type_key:
+            '{}/{}'.format(sample_manifest.SCHEMA.primary_type,
                            list_name),
-        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        sample_manifest.SCHEMA.version_key: 3,
         list_name: [
             {
                 'greetings': 'teatime-{name}{{',
@@ -346,10 +351,10 @@ who: dan
   def test_braces_error_unfinished(self):
     list_name = 'mysamples'
     manifest_content = {
-         sample_manifest.Manifest.SCHEMA_TYPE_KEY:
-            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+         sample_manifest.SCHEMA.type_key:
+            '{}/{}'.format(sample_manifest.SCHEMA.primary_type,
                            list_name),
-        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        sample_manifest.SCHEMA.version_key: 3,
         list_name: [
             {
                 'greetings': 'teatime',
@@ -363,15 +368,15 @@ who: dan
     }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_unfinished_at_end(self):
     list_name = 'mysamples'
     manifest_content = {
-         sample_manifest.Manifest.SCHEMA_TYPE_KEY:
-            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+         sample_manifest.SCHEMA.type_key:
+            '{}/{}'.format(sample_manifest.SCHEMA.primary_type,
                            list_name),
-        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        sample_manifest.SCHEMA.version_key: 3,
         list_name: [
             {
                 'greetings': 'teatime',
@@ -385,15 +390,15 @@ who: dan
     }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_empty(self):
     list_name = 'mysamples'
     manifest_content = {
-         sample_manifest.Manifest.SCHEMA_TYPE_KEY:
-            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+         sample_manifest.SCHEMA.type_key:
+            '{}/{}'.format(sample_manifest.SCHEMA.primary_type,
                            list_name),
-        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        sample_manifest.SCHEMA.version_key: 3,
         list_name: [
             {
                 'greetings': 'teatime',
@@ -407,15 +412,15 @@ who: dan
     }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_key_with_braces(self):
     list_name = 'mysamples'
     manifest_content = {
-         sample_manifest.Manifest.SCHEMA_TYPE_KEY:
-            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+         sample_manifest.SCHEMA.type_key:
+            '{}/{}'.format(sample_manifest.SCHEMA.primary_type,
                            list_name),
-        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        sample_manifest.SCHEMA.version_key: 3,
         list_name: [
             {
                 'greetings': 'teatime',
@@ -429,15 +434,15 @@ who: dan
     }
     manifest = sample_manifest.Manifest('greetings')
     manifest.read_sources([('erroring manifest', manifest_content, {})])
-    self.assertRaises(sample_manifest.SyntaxError, manifest.index)
+    self.assertRaises(sample_manifest.ManifestSyntaxError, manifest.index)
 
   def test_braces_error_loop(self):
     list_name = 'mysamples'
     manifest_content = {
-         sample_manifest.Manifest.SCHEMA_TYPE_KEY:
-            '{}/{}'.format(sample_manifest.Manifest.SCHEMA_TYPE_VALUE,
+         sample_manifest.SCHEMA.type_key:
+            '{}/{}'.format(sample_manifest.SCHEMA.primary_type,
                            list_name),
-        sample_manifest.Manifest.SCHEMA_VERSION_KEY: 3,
+        sample_manifest.SCHEMA.version_key: 3,
         list_name: [
             {
                 'greetings': '{drink} time',
@@ -497,7 +502,7 @@ who: dan
           "Be": "Beryllium",
       }
     ]
-    with self.assertRaises(sample_manifest.SyntaxError):
+    with self.assertRaises(sample_manifest.ManifestSyntaxError):
       sample_manifest.check_tag_names(invalid_manifest)
 
     correct_manifest = [
@@ -528,7 +533,8 @@ who: dan
 
 
     manifest = sample_manifest.Manifest('model', 'sample')
-    manifest.read_files(manifest_h_he_path, manifest_li_be_path)
+    manifest.from_docs(inputs.create_indexed_docs(manifest_h_he_path,
+                                                  manifest_li_be_path))
     manifest.index()
 
     expect_hydrogen = {

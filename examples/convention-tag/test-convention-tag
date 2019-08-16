@@ -17,9 +17,29 @@
 # Exit correctly depending on whether this file is being sourced or executed.
 [[ "${BASH_SOURCE[0]}" != "${0}" ]] && EXIT=return || EXIT=exit
 
+output_file="$(mktemp /tmp/sample-tester.XXXXXXXXX )"
+
 pushd "$(dirname ${BASH_SOURCE})/../.." >& /dev/null
-sample-tester -v detailed ${FLAGS:---xunit=/tmp/xunit.tag.xml} examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml
+sample-tester -v detailed ${FLAGS:---xunit=/tmp/xunit.tag.xml} examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml >& $output_file 
 code=$?
+
+if [[ $code -eq 0 ]] ; then
+  for expected_text in                        \
+    'In setup'  \
+    'In teardown'  \
+    'Language samples test'  \
+    'A test defined via yaml directives'  \
+    "A test defined via 'code'" \
+    ;
+  do
+    if ! grep --silent "$expected_text" "$output_file"; then
+      echo "Assertion failed"
+      echo "Expected \`$expected_text\` in $output_file"
+      code=1
+      break
+    fi
+  done
+fi
 
 popd >& /dev/null
 ${EXIT} $code

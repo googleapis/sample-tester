@@ -15,8 +15,13 @@
 import io
 import logging
 import os.path
-from typing import Iterable
 import yaml
+
+from sampletester import parser
+
+from typing import Iterable
+
+SCHEMA = parser.SchemaDescriptor('manifest')
 
 
 # This prefix marks symbols that have special semantics for the purposes of
@@ -56,11 +61,6 @@ class Manifest:
 
   # TODO: Change key to index in the doc above and usages below
 
-  SCHEMA_TYPE_KEY = 'type'
-  SCHEMA_TYPE_VALUE = 'manifest'
-  SCHEMA_TYPE_SEPARATOR = '/'
-  SCHEMA_VERSION_KEY = 'schema_version'
-
   # These values are deprecated and will go away once sampler tester stops
   # supporting manifest schema versions v1 and v2
   VERSION_KEY_v1v2 = 'version'
@@ -94,30 +94,19 @@ class Manifest:
   def set_indices(self, *indices: str):
     self.indices = indices or [None]
 
-  def read_files(self, *files: str):
-    """Interprets files as YAML streams, each possibly containing multiple documents
-
-    Args:
-       files: any number of filenames to be parsed as YAML files
-    """
-    self.read_sources(files_to_yaml(*files))
-
-  def read_strings(self, *sources: str):
-    """Interprets strings as YAML streams, each possibly with multiple documents
-
-    Args:
-       str: any number of (label, yaml-string) pairs
-    """
-    self.read_sources(strings_to_yaml(*sources))
+  def from_docs(self, indexed_docs: parser.IndexedDocs):
+    """Ingests the manifests in `indexed_docs`"""
+    self.read_sources(from_indexed_docs(indexed_docs))
 
   def read_sources(self, sources):
     """Reads a sample manifest from a single YAML document.
 
     Args:
-      sources: An iterable of (name, manifest) pairs. Here, `manifest` is a dict
-        with a version key (`SCHEMA_VERSION_KEY` or `VERSION_KEY_v1v2`)
-        and with the other keys structured as expected by the interpreter for
-        the version specified as the value of the version key.
+      sources: An iterable of (name, manifest, implicit_tags) tuples. Here,
+        `manifest` is a dict with a version key (`parser.SCHEMA_VERSION_KEY` or
+        `VERSION_KEY_v1v2`) and with the other keys structured as expected by
+        the interpreter for the version specified as the value of the version
+        key.
 
     Returns:
       the list of sources successfully read
@@ -131,7 +120,7 @@ class Manifest:
         continue
       sources_read.append(name)
 
-      version = manifest.get(self.SCHEMA_VERSION_KEY)
+      version = manifest.get(SCHEMA.version_key)
       if version is None:
         version = manifest.get(self.VERSION_KEY_v1v2)
       if version is None:
@@ -273,23 +262,22 @@ def get_elements_v3(input):
   Args:
     input: the hierarchical manifest structure, typically as parsed from YAML
   """
-  specified_type = input.get(Manifest.SCHEMA_TYPE_KEY, None)
+  specified_type = input.get(SCHEMA.type_key, None)
   if not specified_type:
-    raise SyntaxError('no top-level "{}" field specified'
-                      .format(Manifest.SCHEMA_TYPE_KEY))
+    raise ManifestSyntaxError(f'no top-level "{SCHEMA.type_key}" field specified')
   if not isinstance(specified_type, str):
-    raise SyntaxError('top level "{}" field is not a string: {}'
-                      .format(Manifest.SCHEMA_TYPE_KEY, specified_type))
+    raise ManifestSyntaxError(f'top level "{SCHEMA.type_key}" field is not a string: '
+                      f'"{specified_type}"')
 
-  type_parts = specified_type.split(Manifest.SCHEMA_TYPE_SEPARATOR)
+  type_parts = specified_type.split(SCHEMA.type_separator)
   type_name = type_parts[0]
-  if type_name != Manifest.SCHEMA_TYPE_VALUE:
+  if type_name != SCHEMA.primary_type:
     return None
   if len(type_parts) > 1:
     list_item = type_parts[1]
   if not list_item:
-    raise SyntaxError('missing item list name in "{}" field: "{}"'
-                      .format(Manifest.SCHEMA_TYPE_KEY, specified_type))
+    raise ManifestSyntaxError(f'missing item list name in "{SCHEMA.type_key}" field: '
+                      f'"{specified_type}"')
 
   return input.get(list_item, [])
 
@@ -323,7 +311,7 @@ def get_flattened_elements_v1_v2(input):
 
 ### Helpers for inclusions
 
-class SyntaxError(Exception):
+class ManifestSyntaxError(Exception):
   pass
 
 class CycleError(Exception):
@@ -418,7 +406,7 @@ class Inclusions:
       # we found open brace
 
       if open_idx >= len(value) - 1:  # need room for closing brace or escaped open
-        raise SyntaxError(
+        raise ManifestSyntaxError(
             'no inclusion key for tag "{}" at position {} in item {}'
             .format(tag_name, open_idx, element))
       if value[open_idx+1] == '{':
@@ -432,17 +420,17 @@ class Inclusions:
 
       close_idx = value.find('}', open_idx)
       if close_idx == -1:
-        raise SyntaxError(
+        raise ManifestSyntaxError(
             'inclusion key starting at position {} is not terminated in '+
             'tag "{}" in item {}'
             .format(open_idx, tag_name, element))
       inclusion_name = value[open_idx+1:close_idx]
       if len(inclusion_name) == 0:
-        raise SyntaxError(
+        raise ManifestSyntaxError(
             'inclusion key is empty at position {} for tag "{}" in item {}'
             .format(open_idx, tag_name, element))
       if inclusion_name.find('{') != -1:
-        raise SyntaxError(
+        raise ManifestSyntaxError(
             'inclusion key "{}" cannot contain braces'.format(inclusion_name))
       parts.append(inclusion_name)
 
@@ -458,7 +446,7 @@ class Inclusions:
         if pos == -1:
           break
         if (pos == len(part) - 1 or part[pos+1]!='}'):
-          raise SyntaxError('closing brace not escaped')
+          raise ManifestSyntaxError('closing brace not escaped')
         part=part[:pos+1]+part[pos+2:]
       parts[idx]=part.replace('}}','}')
 
@@ -511,38 +499,11 @@ def get_or_create(d, key, empty_value):
   return value
 
 
-def files_to_yaml(*files: str):
-  """Reads sample manifests from files.
+def from_indexed_docs(indexed_docs: parser.IndexedDocs):
+  """Reads sample manifests from indexed_docs.
 
   Args:
-    sources: Any number of names of files, each containing one or more YAML
-      documents.
-
-  Yields:
-    a tuple per YAML document in each file, each tuple containing the filename
-    of its source file, the parsed YAML as a Python object, and the implicit
-    tags (which have not yet been applied to the object). The implicit tags
-    contain the filename itself and the directory of filename.  Note that none
-    of YAML documents are guaranteed to be of the manifest type yet.
-  """
-  for file_name in files:
-    # we delegate to strings_to_yaml below to have single code path for easier
-    # testing and bug avoidance
-    with open(file_name, 'r') as stream:
-      content = stream.read()
-      yield from strings_to_yaml(
-          (file_name,
-           content,
-           create_implicit_tags(source=file_name, dir=os.path.dirname(file_name))))
-
-def strings_to_yaml(*sources: str):
-  """Reads sample manifests from strings.
-
-  Args:
-    sources: Any number of tuples, each containing the name of YAML source and
-      the actual string representation of the YAML. An optional third element
-      of each tuple is the set of implicit tags to add to the YAML; if not
-      provided, just the name in the tuple is made into an implicit tag.
+    indexed_docs: A set of indexed YAML docs.
 
   Yields:
     a tuple per YAML document in each source, each tuple containing the name of
@@ -550,12 +511,11 @@ def strings_to_yaml(*sources: str):
     have not yet been applied to the object). Note that none of YAML documents
     are guaranteed to be of the manifest type yet.
   """
-  for one_source in sources:
-    name, data = one_source[0], one_source[1]
-    implicit_tags = (one_source[2] if len(one_source) > 2
-                     else create_implicit_tags(source=name))
-    for manifest in yaml.load_all(data):
-      yield (name, manifest, implicit_tags)
+  for doc in indexed_docs.of_type(SCHEMA.primary_type):
+    yield(doc.path,
+          doc.obj,
+          create_implicit_tags(source=doc.path, dir=os.path.dirname(doc.path)))
+
 
 def check_tag_names(src):
   """Checks that all explicit tag names are valid."""
@@ -566,7 +526,7 @@ def check_tag_names(src):
              for name in element.keys()
              if name.startswith(RESERVED_SYMBOL_PREFIX)]
   if invalid:
-    raise SyntaxError('tag names may not begin with "{}": {}'
+    raise ManifestSyntaxError('tag names may not begin with "{}": {}'
                       .format(RESERVED_SYMBOL_PREFIX,
                               ' '.join(['"{}"'.format(name) for name in invalid])))
   return src # to allow for composition

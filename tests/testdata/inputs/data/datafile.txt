@@ -12,13 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-type: test/samples
-schema_version: 1
-test:
-  suites:
-  - name: Keyboard interrupt
-    cases:
-    - name: code
-      spec:
-        - code: |
-            raise KeyboardInterrupt
+This represents some random data file. It's not used anywhere, but we need it in git so that its directory is present, since that _is_ checked in inputs_test.py.

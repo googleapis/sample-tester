@@ -16,6 +16,7 @@
 import os
 import unittest
 
+from sampletester import inputs
 from sampletester.convention import tag
 from sampletester import sample_manifest
 
@@ -40,7 +41,7 @@ class TestArgSubstitution(unittest.TestCase):
   def setUp(self):
     filename = full_path('testdata/tag_test.manifest.yaml')
     manifest = sample_manifest.Manifest('situation')
-    manifest.read_files(filename)
+    manifest.from_docs(inputs.create_indexed_docs(filename))
     manifest.index()
     self.env = tag.ManifestEnvironment(filename, '', manifest, [])
 
@@ -118,7 +119,7 @@ class TestChangingInvocationKey(unittest.TestCase):
   def setUp(self):
     filename = full_path('testdata/tag_test.manifest.yaml')
     manifest = sample_manifest.Manifest('situation')
-    manifest.read_files(filename)
+    manifest.from_docs(inputs.create_indexed_docs(filename))
     manifest.index()
     self.env = tag.ManifestEnvironment(
         filename, '', manifest, [],
@@ -138,7 +139,7 @@ class TestChdir(unittest.TestCase):
   def setUp(self):
     filename = full_path('testdata/tag_test.manifest.yaml')
     manifest = sample_manifest.Manifest('situation')
-    manifest.read_files(filename)
+    manifest.from_docs(inputs.create_indexed_docs(filename))
     manifest.index()
     self.env = tag.ManifestEnvironment(filename, '', manifest, [])
 
@@ -155,7 +156,7 @@ class TestChangingChdirKey(unittest.TestCase):
   def setUp(self):
     filename = full_path('testdata/tag_test.manifest.yaml')
     manifest = sample_manifest.Manifest('situation')
-    manifest.read_files(filename)
+    manifest.from_docs(inputs.create_indexed_docs(filename))
     manifest.index()
     self.env = tag.ManifestEnvironment(
         filename, '', manifest, [],
@@ -173,7 +174,7 @@ class TestGetSymbol(unittest.TestCase):
   def setUp(self):
     self.manifest_file_name = full_path('testdata/tag_test.manifest.yaml')
     manifest = sample_manifest.Manifest('situation')
-    manifest.read_files(self.manifest_file_name)
+    manifest.from_docs(inputs.create_indexed_docs(self.manifest_file_name))
     manifest.index()
     self.env = tag.ManifestEnvironment(self.manifest_file_name, '', manifest, [])
 

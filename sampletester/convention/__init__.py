@@ -39,7 +39,7 @@ for convention in all_conventions:
     logging.info('registering convention "{}"'.format(convention))
     environment_creators[convention] = module.test_environments
 
-def generate_environments(requested_conventions, testcase_args, manifest_options, files):
+def generate_environments(requested_conventions, testcase_args, manifest_options, indexed_docs):
   """Generates the environments for the requested conventions with the given args.
 
   Note that a given convention may (and usually will) generate multiple
@@ -62,7 +62,7 @@ def generate_environments(requested_conventions, testcase_args, manifest_options
     if create_fn is None:
       raise ValueError('convention "{}" not implemented'.format(convention))
     try:
-      all_environments.extend(create_fn(files, testcase_args, manifest_options))
+      all_environments.extend(create_fn(indexed_docs, testcase_args, manifest_options))
     except Exception as ex:
       raise ValueError(
           'could not create test environments for convention "{}": {}'

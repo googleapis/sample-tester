@@ -5,8 +5,11 @@ Manifest file format
 
 A manifest contains one or more YAML documents that associate each
 artifact (sample) of interest on disk with a series of metadata
-tags. The YAML documents within the file are separated by the usual
-YAML start-document indicator, ``---``.
+tags. Multiple manifests can be specified by having multiple YAML
+documents within a single configuration YAML file and/or having
+multiple configuration YAML files. The YAML documents within each YAML
+file are separated by the usual YAML start-document indicator,
+``---``.
 
 A manifest YAML document has the general structure:
 
@@ -23,6 +26,11 @@ A manifest YAML document has the general structure:
    as a manifest. Other document types are silently ignored (this
    permits putting disparate YAML documents in the same file if
    desired).
+
+   - For backwards compatibility, any document that does not have a 
+     ``type:`` top-level field will be treated as a manifest if the file
+     in which it was specified ends in ``.manifest.yaml``
+     
 #. The arbitrary value "XXX" in the ``type`` field defines the
    top-level YAML field ``XXX`` as containing the actual manifest.
 #. The ``schema_version`` field is required.

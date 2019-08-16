@@ -38,8 +38,13 @@ import string
 import sys
 import traceback
 
+from typing import Dict
+from typing import List
+from typing import Tuple
+
 from sampletester import convention
 from sampletester import environment_registry
+from sampletester import inputs
 from sampletester import runner
 from sampletester import summary
 from sampletester import testplan
@@ -70,14 +75,15 @@ def main():
   logging.info("argv: {}".format(sys.argv))
 
   try:
-    test_files, user_paths = get_files(args.files)
+    indexed_docs = inputs.index_docs(*args.files)
 
-    registry = environment_registry.new(args.convention, user_paths)
+    registry = environment_registry.new(args.convention, indexed_docs)
+    test_suites = testplan.suites_from(indexed_docs, args.suites, args.cases)
 
-    test_suites = testplan.suites_from(test_files, args.suites, args.cases)
     if len(test_suites) == 0:
       exit(EXITCODE_SUCCESS)
     manager = testplan.Manager(registry, test_suites, args.envs)
+
   except Exception as e:
     logging.error("fatal error: {}".format(repr(e)))
     print("\nERROR: could not run tests because {}\n".format(e))
@@ -207,38 +213,14 @@ def parse_cli():
   if len(sys.argv) == 1:
     parser.print_help()
     return None, None
+
   parser.add_argument("files", metavar="CONFIGS", nargs=argparse.REMAINDER)
   return parser.parse_args(), parser.format_usage()
 
 
-# cf https://docs.python.org/3/library/argparse.html
-def get_files(files):
-  test_files = []
-  user_paths = []
-  for filename in files:
-    filepath = os.path.abspath(filename)
-    if os.path.isdir(filepath):
-      user_paths.append(filepath)
-      continue
-
-    ext_split = os.path.splitext(filename)
-    ext = ext_split[-1]
-    if ext == ".yaml":
-      prev_ext = os.path.splitext(ext_split[0])[-1]
-      if prev_ext == ".manifest":
-        user_paths.append(filepath)
-      else:
-        test_files.append(filepath)
-    else:
-      msg = 'unknown file type: "{}"'.format(filename)
-      logging.critical(msg)
-      raise ValueError(msg)
-  return test_files, user_paths
-
-
 # from https://stackoverflow.com/a/17603000
 @contextlib.contextmanager
-def smart_open(filename=None):
+def smart_open(filename: str=None):
   if filename and filename != "-":
     fh = open(filename, "w")
   else:
