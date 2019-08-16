@@ -24,9 +24,9 @@ copyright = '2019, Google LLC'
 author = 'Victor Chudnovsky'
 
 # The short X.Y version
-version = '0.15.3'
+version = '0.16.0'
 # The full version, including alpha/beta/rc tags
-release = '0.15.3'
+release = '0.16.0'
 
 
 # -- General configuration ---------------------------------------------------
