@@ -41,6 +41,8 @@ setup(
     platforms='Posix; MacOS X',
     include_package_data=True,
     install_requires=(
+        'click',
+        'dataclasses;python_version<"3.7"',
         'pyyaml',
     ),
 
