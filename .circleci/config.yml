@@ -10,8 +10,6 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install --upgrade flake8 pip setuptools click
-            # If using python < 3.7 locally, also need to
-            #   pip install --upgrade dataclasses
+            pip install --upgrade pip setuptools
             pipenv install .
             . devcheck

@@ -30,8 +30,15 @@ info_message()    { echo -e -n "${COLOR_CYAN}${HEADER}$@${COLOR_END}"; }
 error_message()   { echo -e "${COLOR_RED}$@${COLOR_END}"; }
 success_message() { echo -e "${COLOR_GREEN}$@${COLOR_END}"; }
 
+info_message "Checking/installing development packages\n"
+PACKAGES="flake8 sphinx sphinx_rtd_theme twine wheel setuptools"
+pip install --upgrade $PACKAGES || \
+  { error "Could not install: $PACKAGES" ; $EXIT 20 ; }
+
+
 # Update the local installation
 info_message "Installing local package\n"
+
 pip install --upgrade . || \
   pip install  . || \
   { error_message "Could not install the local package!" ; $EXIT 10 ; }
