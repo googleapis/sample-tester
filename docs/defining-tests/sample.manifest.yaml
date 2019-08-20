@@ -46,11 +46,11 @@ python: &python
   bin: python3  # used to run these items
   base_path: "/home/nobody/api/samples/"  
 samples:
-- << *python
+- <<: *python
   path: "{base_path}/trivial/method/sample_alice"
   sample: "alice2"
   canonical: "trivial"
-- << *python
+- <<: *python
   path: "{base_path}complex/method/usecase_bob"
   sample: "robert2"
   tag: "guide"

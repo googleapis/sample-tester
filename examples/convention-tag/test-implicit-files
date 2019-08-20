@@ -1,0 +1,58 @@
+#! /bin/bash
+
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This tests that implicit files are correctly picked up and tested.
+
+# Exit correctly depending on whether this file is being sourced or executed.
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] && EXIT=return || EXIT=exit
+
+output_file="$(mktemp /tmp/sample-tester.XXXXXXXXX )"
+invocation_dir="$(mktemp -d /tmp/sample-tester.implicit.XXXXXXXXX )"
+
+pushd "$(dirname ${BASH_SOURCE})/../.." >& /dev/null
+
+# Copy tests, manifests, and samples to a temp directory. Then tweak the
+# manifest to point to the new locations
+cp -ax examples/mock-samples/* ${invocation_dir}/
+cp -L examples/convention-tag/language.{test,manifest}.yaml ${invocation_dir}/
+pushd ${invocation_dir} >& /dev/null
+sed -i 's^examples/mock-samples/^^g' language.manifest.yaml
+
+sample-tester -v detailed ${FLAGS:---xunit=/tmp/xunit.tag.xml} examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml >& $output_file 
+code=$?
+
+if [[ $code -eq 0 ]] ; then
+  for expected_text in                        \
+    'In setup'  \
+    'In teardown'  \
+    'Language samples test'  \
+    'A test defined via yaml directives'  \
+    "A test defined via 'code'" \
+    ;
+  do
+    if ! grep --silent "$expected_text" "$output_file"; then
+      echo "Assertion failed"
+      echo "Expected \`$expected_text\` in $output_file"
+      code=1
+      break
+    fi
+  done
+else
+  cat $output_file
+fi
+
+popd 2 >& /dev/null
+${EXIT} $code
