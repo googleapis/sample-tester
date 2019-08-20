@@ -101,7 +101,7 @@ class IndexedDocs(object):
     provided, the untyped documents are put into their own list with type given
     by `SCHEMA_TYPE_ABSENT`.
     """
-    self.add_documents(*[Document(file_name, doc) for doc in yaml.load_all(content)])
+    self.add_documents(*[Document(file_name, doc) for doc in yaml.safe_load_all(content)])
 
   def add_documents(self, *documents: Document):
     """Adds each doc in `documents` under the right schema type key."""
@@ -111,17 +111,17 @@ class IndexedDocs(object):
                         else None)
 
       if not specified_type:
-        msg = f'no top-level "{SCHEMA_TYPE_KEY}" field specified'
+        msg = f'no top-level "{SCHEMA_TYPE_KEY}" field specified in {doc.path}'
         if self.strict:
           raise YamlDocSyntaxError(msg)
-        logging.warning(msg)
+        logging.info(msg)
 
       if not isinstance(specified_type, str):
         msg = (f'top level "{SCHEMA_TYPE_KEY}" field is not '
-               f'a string: {specified_type}')
+               f'a string: ({specified_type})')
         if self.strict:
           raise YamlDocSyntaxError(msg)
-        logging.warning(msg)
+        logging.info(msg)
         specified_type = SCHEMA_TYPE_ABSENT
 
       type_name = specified_type.split(SCHEMA_TYPE_SEPARATOR, 1)[0]
