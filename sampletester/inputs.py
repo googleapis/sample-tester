@@ -66,6 +66,9 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
 
   Returns: the indexed docs of the files that were searched for.
   """
+  if not file_patterns:
+    file_patterns = ['**/*.yaml']
+
   explicit_paths = get_globbed(*file_patterns)
   explicit_directories = {path for path in explicit_paths
                           if os.path.isdir(path)}

@@ -21,17 +21,17 @@
 
 output_file="$(mktemp /tmp/sample-tester.XXXXXXXXX )"
 invocation_dir="$(mktemp -d /tmp/sample-tester.implicit.XXXXXXXXX )"
+example_dir="${invocation_dir}/examples/mock-samples"
+mkdir -p $example_dir
 
 pushd "$(dirname ${BASH_SOURCE})/../.." >& /dev/null
 
-# Copy tests, manifests, and samples to a temp directory. Then tweak the
-# manifest to point to the new locations
-cp -ax examples/mock-samples/* ${invocation_dir}/
+# Copy tests, manifests, and samples to a temp directory.
+cp -ax examples/mock-samples/* ${example_dir}/
 cp -L examples/convention-tag/language.{test,manifest}.yaml ${invocation_dir}/
 pushd ${invocation_dir} >& /dev/null
-sed -i 's^examples/mock-samples/^^g' language.manifest.yaml
 
-sample-tester -v detailed ${FLAGS:---xunit=/tmp/xunit.tag.xml} examples/convention-tag/language.test.yaml examples/convention-tag/language.manifest.yaml >& $output_file 
+sample-tester -v detailed ${FLAGS:---xunit=/tmp/xunit.tag.xml} >& $output_file 
 code=$?
 
 if [[ $code -eq 0 ]] ; then
@@ -51,6 +51,7 @@ if [[ $code -eq 0 ]] ; then
     fi
   done
 else
+  echo "*** Error running from ${invocation_dir}"
   cat $output_file
 fi
 

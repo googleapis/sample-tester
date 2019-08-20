@@ -69,6 +69,7 @@ def main():
 
   if args.version:
     print("sampletester version {}".format(VERSION))
+    exit(EXITCODE_SUCCESS)
 
   log_level = LOG_LEVELS[args.logging] or DEFAULT_LOG_LEVEL
   logging.basicConfig(level=log_level)
@@ -209,10 +210,6 @@ def parse_cli():
       help=("stop execution as soon as any test case fails, preempting " +
             "additional test cases/suites/environments from running"),
       action="store_true")
-
-  if len(sys.argv) == 1:
-    parser.print_help()
-    return None, None
 
   parser.add_argument("files", metavar="CONFIGS", nargs=argparse.REMAINDER)
   return parser.parse_args(), parser.format_usage()
