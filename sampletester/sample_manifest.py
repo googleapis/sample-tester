@@ -247,8 +247,12 @@ class Manifest:
   def get_one(self, *keys, **filters):
     """Returns the single artifact associated with these keys and filters, or None otherwise"""
     values = self.get(*keys, **filters)
-    if values is None or len(values) != 1:
+    if not values:
       return None
+    if len(values) > 1:
+      requested = {self.indices[idx]: key_value for idx, key_value in  enumerate(keys)}
+      requested.update(filters)
+      raise ItemNotUniqueError(f'more than one item with the requested fields {requested}')
     return values[0]
 
 
@@ -530,3 +534,6 @@ def check_tag_names(src):
                       .format(RESERVED_SYMBOL_PREFIX,
                               ' '.join(['"{}"'.format(name) for name in invalid])))
   return src # to allow for composition
+
+class ItemNotUniqueError(Exception):
+  pass

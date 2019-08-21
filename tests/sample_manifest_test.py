@@ -168,7 +168,8 @@ who: dan
 
     self.assertIsNone(manifest.get_one('foo', 'alice'))
 
-    self.assertIsNone(manifest.get_one('', 'math'))
+    self.assertRaises(sample_manifest.ItemNotUniqueError,
+                      manifest.get_one, '', 'math')
 
   def test_get_all_elements(self):
     manifest_source, (expect_alice, expect_bob, expect_carol,
