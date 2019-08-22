@@ -71,9 +71,9 @@ def main():
     print("sampletester version {}".format(VERSION))
     exit(EXITCODE_SUCCESS)
 
-  log_level = LOG_LEVELS[args.logging] or DEFAULT_LOG_LEVEL
-  logging.basicConfig(level=log_level)
-  logging.info("argv: {}".format(sys.argv))
+  log_level = LOG_LEVELS[args.logging] or LOG_LEVELS[DEFAULT_LOG_LEVEL]
+  logging.getLogger().setLevel(log_level)
+  logging.debug("argv: {}".format(sys.argv))
 
   try:
     indexed_docs = inputs.index_docs(*args.files)
@@ -128,7 +128,7 @@ def main():
   exit(EXITCODE_SUCCESS if success else EXITCODE_TEST_FAILURE)
 
 
-LOG_LEVELS = {"none": None, "info": logging.INFO, "debug": logging.DEBUG}
+LOG_LEVELS = {"none": logging.WARNING, "info": logging.INFO, "debug": logging.DEBUG}
 DEFAULT_LOG_LEVEL = "none"
 
 VERBOSITY_LEVELS = {"quiet": summary.Detail.NONE, "summary": summary.Detail.BRIEF, "detailed": summary.Detail.FULL}

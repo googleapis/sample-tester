@@ -69,6 +69,14 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
   if not file_patterns:
     file_patterns = ['**/*.yaml']
 
+  def log_files(indexed_files):
+    "Helper to be called before exiting this method"
+    manifest_paths = [doc.path for doc in indexed_files.of_type(MANIFEST_SCHEMA.primary_type)]
+    testplan_paths = [doc.path for doc in indexed_files.of_type(TESTPLAN_SCHEMA.primary_type)]
+    logging.info('manifest files:\n  {}'.format('\n  '.join(manifest_paths)))
+    logging.info('testplan files:\n  {}'.format('\n  '.join(testplan_paths)))
+    return indexed_files
+
   explicit_paths = get_globbed(*file_patterns)
   explicit_directories = {path for path in explicit_paths
                           if os.path.isdir(path)}
@@ -82,13 +90,13 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
 
   if (has_manifests and has_testplans):
     # We have successfully found needed inputs already.
-    return indexed_explicit
+    return log_files(indexed_explicit)
 
   if files_in_directories:
     # Because directories were specified, we use this as a signal to *not*
-    # recurse into the cwd. The caller is responsible for reporting that one or
-    # both of the needed file types is missing.
-    return indexed_explicit
+    # recurse into the cwd. The caller of this method is responsible for
+    # reporting that one or both of the needed file types is missing.
+    return log_files(indexed_explicit)
 
   implicit_files = get_globbed('**/*.yaml')
   indexed_implicit = create_indexed_docs(*implicit_files)
@@ -96,7 +104,8 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
     indexed_explicit.add_documents(*indexed_implicit.of_type(TESTPLAN_SCHEMA.primary_type))
   if not has_manifests:
     indexed_explicit.add_documents(*indexed_implicit.of_type(MANIFEST_SCHEMA.primary_type))
-  return indexed_explicit
+
+  return log_files(indexed_explicit)
 
 def create_indexed_docs(*all_paths: Set[str]) -> parser.IndexedDocs:
   """Returns a parser.IndexedDocs that contains all documents in `all_paths`.

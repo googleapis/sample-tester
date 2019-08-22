@@ -115,7 +115,7 @@ class Manifest:
     err_no_interpreter = []
     sources_read = []
     for name, manifest, implicit_tags in sources:
-      logging.info('reading manifest "{}"'.format(name))
+      logging.debug('reading manifest "{}"'.format(name))
       if not manifest:
         continue
       sources_read.append(name)
@@ -193,7 +193,7 @@ class Manifest:
                              [] if idx_num >= max_idx else {})
       tags.append(element) # appending to the  non-indexed list
 
-    logging.info('indexed elements')
+    logging.debug('indexed elements')
 
   def get_all_elements(self):
     """Generator that yields each element in the (indexed) manifest."""
@@ -247,8 +247,12 @@ class Manifest:
   def get_one(self, *keys, **filters):
     """Returns the single artifact associated with these keys and filters, or None otherwise"""
     values = self.get(*keys, **filters)
-    if values is None or len(values) != 1:
+    if not values:
       return None
+    if len(values) > 1:
+      requested = {self.indices[idx]: key_value for idx, key_value in  enumerate(keys)}
+      requested.update(filters)
+      raise ItemNotUniqueError(f'more than one item with the requested fields {requested}')
     return values[0]
 
 
@@ -305,7 +309,7 @@ def get_flattened_elements_v1_v2(input):
       for key, common_value in set_common_values.items():
         element[key] = common_value + element.get(key, '')
       element_list.append(element)
-      logging.info('read "{}"'.format(element))
+      logging.debug('read "{}"'.format(element))
   return element_list
 
 
@@ -324,7 +328,7 @@ def resolve_inclusions(all_elements):
     return None
   for element in all_elements:
     resolve_element_inclusions(element)
-  logging.info('resolved inclusions')
+  logging.debug('resolved inclusions')
   return all_elements
 
 def resolve_element_inclusions(element):
@@ -530,3 +534,6 @@ def check_tag_names(src):
                       .format(RESERVED_SYMBOL_PREFIX,
                               ' '.join(['"{}"'.format(name) for name in invalid])))
   return src # to allow for composition
+
+class ItemNotUniqueError(Exception):
+  pass
