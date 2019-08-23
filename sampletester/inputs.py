@@ -66,9 +66,6 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
 
   Returns: the indexed docs of the files that were searched for.
   """
-  if not file_patterns:
-    file_patterns = ['**/*.yaml']
-
   def log_files(indexed_files):
     "Helper to be called before exiting this method"
     manifest_paths = [doc.path for doc in indexed_files.of_type(MANIFEST_SCHEMA.primary_type)]
@@ -76,6 +73,9 @@ def index_docs(*file_patterns: str) -> parser.IndexedDocs:
     logging.info('manifest files:\n  {}'.format('\n  '.join(manifest_paths)))
     logging.info('testplan files:\n  {}'.format('\n  '.join(testplan_paths)))
     return indexed_files
+
+  if not file_patterns:
+    file_patterns = ['**/*.yaml']
 
   explicit_paths = get_globbed(*file_patterns)
   explicit_directories = {path for path in explicit_paths
