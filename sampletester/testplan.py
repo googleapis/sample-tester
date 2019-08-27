@@ -87,7 +87,7 @@ class Suite(Wrapper):
     self.selected_to_run = passes_filter(suite_filter, self.name())
 
   def selected(self):
-    return self.enabled and super().selected()
+    return self.enabled() and super().selected()
 
   def enabled(self):
     return self.config.get(SUITE_ENABLED, True)
@@ -104,6 +104,10 @@ class Suite(Wrapper):
   def source(self):
     return self.config[SUITE_SOURCE]
 
+  def __repr__(self):
+    return (f'Suite("{self.name()}" selected: {self.selected()}  '
+            f'enabled: {self.enabled()} cases: {self.cases})')
+
 
 class TestCase(Wrapper):
 
@@ -118,6 +122,9 @@ class TestCase(Wrapper):
 
   def spec(self):
     return self.config.get(CASE_SPEC, "")
+
+  def __repr__(self):
+    return f'Case("{self.name()}": selected: {self.selected()})'
 
 def passes_filter(filter: str, name: str):
   if not filter:
@@ -295,4 +302,5 @@ def suites_from(indexed_docs: parser.IndexedDocs,
                 suite_filter: str = None,
                 case_filter: str = None) -> List[Suite]:
   """Creates and returns Suite objects from a `indexed_docs`"""
-  return suites_from_doc_list(indexed_docs.of_type(SCHEMA.primary_type))
+  return suites_from_doc_list(indexed_docs.of_type(SCHEMA.primary_type),
+                              suite_filter, case_filter)
