@@ -39,13 +39,13 @@ class TestGenManifest(unittest.TestCase):
     BIN = '/my/bin/'
     INVOCATION = 'call this way'
     CHDIR = '@/this/working/path/'
-    ENV = 'python'
+    ENVIRONMENT = 'python'
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
     sample_relative_path = os.path.join('tests','testdata','gen_manifest')
     sample_path = os.path.abspath(os.path.join(gen_manifest_cwd, sample_relative_path))
     manifest_string = gen_manifest.emit_manifest_v3(
-        tags = [('env', ENV),
+        tags = [('environment', ENVIRONMENT),
                 ('bin', BIN),
                 ('invocation', INVOCATION),
                 ('chdir', CHDIR)],
@@ -57,7 +57,7 @@ class TestGenManifest(unittest.TestCase):
       type: manifest/samples
       schema_version: 3
       base: &common
-        env: '{ENV}'
+        environment: '{ENVIRONMENT}'
         bin: '{BIN}'
         invocation: '{INVOCATION}'
         chdir: '{CHDIR}'
@@ -77,7 +77,7 @@ class TestGenManifest(unittest.TestCase):
     BIN = '/my/bin/'
     INVOCATION = 'call this way'
     CHDIR = '@/this/working/path/'
-    ENV = 'python'
+    ENVIRONMENT = 'python'
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
     sample_relative_path = os.path.join('tests','testdata','gen_manifest')
@@ -87,7 +87,7 @@ class TestGenManifest(unittest.TestCase):
     result = runner.invoke(
         gen_manifest.main,
         ['--schema_version=3',
-         f'--env={ENV}',
+         f'--environment={ENVIRONMENT}',
          f'--bin={BIN}',
          f'--invocation={INVOCATION}',
          f'--chdir={CHDIR}',
@@ -98,7 +98,7 @@ class TestGenManifest(unittest.TestCase):
       type: manifest/samples
       schema_version: 3
       base: &common
-        env: '{ENV}'
+        environment: '{ENVIRONMENT}'
         bin: '{BIN}'
         invocation: '{INVOCATION}'
         chdir: '{CHDIR}'
@@ -121,14 +121,14 @@ class TestGenManifest(unittest.TestCase):
     BIN = '/my/bin/exe --flag'
     INVOCATION = 'call this way'
     CHDIR = '@/this/working/path/'
-    ENV = 'python'
+    ENVIRONMENT = 'python'
     BASEPATH = 'some/dir/path'
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
     sample_relative_path = os.path.join('tests','testdata','gen_manifest')
     sample_path = os.path.abspath(os.path.join(gen_manifest_cwd, sample_relative_path))
     manifest_string = gen_manifest.emit_manifest_v3(
-        tags = [('env', ENV),
+        tags = [('environment', ENVIRONMENT),
                 ('bin', BIN),
                 ('invocation', INVOCATION),
                 ('chdir', CHDIR),
@@ -141,7 +141,7 @@ class TestGenManifest(unittest.TestCase):
       type: manifest/samples
       schema_version: 3
       base: &common
-        env: '{ENV}'
+        environment: '{ENVIRONMENT}'
         bin: '{BIN}'
         invocation: '{INVOCATION}'
         chdir: '{CHDIR}'
@@ -173,13 +173,13 @@ class TestGenManifest(unittest.TestCase):
     BIN = '/my/bin/'
     INVOCATION = 'call this way'
     CHDIR = '@/this/working/path/'
-    ENV = 'python'
+    ENVIRONMENT = 'python'
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
     sample_relative_path = os.path.join('tests','testdata','gen_manifest')
     sample_path = os.path.abspath(os.path.join(gen_manifest_cwd, sample_relative_path))
     manifest_string = gen_manifest.emit_manifest_v3(
-        tags = [('env', ENV),
+        tags = [('environment', ENVIRONMENT),
                 ('bin', BIN),
                 ('invocation', INVOCATION),
                 ('chdir', CHDIR),
@@ -195,13 +195,13 @@ class TestGenManifest(unittest.TestCase):
       samples:
       - bin: {BIN}
         chdir: '{CHDIR}'
-        env: {ENV}
+        environment: {ENVIRONMENT}
         invocation: {INVOCATION}
         path: ./{sample_relative_path}/readbook.py
         sample: readbook_sample
       - bin: {BIN}
         chdir: '{CHDIR}'
-        env: {ENV}
+        environment: {ENVIRONMENT}
         invocation: {INVOCATION}
         path: ./{sample_relative_path}/getbook.py
         sample: getbook_sample
@@ -213,14 +213,14 @@ class TestGenManifest(unittest.TestCase):
     BIN = '/my/bin/'
     INVOCATION = 'call this way'
     CHDIR = '@/this/working/path/'
-    ENV = 'python'
+    ENVIRONMENT = 'python'
     BASEPATH = 'some/dir/path'
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
     sample_relative_path = os.path.join('tests','testdata','gen_manifest')
     sample_path = os.path.abspath(os.path.join(gen_manifest_cwd, sample_relative_path))
     manifest_string = gen_manifest.emit_manifest_v3(
-        tags = [('env', ENV),
+        tags = [('environment', ENVIRONMENT),
                 ('bin', BIN),
                 ('invocation', INVOCATION),
                 ('chdir', CHDIR),
@@ -235,13 +235,13 @@ class TestGenManifest(unittest.TestCase):
       samples:
       - bin: {BIN}
         chdir: '{CHDIR}'
-        env: {ENV}
+        environment: {ENVIRONMENT}
         invocation: {INVOCATION}
         path: {BASEPATH}/{sample_relative_path}/readbook.py
         sample: readbook_sample
       - bin: {BIN}
         chdir: '{CHDIR}'
-        env: {ENV}
+        environment: {ENVIRONMENT}
         invocation: {INVOCATION}
         path: {BASEPATH}/{sample_relative_path}/getbook.py
         sample: getbook_sample
@@ -265,13 +265,13 @@ class TestGenManifest(unittest.TestCase):
     BIN = '/my/bin/'
     INVOCATION = 'call this way'
     CHDIR = '/this/working/path/'
-    ENV = 'python'
+    ENVIRONMENT = 'python'
 
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
     sample_relative_path = os.path.join('tests','testdata','gen_manifest')
     sample_path = os.path.abspath(os.path.join(gen_manifest_cwd, sample_relative_path))
     manifest_string = gen_manifest.emit_manifest_v2(
-        tags = [('env', ENV),
+        tags = [('env', ENVIRONMENT),
                 ('bin', BIN),
                 ('invocation', INVOCATION),
                 ('chdir', CHDIR)],
@@ -282,7 +282,7 @@ class TestGenManifest(unittest.TestCase):
     expected_string = dedent(f"""\
       version: 2
       sets:
-      - environment: {ENV}
+      - environment: {ENVIRONMENT}
         bin: {BIN}
         invocation: {INVOCATION}
         chdir: {CHDIR}
@@ -300,7 +300,7 @@ class TestGenManifest(unittest.TestCase):
     BIN = '/my/bin/'
     INVOCATION = 'call this way'
     CHDIR = '/this/working/path/'
-    ENV = 'python'
+    ENVIRONMENT = 'python'
     BASEPATH = 'some/dir/path'
 
 
@@ -308,7 +308,7 @@ class TestGenManifest(unittest.TestCase):
     sample_relative_path = os.path.join('tests','testdata','gen_manifest')
     sample_path = os.path.abspath(os.path.join(gen_manifest_cwd, sample_relative_path))
     manifest_string = gen_manifest.emit_manifest_v2(
-        tags = [('env', ENV),
+        tags = [('env', ENVIRONMENT),
                 ('bin', BIN),
                 ('invocation', INVOCATION),
                 ('chdir', CHDIR),
@@ -320,7 +320,7 @@ class TestGenManifest(unittest.TestCase):
     expected_string = dedent(f"""\
       version: 2
       sets:
-      - environment: {ENV}
+      - environment: {ENVIRONMENT}
         bin: {BIN}
         invocation: {INVOCATION}
         chdir: {CHDIR}
