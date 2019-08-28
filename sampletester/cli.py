@@ -50,7 +50,7 @@ from sampletester import summary
 from sampletester import testplan
 from sampletester import xunit
 
-VERSION = '0.16.1'
+VERSION = '0.16.2'
 EXITCODE_SUCCESS = 0
 EXITCODE_TEST_FAILURE = 1
 EXITCODE_FLAG_ERROR = 2
