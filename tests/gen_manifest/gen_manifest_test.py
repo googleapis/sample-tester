@@ -26,6 +26,15 @@ _ABS_DIR = os.path.dirname(_ABS_FILE)
 
 class TestGenManifest(unittest.TestCase):
 
+  def test_glob_non_yaml(self):
+    gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
+    sample_relative_path = os.path.join('tests','testdata','gen_manifest')
+    sample_path = os.path.abspath(os.path.join(gen_manifest_cwd, sample_relative_path))
+    self.assertEquals({'readbook.py', 'getbook.py'},
+                      {os.path.basename(match) for match in
+                       gen_manifest.glob_non_yaml(
+                           os.path.join(sample_path, '**/*'))})
+
   def test_parse_files_and_tags(self):
     files, tags = gen_manifest.parse_files_and_tags(['--principal=alice',
                                                      'crypto/path/scenario',
@@ -51,6 +60,43 @@ class TestGenManifest(unittest.TestCase):
                 ('chdir', CHDIR)],
         sample_globs = [os.path.join(sample_relative_path, 'readbook.py'),
                         os.path.join(sample_relative_path, 'getbook.py')],
+        flat = False)
+
+    expected_string = dedent(f"""\
+      type: manifest/samples
+      schema_version: 3
+      base: &common
+        environment: '{ENVIRONMENT}'
+        bin: '{BIN}'
+        invocation: '{INVOCATION}'
+        chdir: '{CHDIR}'
+        basepath: '.'
+      samples:
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/getbook.py'
+        sample: 'getbook_sample'
+      """)
+    self.assertEqual(expected_string, manifest_string)
+
+  def test_generation_v3_factored_globbed(self):
+    self.maxDiff = None
+    BIN = '/my/bin/'
+    INVOCATION = 'call this way'
+    CHDIR = '@/this/working/path/'
+    ENVIRONMENT = 'python'
+
+    gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
+    sample_relative_path = os.path.join('tests','testdata','gen_manifest')
+    sample_path = os.path.abspath(os.path.join(gen_manifest_cwd, sample_relative_path))
+    manifest_string = gen_manifest.emit_manifest_v3(
+        tags = [('environment', ENVIRONMENT),
+                ('bin', BIN),
+                ('invocation', INVOCATION),
+                ('chdir', CHDIR)],
+        sample_globs = [os.path.join(sample_relative_path, '**/*')],
         flat = False)
 
     expected_string = dedent(f"""\
