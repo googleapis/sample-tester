@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from glob import glob
 import unittest
 import os
 
@@ -27,13 +28,22 @@ _ABS_DIR = os.path.dirname(_ABS_FILE)
 class TestGenManifest(unittest.TestCase):
 
   def test_glob_non_yaml(self):
+    def basenames_of(files):
+      return {os.path.basename(match) for match in files}
+
     gen_manifest_cwd = os.path.abspath(os.path.join(_ABS_DIR, '..', '..'))
     sample_relative_path = os.path.join('tests','testdata','gen_manifest')
     sample_path = os.path.abspath(os.path.join(gen_manifest_cwd, sample_relative_path))
+    self.assertEquals({'readbook.py', 'getbook.py', 'some.random.yaml'},
+                      basenames_of(
+                          glob(os.path.join(sample_path, '**/*'),
+                               recursive=True)))
+
+    # ensure we exclude the *.yaml incldued in the naive globbing above
     self.assertEquals({'readbook.py', 'getbook.py'},
-                      {os.path.basename(match) for match in
-                       gen_manifest.glob_non_yaml(
-                           os.path.join(sample_path, '**/*'))})
+                      basenames_of(
+                          gen_manifest.glob_non_yaml(
+                              os.path.join(sample_path, '**/*'))))
 
   def test_parse_files_and_tags(self):
     files, tags = gen_manifest.parse_files_and_tags(['--principal=alice',
