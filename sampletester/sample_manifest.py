@@ -145,6 +145,9 @@ class Manifest:
       raise Exception(error_msg)
     return sources_read
 
+  def string(self):
+    return '\n'.join([f'{element}' for element in self.get_all_elements()])
+
   def index(self):
     """Indexes all items in self.sources using appropriate interpreters."""
     self.tags = {}
