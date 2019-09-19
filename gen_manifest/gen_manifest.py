@@ -61,7 +61,7 @@ def create_factored_manifest_v3(tags, sample_globs):
     lines.append("  {}: '{}'".format(BASEPATH_KEY, BASEPATH_DEFAULT))
   lines.append("samples:")
   for s in sample_globs:
-    for sample_relative_path in glob(s, recursive=True):
+    for sample_relative_path in glob_non_yaml(s):
       sample_absolute_path = os.path.join(os.getcwd(), sample_relative_path)
       lines.extend([
           "- <<: *common",
@@ -82,7 +82,7 @@ def create_flat_manifest_v3(tags, sample_globs):
   items = []
 
   for s in sample_globs:
-    for sample in glob(s, recursive=True):
+    for sample in glob_non_yaml(s):
       basepath = None
       entry_content = {}
       for name, value in tags:
@@ -135,8 +135,8 @@ def create_manifest_v2(tags, sample_globs):
     # adjust for backward compatibility
     if name == 'env':
       if value not in ALL_LANGS:
-        sys.exit('Unrecognized language "{}": env should be one of {}'
-                 .format(value, ALL_LANGS))
+        raise UnrecognizedLanguageError(
+            f'unknown language "{value}": env should be one of {ALL_LANGS}')
       name = 'environment'
     environment[name] = value
 
@@ -152,7 +152,7 @@ def path_sample_pairs_v2(sample_globs):
   """Returns a list of path/ID pairs for each glob in `sample_globs`"""
   items = []
   for s in sample_globs:
-    for sample in glob(s, recursive=True):
+    for sample in glob_non_yaml(s):
       items.append({
 	  'path': sample,
 	  'sample': get_region_tag(os.path.join(os.getcwd(), sample))
@@ -197,16 +197,35 @@ def get_region_tag(sample_file_path):
         region_tags.append(srt)
 
   if not region_tags:
-    sys.exit("Found no region tags.")
+    raise RegionTagError(f'Found no region tags in {sample_file_path}.')
 
   if len(region_tags) > 1:
-    sys.exit("Found too many region tags.")
+    raise RegionTagError(f'Found too many region tags in {sample_file_path}.')
 
   return region_tags[0]
 
 
-class TagNameError(Exception):
+def glob_non_yaml(pattern):
+  '''Recursively globs for `pattern`, ignoring "*.yaml" and ".yml" files.'''
+  matches = glob(pattern, recursive=True)
+  return [root+ext
+          for root, ext in [os.path.splitext(path) for path in matches]
+          if ext != ".yaml" and ext !=".yml"]
+
+
+class GenManifestError(Exception):
   pass
+
+class TagNameError(GenManifestError):
+  pass
+
+class RegionTagError(GenManifestError):
+  pass
+
+class UnrecognizedLanguageError(GenManifestError):
+  # only for v2 manifests
+  pass
+
 
 ### YAML helpers
 
@@ -292,6 +311,10 @@ def main(schema_version: str, output: str, flat: bool, files_and_tags: List[str]
         output_file.write(serialized_manifest)
     else:
       sys.stdout.write(serialized_manifest)
-  except TagNameError as e:
+  except GenManifestError as e:
+    print('*** Exception')
     print(f"ERROR: {e}")
     sys.exit(2)
+  except Exception as e:
+    print(e)
+    raise

@@ -1,0 +1,8 @@
+# This is a random YAML file that should NOT get picked up by gen_manifest
+name: "Some other config"
+code: |
+  [START something]
+  with delimiters
+  [END something]
+  epilog
+  
