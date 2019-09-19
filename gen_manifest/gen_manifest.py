@@ -36,7 +36,7 @@ BASEPATH_DEFAULT = '.'
 
 def emit_manifest_v3(tags, sample_globs, flat):
   if flat:
-    return dump(create_flat_manifest_v3(tags, sample_globs))
+    return create_flat_manifest_v3(tags, sample_globs)
   return create_factored_manifest_v3(tags, sample_globs)
 
 def create_factored_manifest_v3(tags, sample_globs):
@@ -56,17 +56,17 @@ def create_factored_manifest_v3(tags, sample_globs):
   for name, value in tags:
     if name == BASEPATH_KEY:
       have_basepath = True
-    lines.append("  {}: '{}'".format(name, value))
+    lines.append(f"  {name}: '{escape(value)}'")
   if not have_basepath:
-    lines.append("  {}: '{}'".format(BASEPATH_KEY, BASEPATH_DEFAULT))
+    lines.append(f"  {BASEPATH_KEY}: '{escape(BASEPATH_DEFAULT)}'")
   lines.append("samples:")
   for s in sample_globs:
     for sample_relative_path in glob_non_yaml(s):
       sample_absolute_path = os.path.join(os.getcwd(), sample_relative_path)
       lines.extend([
           "- <<: *common",
-	  "  path: '{{{}}}/{}'".format(BASEPATH_KEY, sample_relative_path),
-	  "  sample: '{}'".format(get_region_tag(sample_absolute_path))
+	  f"  path: '{{{BASEPATH_KEY}}}/{escape(sample_relative_path)}'",
+	  f"  sample: '{get_region_tag(sample_absolute_path)}'"
           ])
   return '\n'.join(lines) + '\n'
 
@@ -84,7 +84,7 @@ def create_flat_manifest_v3(tags, sample_globs):
   for s in sample_globs:
     for sample in glob_non_yaml(s):
       basepath = None
-      entry_content = {}
+      entry_content = OrderedDict()
       for name, value in tags:
         if name == BASEPATH_KEY:
           basepath = value
@@ -95,18 +95,23 @@ def create_flat_manifest_v3(tags, sample_globs):
         basepath = BASEPATH_DEFAULT
       sample_path = os.path.join(os.getcwd(), sample)
 
-      entry = {
-	  'path': os.path.join(basepath, sample),
-	  'sample': get_region_tag(sample_path)
-      }
+      entry = OrderedDict([('path', os.path.join(basepath, sample)),
+	                   ('sample', get_region_tag(sample_path))])
       entry.update(entry_content)
       items.append(entry)
 
-  manifest = OrderedDict()
-  manifest["type"] = "manifest/samples"
-  manifest["schema_version"] = 3
-  manifest["samples"] = items
-  return manifest
+  # It's easier to just output the correctly quoted and indented lines directly
+  # than to invoke the YAML emitter.
+  lines = ['type: manifest/samples',
+           'schema_version: 3',
+           'samples:']
+  for entry in items:
+    indent = '- '
+    for tag_name, tag_value in entry.items():
+      lines.append(f"{indent}{tag_name}: '{escape(tag_value)}'")
+      indent = '  '
+
+  return '\n'.join(lines) + '\n'
 
 
 ### For manifest schema version 2
@@ -172,6 +177,10 @@ def forbid_names(tags, *forbidden_names):
                          'they are auto-generated, given the other options ' +
                          'specified: {}'
                          .format(' '.join(['"{}"'.format(f) for f in found])))
+
+def escape(text):
+  """Escapes special characters for inclusion in a YAML text field"""
+  return text.replace("'", "''")
 
 def get_region_tag(sample_file_path):
   """Extracts the region tag from the given sample.
