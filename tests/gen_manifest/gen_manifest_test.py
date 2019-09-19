@@ -183,7 +183,6 @@ class TestGenManifest(unittest.TestCase):
                 ('bin', BIN),
                 ('invocation', INVOCATION),
                 ('chdir', CHDIR),
-                # ('basepath', 'should not be forbidden when flat')
         ],
         sample_globs = [os.path.join(sample_relative_path, 'readbook.py'),
                         os.path.join(sample_relative_path, 'getbook.py')],
@@ -193,18 +192,18 @@ class TestGenManifest(unittest.TestCase):
       type: manifest/samples
       schema_version: 3
       samples:
-      - bin: {BIN}
+      - path: './{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
+        environment: '{ENVIRONMENT}'
+        bin: '{BIN}'
+        invocation: '{INVOCATION}'
         chdir: '{CHDIR}'
-        environment: {ENVIRONMENT}
-        invocation: {INVOCATION}
-        path: ./{sample_relative_path}/readbook.py
-        sample: readbook_sample
-      - bin: {BIN}
+      - path: './{sample_relative_path}/getbook.py'
+        sample: 'getbook_sample'
+        environment: '{ENVIRONMENT}'
+        bin: '{BIN}'
+        invocation: '{INVOCATION}'
         chdir: '{CHDIR}'
-        environment: {ENVIRONMENT}
-        invocation: {INVOCATION}
-        path: ./{sample_relative_path}/getbook.py
-        sample: getbook_sample
       """)
     self.assertEqual(expected_string, manifest_string)
 
@@ -233,18 +232,18 @@ class TestGenManifest(unittest.TestCase):
       type: manifest/samples
       schema_version: 3
       samples:
-      - bin: {BIN}
+      - path: '{BASEPATH}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
+        environment: '{ENVIRONMENT}'
+        bin: '{BIN}'
+        invocation: '{INVOCATION}'
         chdir: '{CHDIR}'
-        environment: {ENVIRONMENT}
-        invocation: {INVOCATION}
-        path: {BASEPATH}/{sample_relative_path}/readbook.py
-        sample: readbook_sample
-      - bin: {BIN}
+      - path: '{BASEPATH}/{sample_relative_path}/getbook.py'
+        sample: 'getbook_sample'
+        environment: '{ENVIRONMENT}'
+        bin: '{BIN}'
+        invocation: '{INVOCATION}'
         chdir: '{CHDIR}'
-        environment: {ENVIRONMENT}
-        invocation: {INVOCATION}
-        path: {BASEPATH}/{sample_relative_path}/getbook.py
-        sample: getbook_sample
       """)
     self.assertEqual(expected_string, manifest_string)
 
