@@ -354,8 +354,9 @@ class TestCase:
         self.idx, self.label)
 
     def run_segments_of(stage_spec):
-      for spec_segment in stage_spec:
-        self.run_segment(spec_segment)
+      if stage_spec:
+        for spec_segment in stage_spec:
+          self.run_segment(spec_segment)
 
     try:
       for stage_name, stage_spec in [("SETUP", self.setup), ("TEST", self.case)]:
