@@ -142,7 +142,7 @@ class Manifest:
     if len(error) > 0:
       error_msg = 'error reading manifest data:\n {}'.format('\n'.join(error))
       logging.error(error_msg)
-      raise Exception(error_msg)
+      raise ReadManifestError(error_msg)
     return sources_read
 
   def string(self):
@@ -539,4 +539,7 @@ def check_tag_names(src):
   return src # to allow for composition
 
 class ItemNotUniqueError(Exception):
+  pass
+
+class ReadManifestError(Exception):
   pass

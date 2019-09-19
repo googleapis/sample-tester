@@ -286,10 +286,13 @@ def suite_configs_from(test_docs: List[parser.Document]) -> List[object]:
       if (doc.obj.get(SCHEMA.type_key) != SCHEMA.full_type or
           doc.obj.get(SCHEMA.version_key) != SCHEMA.version):
         continue
-      these_suites = doc.obj["test"]["suites"]
+      tests = doc.obj.get("test",{})
+      these_suites = tests.get("suites", [])
       for suite in these_suites:
         suite[SUITE_SOURCE] = doc.path
       all_suites.extend(these_suites)
+  if not all_suites:
+    logging.warning('no test suites specified')
   return all_suites
 
 def suites_from_doc_list(test_docs: List[parser.Document],

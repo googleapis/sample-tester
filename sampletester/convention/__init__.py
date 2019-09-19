@@ -64,7 +64,6 @@ def generate_environments(requested_conventions, testcase_args, manifest_options
     try:
       all_environments.extend(create_fn(indexed_docs, testcase_args, manifest_options))
     except Exception as ex:
-      raise ValueError(
-          'could not create test environments for convention "{}": {}'
-          .format(convention, repr(ex)))
+      raise ValueError( 'could not create test environments '
+                        f'for convention "{convention}": {ex}')
   return all_environments

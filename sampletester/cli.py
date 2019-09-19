@@ -57,9 +57,8 @@ EXITCODE_FLAG_ERROR = 2
 EXITCODE_SETUP_ERROR = 3
 EXITCODE_USER_ABORT = 4
 
-DEFAULT_LOG_LEVEL = 100
-
-# Set this to True to get a backtrace for debugging
+# Set this to True to get a backtrace for debugging, or enable debug-level
+# logging from the command line.
 DEBUGME=False
 
 def main():
@@ -71,9 +70,12 @@ def main():
     print("sampletester version {}".format(VERSION))
     exit(EXITCODE_SUCCESS)
 
-  log_level = LOG_LEVELS[args.logging] or LOG_LEVELS[DEFAULT_LOG_LEVEL]
+  log_level = LOG_LEVELS[args.logging]
   logging.getLogger().setLevel(log_level)
   logging.debug("argv: {}".format(sys.argv))
+
+  global DEBUGME
+  DEBUGME = DEBUGME or (log_level == logging.DEBUG)
 
   try:
     indexed_docs = inputs.index_docs(*args.files)
@@ -86,8 +88,8 @@ def main():
     manager = testplan.Manager(registry, test_suites, args.envs)
 
   except Exception as e:
-    logging.error("fatal error: {}".format(repr(e)))
-    print("\nERROR: could not run tests because {}\n".format(e))
+    logging.error(f'fatal error: {repr(e)}')
+    print(f'\nERROR: could not run tests because {e}\n')
     if DEBUGME:
       traceback.print_exc(file=sys.stdout)
     else:
@@ -128,7 +130,7 @@ def main():
   exit(EXITCODE_SUCCESS if success else EXITCODE_TEST_FAILURE)
 
 
-LOG_LEVELS = {"none": logging.WARNING, "info": logging.INFO, "debug": logging.DEBUG}
+LOG_LEVELS = {"none": logging.CRITICAL, "info": logging.INFO, "debug": logging.DEBUG}
 DEFAULT_LOG_LEVEL = "none"
 
 VERBOSITY_LEVELS = {"quiet": summary.Detail.NONE, "summary": summary.Detail.BRIEF, "detailed": summary.Detail.FULL}
