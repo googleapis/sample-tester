@@ -354,8 +354,9 @@ class TestCase:
         self.idx, self.label)
 
     def run_segments_of(stage_spec):
-      for spec_segment in stage_spec:
-        self.run_segment(spec_segment)
+      if stage_spec:
+        for spec_segment in stage_spec:
+          self.run_segment(spec_segment)
 
     try:
       for stage_name, stage_spec in [("SETUP", self.setup), ("TEST", self.case)]:
@@ -364,62 +365,79 @@ class TestCase:
     except TestFailure:
       pass
     except CallError as e:
-      status = "CALL ERROR in stage {} ".format(stage_name)
+      status = f'CALL ERROR in stage {stage_name} of case {self.idx} ("{self.label}")'
       self.record_error(status, e.msg)
-      self.print_out(status + ": " + e.msg)
+      self.print_out(f'# {status}: {e.msg}')
 
     except KeyboardInterrupt:
-      status = "KEYBOARD INTERRUPT in stage {} ".format(stage_name)
+      status = f'KEYBOARD INTERRUPT in stage {stage_name} of case {self.idx} ("{self.label}")'
       self.record_error(status, "keyboard interrupt detected")
-      self.print_out(status)
+      self.print_out(f'# {status}')
       raise
 
+    except ConfigError as e:
+      status = f'CONFIGURATION ERROR in stage {stage_name} of case {self.idx} ("{self.label}")'
+      short_details = repr(e)
+      details = short_details + "\n" + "".join( traceback.format_tb(e.__traceback__))
+      logging.debug(f'configuration error: {details}')
+
+      self.record_error(status, e.msg)
+      self.print_out(f'# {status}: {e.msg}')
+
     except Exception as e:
-      status = "UNHANDLED EXCEPTION in stage {} ".format(stage_name)
-      short_description = repr(e)
-      description = short_description + "\n" + "".join( traceback.format_tb(e.__traceback__))
-      self.record_error(status, description)
-      self.print_out("# EXCEPTION!! " + short_description)
+      status = f'UNHANDLED EXCEPTION in stage {stage_name} of case {self.idx} ("{self.label}")'
+      short_details = repr(e)
+      details = short_details + "\n" + "".join( traceback.format_tb(e.__traceback__))
+      self.record_error(status, details)
+      self.print_out(f'# {status} {short_details}')
 
     finally:
       try:
         self.print_out("\n### Test case TEARDOWN")
         run_segments_of(self.teardown)
       except TestFailure:
-        status = "unexpected TEST FAILURE in stage TEARDOWN"
-        self.record_error(status, "test failure in stage TEARDOWN")
-        self.print_out(status)
+        status = f'unexpected TEST FAILURE in stage TEARDOWN  of case {self.idx} ("{self.label}")'
+        self.record_error(status, f'test failure in stage TEARDOWN  of case {self.idx} ("{self.label}")')
+        self.print_out(f'# {status}')
       except CallError as e:
-        status = "CALL ERROR in stage TEARDOWN "
+        status = f'CALL ERROR in stage TEARDOWN  of case {self.idx} ("{self.label}")'
         self.record_error(status, e.msg)
-        self.print_out(status + ": " + e.msg)
+        self.print_out(f'{status}: {e.msg}')
       except KeyboardInterrupt:
-        status = "KEYBOARD INTERRUPT in stage TEARDOWN"
+        status = f'KEYBOARD INTERRUPT in stage TEARDOWN  of case {self.idx} ("{self.label}")'
         self.record_error(status, "keyboard interrupt detected")
-        self.print_out(status)
+        self.print_out(f'# {status}')
         raise
+      except ConfigError as e:
+        status = f'CONFIGURATION ERROR in stage TEARDOWN of case {self.idx} ("{self.label}")'
+        short_details = repr(e)
+        details = short_details + "\n" + "".join( traceback.format_tb(e.__traceback__))
+        logging.debug(f'configuration error: {details}')
+
+        self.record_error(status, e.msg)
+        self.print_out(f'# {status}: {e.msg}')
       except Exception as e:
-        status = "UNHANDLED EXCEPTION in stage TEARDOWN"
-        short_description = repr(e)
-        description = short_description + "\n" + "".join( traceback.format_tb(e.__traceback__))
-        self.record_error(status, description)
-        self.print_out("# EXCEPTION!! " + short_description)
+        status = f'UNHANDLED EXCEPTION in stage TEARDOWN of case {self.idx} ("{self.label}")'
+        short_details = repr(e)
+        details = short_details + "\n" + "".join( traceback.format_tb(e.__traceback__))
+        self.record_error(status, details)
+        self.print_out(f'# {status} {short_details}')
 
     print_output = True
     if len(self.failures) > 0:
-      logging.info(log_entry_prefix + " FAILED --------------------")
+      logging.info(f'{log_entry_prefix} FAILED --------------------')
       for failure in self.failures:
         logging.info("    {}: {}".format(
             failure[0], self.format_string(failure[1], *failure[2])))
         print_output = True
     elif len(self.errors) > 0:
-      logging.info(log_entry_prefix + " ERRORED --------------------")
+      logging.info(f'{log_entry_prefix} ERRORED --------------------')
       for error in self.errors:
         logging.info("    {}: (check state: clean-up did not finish) {}".format(
             error[0], self.format_string(error[1], *error[2])))
         print_output = True
     else:
-      logging.info(log_entry_prefix + " PASSED ------------------------------")
+      logging.info(f'{log_entry_prefix} PASSED ------------------------------')
     if print_output:
       logging.info("    Output:")
       logging.info(self.get_output(4, "| ") + "\n")
@@ -432,16 +450,16 @@ class TestCase:
 
   def run_segment(self, spec_segment):
     if len(spec_segment) > 1:
-      raise ConfigError
+      logging.error(f'multiple spec segments, expected only one: {spec_segment}')
+      raise ConfigError('more than one spec segment')
 
     for directive, segment in spec_segment.items():
       if directive not in self.builtins:
-        raise ConfigError("unknown YAML directive: " + str(directive))
+        raise ConfigError(f'unknown YAML directive: "{directive}"')
 
       howto = self.builtins[directive]
       if howto[1] == None:
-        raise ConfigError("directive only available inside a code directive: " +
-                          directive)
+        raise ConfigError(f'directive only available inside a code directive: "{directive}"')
 
       args, kwargs = howto[1](segment)
       if args is None and kwargs is None:
@@ -587,8 +605,8 @@ class TestCase:
         item = self.local_symbols[item]
       elif type != key_literal:
         raise ConfigError(
-            'expected "{}" or "{}", got "{}":""{}"'.format(
-                key_variable, key_literal, type, item))
+            f'expected "{key_variable}" or "{key_literal}", '
+            f'got "{type}": "{item}"')
     return item
 
   def lookup_values(self, strings):

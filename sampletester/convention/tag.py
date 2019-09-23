@@ -205,6 +205,9 @@ def test_environments(indexed_docs: parser.IndexedDocs,
   manifest = sample_manifest.Manifest(ENVIRONMENT_KEY, *convention_parameters) # read only, so don't need a copy
   manifest.from_docs(indexed_docs)
   manifest.index()
+  logging.debug('manifest >>> \n{}\n<<<\n'.format(manifest.string()))
+
+
 
   env_names = []
   env_names = manifest.get_keys()
