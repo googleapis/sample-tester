@@ -265,6 +265,7 @@ def parse_files_and_tags(params: List[str]) -> (List[str], List[str]):
       tags.append((tag_key, tag_value))
     else:
       files.append(current)
+  files.sort()  # in order to make tests deterministic
   return (files, tags)
 
 

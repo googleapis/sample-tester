@@ -50,7 +50,7 @@ class TestGenManifest(unittest.TestCase):
                                                      'crypto/path/scenario',
                                                      '--respondent=bob',
                                                      '/doc/sample'])
-    self.assertEqual(['crypto/path/scenario', '/doc/sample'], files)
+    self.assertEqual(['/doc/sample', 'crypto/path/scenario'], files)
     self.assertEqual([('principal', 'alice'), ('respondent', 'bob')], tags)
 
   def test_generation_v3_factored(self):
@@ -161,11 +161,11 @@ class TestGenManifest(unittest.TestCase):
         basepath: '.'
       samples:
       - <<: *common
-        path: '{{basepath}}/{sample_relative_path}/readbook.py'
-        sample: 'readbook_sample'
-      - <<: *common
         path: '{{basepath}}/{sample_relative_path}/getbook.py'
         sample: 'getbook_sample'
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
       """)
 
     self.assertEqual(0, result.exit_code)
