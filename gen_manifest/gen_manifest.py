@@ -191,6 +191,8 @@ def get_region_tag(sample_file_path):
   start_region_tag_exp = r'\[START ([a-zA-Z0-9_]*)\]'
   end_region_tag_exp = r'\[END ([a-zA-Z0-9_]*)\]'
   region_tags = []
+  if not os.path.isfile(sample_file_path):
+    raise NotRegularFileError(f'not a regular file: "{sample_file_path}"')
   with open(sample_file_path) as sample:
     sample_text = sample.read()
     start_region_tags = re.findall(start_region_tag_exp, sample_text)
@@ -231,6 +233,9 @@ class TagNameError(GenManifestError):
 class RegionTagError(GenManifestError):
   pass
 
+class NotRegularFileError(GenManifestError):
+  pass
+
 class UnrecognizedLanguageError(GenManifestError):
   # only for v2 manifests
   pass
@@ -265,6 +270,7 @@ def parse_files_and_tags(params: List[str]) -> (List[str], List[str]):
       tags.append((tag_key, tag_value))
     else:
       files.append(current)
+  files.sort()  # in order to make tests deterministic
   return (files, tags)
 
 
@@ -321,7 +327,6 @@ def main(schema_version: str, output: str, flat: bool, files_and_tags: List[str]
     else:
       sys.stdout.write(serialized_manifest)
   except GenManifestError as e:
-    print('*** Exception')
     print(f"ERROR: {e}")
     sys.exit(2)
   except Exception as e:
