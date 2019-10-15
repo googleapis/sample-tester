@@ -32,6 +32,11 @@ ALL_LANGS = ["python", "java", "csharp", "nodejs", "ruby", "php", "go"]
 BASEPATH_KEY = 'basepath'
 BASEPATH_DEFAULT = '.'
 
+# BIN_KEY is deprecated, so if it is specified and INVOCATION_KEY is not, we
+# print a warning message.
+BIN_KEY = 'bin'
+INVOCATION_KEY = 'invocation'
+
 ### For manifest schema version 3
 
 def emit_manifest_v3(tags, sample_globs, flat):
@@ -53,9 +58,15 @@ def create_factored_manifest_v3(tags, sample_globs):
   forbid_names(tags, 'sample', 'path')
 
   have_basepath = False
+  have_bin = False
+  have_invocation = False
   for name, value in tags:
     if name == BASEPATH_KEY:
       have_basepath = True
+    if name == BIN_KEY:
+      have_bin = True
+    if name == INVOCATION_KEY:
+      have_invocation = True
     lines.append(f"  {name}: '{escape(value)}'")
   if not have_basepath:
     lines.append(f"  {BASEPATH_KEY}: '{escape(BASEPATH_DEFAULT)}'")
@@ -68,6 +79,15 @@ def create_factored_manifest_v3(tags, sample_globs):
 	  f"  path: '{{{BASEPATH_KEY}}}/{escape(sample_relative_path)}'",
 	  f"  sample: '{get_region_tag(sample_absolute_path)}'"
           ])
+  if have_bin and not have_invocation:
+    # This deprecation warning is printed to stderr so as to not pollute the
+    # generated manifest file. We also write it as a YAML comment so that if the
+    # user redirects stdout+stderr to a file, the warning does not break the
+    # manifest.
+    sys.stderr.write('# For invoking samples via sample-tester, the use of "bin" '
+                     'is deprecated in favor of "invocation".')
+    sys.stderr.write('# See https://sample-tester.readthedocs.io/en/stable/'
+                     'defining-tests/manifest-reference.html#tags-for-sample-tester')
   return '\n'.join(lines) + '\n'
 
 def create_flat_manifest_v3(tags, sample_globs):
@@ -81,6 +101,8 @@ def create_flat_manifest_v3(tags, sample_globs):
   forbid_names(tags, 'sample', 'path')
   items = []
 
+  have_bin = False
+  have_invocation = False
   for s in sample_globs:
     for sample in glob_non_yaml(s):
       basepath = None
@@ -89,6 +111,10 @@ def create_flat_manifest_v3(tags, sample_globs):
         if name == BASEPATH_KEY:
           basepath = value
           continue
+        if name == BIN_KEY:
+          have_bin = True
+        if name == INVOCATION_KEY:
+          have_invocation = True
         entry_content[name] = value
 
       if not basepath:
@@ -111,6 +137,15 @@ def create_flat_manifest_v3(tags, sample_globs):
       lines.append(f"{indent}{tag_name}: '{escape(tag_value)}'")
       indent = '  '
 
+  if have_bin and not have_invocation:
+    # This deprecation warning is printed to stderr so as to not pollute the
+    # generated manifest file. We also write it as a YAML comment so that if the
+    # user redirects stdout+stderr to a file, the warning does not break the
+    # manifest.
+    sys.stderr.write('# For invoking samples via sample-tester, the use of "bin" '
+                     'is deprecated in favor of "invocation".')
+    sys.stderr.write('# See https://sample-tester.readthedocs.io/en/stable/'
+                     'defining-tests/manifest-reference.html#tags-for-sample-tester')
   return '\n'.join(lines) + '\n'
 
 
