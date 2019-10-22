@@ -57,6 +57,9 @@ EXITCODE_FLAG_ERROR = 2
 EXITCODE_SETUP_ERROR = 3
 EXITCODE_USER_ABORT = 4
 
+# pyinstaller recognizes `sys.exit` but not `exit`
+exit = sys.exit
+
 # Set this to True to get a backtrace for debugging, or enable debug-level
 # logging from the command line.
 DEBUGME=False

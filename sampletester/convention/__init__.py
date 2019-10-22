@@ -12,29 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import importlib
 import logging
-import os
+
+from . import cloud
+from . import tag
 
 DEFAULT="tag:sample:invocation,chdir"
-
-__abs_file__ = os.path.abspath(__file__)
-__abs_file_path__ = os.path.split(__abs_file__)[0]
 
 # The list of environment creation functions for each of the various conventions
 # we discover below.
 environment_creators = {}
 
-# We find all the conventions defined via modules and subpackages rooted in the
-# current directory
-all_files = [entry for entry in os.listdir(__abs_file_path__)
-             if entry !='__init__.py' and entry != '__pycache__' and not entry.endswith('~')]
-all_conventions = [os.path.splitext(os.path.basename(entry))[0] for entry in all_files]
-
 # We register the environment creation function for each convention. Each such
 # function has the name `test_environments` within the convention code.
-for convention in all_conventions:
-  module = importlib.import_module('.'+convention, package='sampletester.convention')
+for module in {cloud, tag}:
+  convention = module.__name__.split('.')[-1]
   if 'test_environments' in dir(module):
     logging.info('registering convention "{}"'.format(convention))
     environment_creators[convention] = module.test_environments
