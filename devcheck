@@ -31,7 +31,7 @@ error_message()   { echo -e "${COLOR_RED}$@${COLOR_END}"; }
 success_message() { echo -e "${COLOR_GREEN}$@${COLOR_END}"; }
 
 info_message "Checking/installing development packages\n"
-PACKAGES="flake8 sphinx sphinx_rtd_theme twine wheel setuptools"
+PACKAGES="flake8 sphinx sphinx_rtd_theme twine wheel setuptools click"
 pip install --upgrade $PACKAGES || \
   { error "Could not install: $PACKAGES" ; $EXIT 20 ; }
 
