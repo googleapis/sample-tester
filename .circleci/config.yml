@@ -1,4 +1,12 @@
 version: 2
+workflows:
+  version: 2
+  main:
+    jobs:
+    - build
+    - publish_standalone:
+        requires:
+        - build
 jobs:
   build:
     working_directory: ~/sample-tester
@@ -7,9 +15,52 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Running devcheck
           command: |
             python3 -m venv venv
             . venv/bin/activate
             pip install --upgrade pip setuptools
             pipenv install .
             . devcheck
+  publish_standalone:
+    docker:
+      - image: golang:1.13
+    environment:
+      GOPATH: /go
+      GO111MODULE: "on"
+    working_directory: ~/sample-tester
+    steps:
+      - checkout
+      # - run:
+      #     name: Update git submodules.
+      #     command: git submodule update --init
+      # - run:
+      #     name: Retrieve dependencies
+      #     command: go get ./...
+      - run:
+          name: Install protoc
+          command: |
+            apt-get update && apt-get install -y unzip
+            curl -o ~/protoc3.zip -L https://github.com/google/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
+            unzip ~/protoc3.zip -d ~/protoc3
+            mv ~/protoc3/bin/* /usr/local/bin/
+            mv ~/protoc3/include/* /usr/local/include/
+      - run:
+          name: Installing pyinstaller
+          command: |
+            . venv/bin/activate
+            pip install --upgrade pyinstaller           
+      - run:
+          name: Create release assets
+          command: pyinstaller  sampletester/cli.py --name sample-tester-cli  --onefile 
+      - run:
+          name: Attach compiled stuff to the tag.
+          command: |
+            go get github.com/tcnksm/ghr
+            ghr -t ${GITHUB_TOKEN} \
+                -u vchudnov-g \
+                -r sample-tester \
+                -c ${CIRCLE_SHA1} \
+                -b "a release" \
+                -prerelease \
+                ${CIRCLE_TAG} ./dist    
