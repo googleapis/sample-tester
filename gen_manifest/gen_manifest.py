@@ -71,14 +71,13 @@ def create_factored_manifest_v3(tags, sample_globs):
   if not have_basepath:
     lines.append(f"  {BASEPATH_KEY}: '{escape(BASEPATH_DEFAULT)}'")
   lines.append("samples:")
-  for s in sample_globs:
-    for sample_relative_path in glob_non_yaml(s):
-      sample_absolute_path = os.path.join(os.getcwd(), sample_relative_path)
-      lines.extend([
-          "- <<: *common",
-	  f"  path: '{{{BASEPATH_KEY}}}/{escape(sample_relative_path)}'",
-	  f"  sample: '{get_region_tag(sample_absolute_path)}'"
-          ])
+  for sample_relative_path in glob_non_yaml(sample_globs):
+    sample_absolute_path = os.path.join(os.getcwd(), sample_relative_path)
+    lines.extend([
+        "- <<: *common",
+	f"  path: '{{{BASEPATH_KEY}}}/{escape(sample_relative_path)}'",
+	f"  sample: '{get_region_tag(sample_absolute_path)}'"
+    ])
   if have_bin and not have_invocation:
     # This deprecation warning is printed to stderr so as to not pollute the
     # generated manifest file. We also write it as a YAML comment so that if the
@@ -103,28 +102,27 @@ def create_flat_manifest_v3(tags, sample_globs):
 
   have_bin = False
   have_invocation = False
-  for s in sample_globs:
-    for sample in glob_non_yaml(s):
-      basepath = None
-      entry_content = OrderedDict()
-      for name, value in tags:
-        if name == BASEPATH_KEY:
-          basepath = value
-          continue
-        if name == BIN_KEY:
-          have_bin = True
-        if name == INVOCATION_KEY:
-          have_invocation = True
-        entry_content[name] = value
+  for sample in glob_non_yaml(sample_globs):
+    basepath = None
+    entry_content = OrderedDict()
+    for name, value in tags:
+      if name == BASEPATH_KEY:
+        basepath = value
+        continue
+      if name == BIN_KEY:
+        have_bin = True
+      if name == INVOCATION_KEY:
+        have_invocation = True
+      entry_content[name] = value
 
-      if not basepath:
-        basepath = BASEPATH_DEFAULT
-      sample_path = os.path.join(os.getcwd(), sample)
+    if not basepath:
+      basepath = BASEPATH_DEFAULT
+    sample_path = os.path.join(os.getcwd(), sample)
 
-      entry = OrderedDict([('path', os.path.join(basepath, sample)),
-	                   ('sample', get_region_tag(sample_path))])
-      entry.update(entry_content)
-      items.append(entry)
+    entry = OrderedDict([('path', os.path.join(basepath, sample)),
+                         ('sample', get_region_tag(sample_path))])
+    entry.update(entry_content)
+    items.append(entry)
 
   # It's easier to just output the correctly quoted and indented lines directly
   # than to invoke the YAML emitter.
@@ -191,12 +189,11 @@ def create_manifest_v2(tags, sample_globs):
 def path_sample_pairs_v2(sample_globs):
   """Returns a list of path/ID pairs for each glob in `sample_globs`"""
   items = []
-  for s in sample_globs:
-    for sample in glob_non_yaml(s):
-      items.append({
-	  'path': sample,
-	  'sample': get_region_tag(os.path.join(os.getcwd(), sample))
-      })
+  for sample in glob_non_yaml(sample_globs):
+    items.append({
+        'path': sample,
+        'sample': get_region_tag(os.path.join(os.getcwd(), sample))
+    })
   return items
 
 ### Helpers
@@ -251,9 +248,13 @@ def get_region_tag(sample_file_path):
   return region_tags[0]
 
 
-def glob_non_yaml(pattern):
-  '''Recursively globs for `pattern`, ignoring "*.yaml" and ".yml" files.'''
-  matches = glob(pattern, recursive=True)
+def glob_non_yaml(all_patterns):
+  '''Recursively globs for each pattern in `all_patterns`, ignoring "*.yaml" and ".yml" files.'''
+  matches = []
+  for pattern in all_patterns:
+      matches.extend(glob(pattern, recursive=True))
+  matches = list(set(matches)) # eliminate duplicates
+  matches.sort()               # want deterministic order for tests
   return [root+ext
           for root, ext in [os.path.splitext(path) for path in matches]
           if ext != ".yaml" and ext !=".yml"]
