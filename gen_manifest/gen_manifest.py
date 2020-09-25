@@ -188,12 +188,9 @@ def create_manifest_v2(tags, sample_globs):
 
 def path_sample_pairs_v2(sample_globs):
   """Returns a list of path/ID pairs for each glob in `sample_globs`"""
-  items = []
-  for sample in glob_non_yaml(sample_globs):
-    items.append({
-        'path': sample,
-        'sample': get_region_tag(os.path.join(os.getcwd(), sample))
-    })
+  cwd = os.getcwd()
+  items = [{'path': sample, 'sample': get_region_tag(os.path.join(cwd, sample))}
+           for sample in glob_non_yaml(sample_globs)]
   return items
 
 ### Helpers
@@ -222,7 +219,7 @@ def get_region_tag(sample_file_path):
   """
   start_region_tag_exp = r'\[START ([a-zA-Z0-9_]*)\]'
   end_region_tag_exp = r'\[END ([a-zA-Z0-9_]*)\]'
-  region_tags = []
+
   if not os.path.isfile(sample_file_path):
     raise NotRegularFileError(f'not a regular file: "{sample_file_path}"')
   with open(sample_file_path) as sample:
@@ -230,14 +227,9 @@ def get_region_tag(sample_file_path):
     start_region_tags = re.findall(start_region_tag_exp, sample_text)
     end_region_tags = re.findall(end_region_tag_exp, sample_text)
 
-    for srt in start_region_tags:
-
-      # We don't need those with '_cores'
-      if 'core' in srt:
-        continue
-
-      if srt in end_region_tags:
-        region_tags.append(srt)
+    region_tags = [srt for srt in start_region_tags
+                   # We don't need those with '_cores'
+                 if ('core' not in srt) and (srt in end_region_tags)]
 
   if not region_tags:
     raise RegionTagError(f'Found no region tags in {sample_file_path}.')
@@ -250,14 +242,12 @@ def get_region_tag(sample_file_path):
 
 def glob_non_yaml(all_patterns):
   '''Recursively globs for each pattern in `all_patterns`, ignoring "*.yaml" and ".yml" files.'''
-  matches = []
-  for pattern in all_patterns:
-      matches.extend(glob(pattern, recursive=True))
-  matches = list(set(matches)) # eliminate duplicates
-  matches.sort()               # want deterministic order for tests
-  return [root+ext
-          for root, ext in [os.path.splitext(path) for path in matches]
-          if ext != ".yaml" and ext !=".yml"]
+  # Create a deterministically ordered list of unique matches to `all_patterns`.
+  matches = sorted(set(match
+                       for pattern in all_patterns
+                       for match in glob(pattern, recursive=True)))
+  yaml_exts = (".yaml", ".yml")
+  return [path for path in matches if os.path.splitext(path)[1] not in yaml_exts]
 
 
 class GenManifestError(Exception):
