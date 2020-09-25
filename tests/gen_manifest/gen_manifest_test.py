@@ -43,7 +43,7 @@ class TestGenManifest(unittest.TestCase):
     self.assertEquals({'readbook.py', 'getbook.py'},
                       basenames_of(
                           gen_manifest.glob_non_yaml(
-                              os.path.join(sample_path, '**/*'))))
+                              [os.path.join(sample_path, '**/*')])))
 
   def test_parse_files_and_tags(self):
     files, tags = gen_manifest.parse_files_and_tags(['--principal=alice',
@@ -83,11 +83,11 @@ class TestGenManifest(unittest.TestCase):
         basepath: '.'
       samples:
       - <<: *common
-        path: '{{basepath}}/{sample_relative_path}/readbook.py'
-        sample: 'readbook_sample'
-      - <<: *common
         path: '{{basepath}}/{sample_relative_path}/getbook.py'
         sample: 'getbook_sample'
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
       """)
     self.assertEqual(expected_string, manifest_string)
 
@@ -120,11 +120,11 @@ class TestGenManifest(unittest.TestCase):
         basepath: '.'
       samples:
       - <<: *common
-        path: '{{basepath}}/{sample_relative_path}/readbook.py'
-        sample: 'readbook_sample'
-      - <<: *common
         path: '{{basepath}}/{sample_relative_path}/getbook.py'
         sample: 'getbook_sample'
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
       """)
     self.assertEqual(expected_string, manifest_string)
 
@@ -204,11 +204,11 @@ class TestGenManifest(unittest.TestCase):
         basepath: '{BASEPATH}'
       samples:
       - <<: *common
-        path: '{{basepath}}/{sample_relative_path}/readbook.py'
-        sample: 'readbook_sample'
-      - <<: *common
         path: '{{basepath}}/{sample_relative_path}/getbook.py'
         sample: 'getbook_sample'
+      - <<: *common
+        path: '{{basepath}}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
       """)
     self.assertEqual(expected_string, manifest_string)
 
@@ -248,14 +248,14 @@ class TestGenManifest(unittest.TestCase):
       type: manifest/samples
       schema_version: 3
       samples:
-      - path: './{sample_relative_path}/readbook.py'
-        sample: 'readbook_sample'
+      - path: './{sample_relative_path}/getbook.py'
+        sample: 'getbook_sample'
         environment: '{ENVIRONMENT}'
         bin: '{BIN}'
         invocation: '{INVOCATION}'
         chdir: '{CHDIR}'
-      - path: './{sample_relative_path}/getbook.py'
-        sample: 'getbook_sample'
+      - path: './{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
         environment: '{ENVIRONMENT}'
         bin: '{BIN}'
         invocation: '{INVOCATION}'
@@ -288,14 +288,14 @@ class TestGenManifest(unittest.TestCase):
       type: manifest/samples
       schema_version: 3
       samples:
-      - path: '{BASEPATH}/{sample_relative_path}/readbook.py'
-        sample: 'readbook_sample'
+      - path: '{BASEPATH}/{sample_relative_path}/getbook.py'
+        sample: 'getbook_sample'
         environment: '{ENVIRONMENT}'
         bin: '{BIN}'
         invocation: '{INVOCATION}'
         chdir: '{CHDIR}'
-      - path: '{BASEPATH}/{sample_relative_path}/getbook.py'
-        sample: 'getbook_sample'
+      - path: '{BASEPATH}/{sample_relative_path}/readbook.py'
+        sample: 'readbook_sample'
         environment: '{ENVIRONMENT}'
         bin: '{BIN}'
         invocation: '{INVOCATION}'
@@ -343,10 +343,10 @@ class TestGenManifest(unittest.TestCase):
         chdir: {CHDIR}
         path: ./
         __items__:
-        - path: {sample_relative_path}/readbook.py
-          sample: readbook_sample
         - path: {sample_relative_path}/getbook.py
           sample: getbook_sample
+        - path: {sample_relative_path}/readbook.py
+          sample: readbook_sample
       """)
     self.assertEqual(expected_string, manifest_string)
 
@@ -381,10 +381,10 @@ class TestGenManifest(unittest.TestCase):
         chdir: {CHDIR}
         path: {BASEPATH}/
         __items__:
-        - path: {sample_relative_path}/readbook.py
-          sample: readbook_sample
         - path: {sample_relative_path}/getbook.py
           sample: getbook_sample
+        - path: {sample_relative_path}/readbook.py
+          sample: readbook_sample
       """)
     self.assertEqual(expected_string, manifest_string)
 
