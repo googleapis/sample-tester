@@ -71,14 +71,13 @@ def create_factored_manifest_v3(tags, sample_globs):
   if not have_basepath:
     lines.append(f"  {BASEPATH_KEY}: '{escape(BASEPATH_DEFAULT)}'")
   lines.append("samples:")
-  for s in sample_globs:
-    for sample_relative_path in glob_non_yaml(s):
-      sample_absolute_path = os.path.join(os.getcwd(), sample_relative_path)
-      lines.extend([
-          "- <<: *common",
-	  f"  path: '{{{BASEPATH_KEY}}}/{escape(sample_relative_path)}'",
-	  f"  sample: '{get_region_tag(sample_absolute_path)}'"
-          ])
+  for sample_relative_path in glob_non_yaml(sample_globs):
+    sample_absolute_path = os.path.join(os.getcwd(), sample_relative_path)
+    lines.extend([
+        "- <<: *common",
+	f"  path: '{{{BASEPATH_KEY}}}/{escape(sample_relative_path)}'",
+	f"  sample: '{get_region_tag(sample_absolute_path)}'"
+    ])
   if have_bin and not have_invocation:
     # This deprecation warning is printed to stderr so as to not pollute the
     # generated manifest file. We also write it as a YAML comment so that if the
@@ -103,28 +102,27 @@ def create_flat_manifest_v3(tags, sample_globs):
 
   have_bin = False
   have_invocation = False
-  for s in sample_globs:
-    for sample in glob_non_yaml(s):
-      basepath = None
-      entry_content = OrderedDict()
-      for name, value in tags:
-        if name == BASEPATH_KEY:
-          basepath = value
-          continue
-        if name == BIN_KEY:
-          have_bin = True
-        if name == INVOCATION_KEY:
-          have_invocation = True
-        entry_content[name] = value
+  for sample in glob_non_yaml(sample_globs):
+    basepath = None
+    entry_content = OrderedDict()
+    for name, value in tags:
+      if name == BASEPATH_KEY:
+        basepath = value
+        continue
+      if name == BIN_KEY:
+        have_bin = True
+      if name == INVOCATION_KEY:
+        have_invocation = True
+      entry_content[name] = value
 
-      if not basepath:
-        basepath = BASEPATH_DEFAULT
-      sample_path = os.path.join(os.getcwd(), sample)
+    if not basepath:
+      basepath = BASEPATH_DEFAULT
+    sample_path = os.path.join(os.getcwd(), sample)
 
-      entry = OrderedDict([('path', os.path.join(basepath, sample)),
-	                   ('sample', get_region_tag(sample_path))])
-      entry.update(entry_content)
-      items.append(entry)
+    entry = OrderedDict([('path', os.path.join(basepath, sample)),
+                         ('sample', get_region_tag(sample_path))])
+    entry.update(entry_content)
+    items.append(entry)
 
   # It's easier to just output the correctly quoted and indented lines directly
   # than to invoke the YAML emitter.
@@ -190,13 +188,9 @@ def create_manifest_v2(tags, sample_globs):
 
 def path_sample_pairs_v2(sample_globs):
   """Returns a list of path/ID pairs for each glob in `sample_globs`"""
-  items = []
-  for s in sample_globs:
-    for sample in glob_non_yaml(s):
-      items.append({
-	  'path': sample,
-	  'sample': get_region_tag(os.path.join(os.getcwd(), sample))
-      })
+  cwd = os.getcwd()
+  items = [{'path': sample, 'sample': get_region_tag(os.path.join(cwd, sample))}
+           for sample in glob_non_yaml(sample_globs)]
   return items
 
 ### Helpers
@@ -225,7 +219,7 @@ def get_region_tag(sample_file_path):
   """
   start_region_tag_exp = r'\[START ([a-zA-Z0-9_]*)\]'
   end_region_tag_exp = r'\[END ([a-zA-Z0-9_]*)\]'
-  region_tags = []
+
   if not os.path.isfile(sample_file_path):
     raise NotRegularFileError(f'not a regular file: "{sample_file_path}"')
   with open(sample_file_path) as sample:
@@ -233,14 +227,9 @@ def get_region_tag(sample_file_path):
     start_region_tags = re.findall(start_region_tag_exp, sample_text)
     end_region_tags = re.findall(end_region_tag_exp, sample_text)
 
-    for srt in start_region_tags:
-
-      # We don't need those with '_cores'
-      if 'core' in srt:
-        continue
-
-      if srt in end_region_tags:
-        region_tags.append(srt)
+    region_tags = [srt for srt in start_region_tags
+                   # We don't need those with '_cores'
+                   if ('core' not in srt) and (srt in end_region_tags)]
 
   if not region_tags:
     raise RegionTagError(f'Found no region tags in {sample_file_path}.')
@@ -251,12 +240,14 @@ def get_region_tag(sample_file_path):
   return region_tags[0]
 
 
-def glob_non_yaml(pattern):
-  '''Recursively globs for `pattern`, ignoring "*.yaml" and ".yml" files.'''
-  matches = glob(pattern, recursive=True)
-  return [root+ext
-          for root, ext in [os.path.splitext(path) for path in matches]
-          if ext != ".yaml" and ext !=".yml"]
+def glob_non_yaml(all_patterns):
+  '''Recursively globs for each pattern in `all_patterns`, ignoring "*.yaml" and ".yml" files.'''
+  # Create a deterministically ordered list of unique matches to `all_patterns`.
+  matches = sorted(set(match
+                       for pattern in all_patterns
+                       for match in glob(pattern, recursive=True)))
+  yaml_exts = (".yaml", ".yml")
+  return [path for path in matches if os.path.splitext(path)[1] not in yaml_exts]
 
 
 class GenManifestError(Exception):
