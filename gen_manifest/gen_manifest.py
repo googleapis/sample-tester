@@ -229,7 +229,7 @@ def get_region_tag(sample_file_path):
 
     region_tags = [srt for srt in start_region_tags
                    # We don't need those with '_cores'
-                 if ('core' not in srt) and (srt in end_region_tags)]
+                   if ('core' not in srt) and (srt in end_region_tags)]
 
   if not region_tags:
     raise RegionTagError(f'Found no region tags in {sample_file_path}.')
